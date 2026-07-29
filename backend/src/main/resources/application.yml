@@ -1,0 +1,66 @@
+spring:
+  application:
+    name: rabbit-aip-api
+  datasource:
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/rabbit}
+    username: ${DATABASE_USERNAME:rabbit}
+    password: ${DATABASE_PASSWORD:rabbit_local_password}
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 2
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+        format_sql: false
+  flyway:
+    enabled: true
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USERNAME:rabbit}
+    password: ${RABBITMQ_PASSWORD:rabbit_local_queue_password}
+  jackson:
+    default-property-inclusion: non_null
+
+server:
+  port: 8080
+  forward-headers-strategy: framework
+  error:
+    include-message: never
+    include-stacktrace: never
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      probes:
+        enabled: true
+
+rabbit:
+  jwt:
+    secret: ${JWT_SECRET:rabbit-local-development-secret-change-me}
+    access-ttl-minutes: ${JWT_ACCESS_TTL_MINUTES:15}
+    refresh-ttl-days: ${JWT_REFRESH_TTL_DAYS:7}
+  minio:
+    endpoint: ${MINIO_ENDPOINT:http://localhost:9000}
+    access-key: ${MINIO_ACCESS_KEY:rabbit}
+    secret-key: ${MINIO_SECRET_KEY:rabbit_local_minio_password}
+    bucket: ${MINIO_BUCKET:question-assets}
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000,http://localhost}
+
+logging:
+  pattern:
+    level: "%5p [traceId=%X{traceId:-}]"
