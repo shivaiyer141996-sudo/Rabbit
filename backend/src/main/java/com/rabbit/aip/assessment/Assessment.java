@@ -130,6 +130,18 @@ public class Assessment extends TenantEntity {
         publishedAt = Instant.now();
     }
 
+    public void submitForReview() {
+        status = AssessmentStatus.READY_FOR_REVIEW;
+    }
+
+    public void approve() {
+        status = AssessmentStatus.APPROVED;
+    }
+
+    public void returnToDraft() {
+        status = AssessmentStatus.DRAFT;
+    }
+
     public void schedule(Instant startAt, Instant endAt, Set<UUID> sectionIds) {
         this.startAt = startAt;
         this.endAt = endAt;

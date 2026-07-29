@@ -1,5 +1,6 @@
 package com.rabbit.aip.attempt;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -12,4 +13,5 @@ public interface AttemptResponseRepository
             UUID questionId
     );
     List<AttemptResponse> findAllByAttemptId(UUID attemptId);
+    List<AttemptResponse> findAllByAttemptIdIn(Collection<UUID> attemptIds);
 }

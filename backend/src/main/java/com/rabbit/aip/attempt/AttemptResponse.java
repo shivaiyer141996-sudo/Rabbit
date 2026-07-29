@@ -8,6 +8,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.Table;
+import java.math.BigDecimal;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
@@ -27,6 +28,12 @@ public class AttemptResponse extends BaseEntity {
 
     @Column(name = "time_spent_seconds", nullable = false)
     private int timeSpentSeconds;
+
+    @Column(name = "awarded_marks", precision = 10, scale = 2)
+    private BigDecimal awardedMarks;
+
+    @Column
+    private Boolean correct;
 
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(
@@ -62,9 +69,16 @@ public class AttemptResponse extends BaseEntity {
         this.timeSpentSeconds = Math.max(0, timeSpentSeconds);
     }
 
+    public void recordEvaluation(BigDecimal awardedMarks, boolean correct) {
+        this.awardedMarks = awardedMarks;
+        this.correct = correct;
+    }
+
     public UUID getAttemptId() { return attemptId; }
     public UUID getQuestionId() { return questionId; }
     public boolean isFlagged() { return flagged; }
     public int getTimeSpentSeconds() { return timeSpentSeconds; }
     public Set<UUID> getSelectedOptionIds() { return Set.copyOf(selectedOptionIds); }
+    public BigDecimal getAwardedMarks() { return awardedMarks; }
+    public Boolean getCorrect() { return correct; }
 }

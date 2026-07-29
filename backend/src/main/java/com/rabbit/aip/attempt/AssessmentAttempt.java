@@ -42,6 +42,34 @@ public class AssessmentAttempt extends TenantEntity {
     @Column(precision = 7, scale = 2)
     private BigDecimal percentage;
 
+    @Column(name = "evaluated_at")
+    private Instant evaluatedAt;
+
+    @Column(length = 20)
+    private String grade;
+
+    @Column(name = "correct_answers", nullable = false)
+    private int correctAnswers;
+
+    @Column(name = "wrong_answers", nullable = false)
+    private int wrongAnswers;
+
+    @Column(name = "unanswered_answers", nullable = false)
+    private int unansweredAnswers;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "result_status", nullable = false, length = 30)
+    private ResultPublicationStatus resultStatus;
+
+    @Column(name = "result_published_at")
+    private Instant resultPublishedAt;
+
+    @Column(name = "result_published_by")
+    private UUID resultPublishedBy;
+
+    @Column(name = "evaluation_version", nullable = false)
+    private int evaluationVersion;
+
     protected AssessmentAttempt() {
     }
 
@@ -57,21 +85,62 @@ public class AssessmentAttempt extends TenantEntity {
         this.status = AttemptStatus.IN_PROGRESS;
         this.startedAt = Instant.now();
         this.expiresAt = expiresAt;
+        this.resultStatus = ResultPublicationStatus.PENDING_PUBLICATION;
+        this.evaluationVersion = 1;
     }
 
     public void submit(
             BigDecimal score,
             BigDecimal maxScore,
             BigDecimal percentage,
+            String grade,
+            int correctAnswers,
+            int wrongAnswers,
+            int unansweredAnswers,
             boolean automatic
     ) {
         this.score = score;
         this.maxScore = maxScore;
         this.percentage = percentage;
+        this.grade = grade;
+        this.correctAnswers = correctAnswers;
+        this.wrongAnswers = wrongAnswers;
+        this.unansweredAnswers = unansweredAnswers;
+        this.evaluatedAt = Instant.now();
+        this.resultStatus = ResultPublicationStatus.PENDING_PUBLICATION;
         this.submittedAt = Instant.now();
         this.status = automatic
                 ? AttemptStatus.AUTO_SUBMITTED
                 : AttemptStatus.SUBMITTED;
+    }
+
+    public void reEvaluate(
+            BigDecimal score,
+            BigDecimal maxScore,
+            BigDecimal percentage,
+            String grade,
+            int correctAnswers,
+            int wrongAnswers,
+            int unansweredAnswers
+    ) {
+        this.score = score;
+        this.maxScore = maxScore;
+        this.percentage = percentage;
+        this.grade = grade;
+        this.correctAnswers = correctAnswers;
+        this.wrongAnswers = wrongAnswers;
+        this.unansweredAnswers = unansweredAnswers;
+        this.evaluatedAt = Instant.now();
+        this.evaluationVersion += 1;
+        this.resultStatus = ResultPublicationStatus.PENDING_PUBLICATION;
+        this.resultPublishedAt = null;
+        this.resultPublishedBy = null;
+    }
+
+    public void publishResult(UUID publisherId) {
+        this.resultStatus = ResultPublicationStatus.PUBLISHED;
+        this.resultPublishedAt = Instant.now();
+        this.resultPublishedBy = publisherId;
     }
 
     public UUID getAssessmentId() { return assessmentId; }
@@ -83,4 +152,13 @@ public class AssessmentAttempt extends TenantEntity {
     public BigDecimal getScore() { return score; }
     public BigDecimal getMaxScore() { return maxScore; }
     public BigDecimal getPercentage() { return percentage; }
+    public Instant getEvaluatedAt() { return evaluatedAt; }
+    public String getGrade() { return grade; }
+    public int getCorrectAnswers() { return correctAnswers; }
+    public int getWrongAnswers() { return wrongAnswers; }
+    public int getUnansweredAnswers() { return unansweredAnswers; }
+    public ResultPublicationStatus getResultStatus() { return resultStatus; }
+    public Instant getResultPublishedAt() { return resultPublishedAt; }
+    public UUID getResultPublishedBy() { return resultPublishedBy; }
+    public int getEvaluationVersion() { return evaluationVersion; }
 }

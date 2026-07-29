@@ -9,6 +9,7 @@ import jakarta.validation.constraints.Size;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 public final class QuestionDtos {
@@ -112,7 +113,28 @@ public final class QuestionDtos {
 
     public record ReviewRequest(
             @NotNull ReviewDecision decision,
-            String reason
+            String reason,
+            @NotNull Set<ReviewChecklistItem> checklistItems
     ) {
+    }
+
+    public record ReviewHistoryResponse(
+            UUID id,
+            UUID reviewerUserId,
+            ReviewDecision decision,
+            String reason,
+            Set<ReviewChecklistItem> checklistItems,
+            Instant createdAt
+    ) {
+        static ReviewHistoryResponse from(QuestionReview review) {
+            return new ReviewHistoryResponse(
+                    review.getId(),
+                    review.getReviewerUserId(),
+                    review.getDecision(),
+                    review.getReason(),
+                    review.checklist(),
+                    review.getCreatedAt()
+            );
+        }
     }
 }

@@ -5,7 +5,6 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
   BarChart3,
-  Bell,
   BookOpenCheck,
   Building2,
   ClipboardList,
@@ -14,12 +13,14 @@ import {
   LogOut,
   Menu,
   Search,
+  ShieldCheck,
   Settings,
   Users,
   X,
   type LucideIcon,
 } from "lucide-react";
 import { useState } from "react";
+import { NotificationPopover } from "@/components/notification-popover";
 import type { UserRole } from "@/lib/types";
 
 interface NavigationItem {
@@ -37,6 +38,12 @@ const navigation: NavigationItem[] = [
     label: "Question Bank",
     icon: FileQuestion,
     roles: ["SUPER_ADMIN", "ORG_ADMIN", "ACADEMIC_HEAD", "FACULTY", "REVIEWER"],
+  },
+  {
+    href: "/approvals",
+    label: "Approvals",
+    icon: BookOpenCheck,
+    roles: ["SUPER_ADMIN", "ORG_ADMIN", "ACADEMIC_HEAD", "REVIEWER"],
   },
   {
     href: "/assessments",
@@ -61,7 +68,12 @@ const navigation: NavigationItem[] = [
     label: "Reports",
     icon: BarChart3,
     roles: ["SUPER_ADMIN", "ORG_ADMIN", "ACADEMIC_HEAD", "FACULTY"],
-    disabled: true,
+  },
+  {
+    href: "/audit-logs",
+    label: "Audit Logs",
+    icon: ShieldCheck,
+    roles: ["SUPER_ADMIN", "ORG_ADMIN"],
   },
 ];
 
@@ -137,19 +149,20 @@ export function AppShell({
           })}
         </nav>
 
-        <div className="nav-section-label">Manage</div>
-        <nav className="nav-list" aria-label="Management navigation">
-          <span className="nav-item" aria-disabled="true">
-            <BookOpenCheck size={17} />
-            Academic setup
-            <span className="badge badge-neutral">M2</span>
-          </span>
-          <span className="nav-item" aria-disabled="true">
-            <Settings size={17} />
-            Settings
-            <span className="badge badge-neutral">M2</span>
-          </span>
-        </nav>
+        {(["SUPER_ADMIN", "ORG_ADMIN"] as UserRole[]).includes(role) && (
+          <>
+            <div className="nav-section-label">Manage</div>
+            <nav className="nav-list" aria-label="Management navigation">
+              <Link
+                className={`nav-item ${pathname.startsWith("/settings") ? "active" : ""}`}
+                href="/settings"
+              >
+                <Settings size={17} />
+                Settings
+              </Link>
+            </nav>
+          </>
+        )}
 
         <div className="sidebar-footer">
           <div className="user-mini">
@@ -183,9 +196,7 @@ export function AppShell({
           <button className="icon-button" aria-label="Search">
             <Search size={18} />
           </button>
-          <button className="icon-button" aria-label="Notifications">
-            <Bell size={18} />
-          </button>
+          <NotificationPopover />
         </div>
       </header>
       <main>{children}</main>

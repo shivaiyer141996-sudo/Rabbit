@@ -36,6 +36,36 @@ public final class AssessmentDtos {
     ) {
     }
 
+    public enum AssessmentReviewDecision {
+        APPROVE,
+        RETURN,
+        REJECT
+    }
+
+    public record AssessmentReviewRequest(
+            @NotNull AssessmentReviewDecision decision,
+            String reason
+    ) {
+    }
+
+    public record AssessmentReviewResponse(
+            UUID id,
+            UUID reviewerUserId,
+            AssessmentReviewDecision decision,
+            String reason,
+            Instant createdAt
+    ) {
+        static AssessmentReviewResponse from(AssessmentReview review) {
+            return new AssessmentReviewResponse(
+                    review.getId(),
+                    review.getReviewerUserId(),
+                    review.getDecision(),
+                    review.getReason(),
+                    review.getCreatedAt()
+            );
+        }
+    }
+
     public record AssessmentResponse(
             UUID id,
             String title,

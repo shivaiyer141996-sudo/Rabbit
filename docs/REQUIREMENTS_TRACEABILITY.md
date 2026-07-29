@@ -1,39 +1,40 @@
-# Milestone 1 requirements traceability
+# Milestone 2 requirements traceability
 
 Status meanings:
 
-- **Implemented** — a working vertical slice exists in this repository.
-- **Foundation** — core domain/API/UI exists; the full screen set or operational hardening continues later.
-- **Planned** — deliberately outside this Milestone 1 commit.
+- **Implemented** — a working backend/API/interface vertical slice exists.
+- **Foundation** — the core workflow exists; production-scale or provider-specific hardening remains for Milestone 3.
+- **GA planned** — deliberately reserved for Release 1.0 GA hardening.
 
 | Requirement group | Status | Evidence |
 | --- | --- | --- |
-| AUTH login and role redirect | Implemented | Auth API, JWT service, login gateway and screen |
-| AUTH organisation selector | Implemented | Selection token flow and organisation selector |
-| AUTH forgot password / OTP | Planned | Milestone 2 notification delivery dependency |
-| AUTH lockout and password history | Foundation | Schema fields and policy configuration; full admin unlock UI planned |
-| ORG tenant isolation | Implemented | Tenant claim/context and tenant-scoped service queries |
-| ORG academic structure | Foundation | Schema and seed for academic years, departments, sections, subjects and topics |
-| USR role model and suspension | Implemented | Membership roles/status and method security |
-| USR CSV bulk import | Planned | Milestone 2 administration workflow |
-| DSH contextual experience | Implemented | Role-aware application shell and Foundation dashboard |
-| QB Single Correct / Multiple Correct | Implemented | Authoring UI, entity model, validation and API |
-| QB rich text and images | Foundation | Asset-ready schema/MinIO; advanced editor upload planned |
-| QB bulk import | Planned | Milestone 2 |
-| QB versioning and retirement | Foundation | Version/status model; full history UI planned |
-| QRV submit and decision | Implemented | Question state transitions and reviewer endpoint |
-| QRV checklist/SLA/escalation | Planned | Milestone 2 |
-| ASM create from approved questions | Implemented | Service invariant and assessment form |
-| ASM publish and schedule | Implemented | API transitions and eligibility model |
-| ASM full approval/version history | Foundation | Status/version model; complete work queue planned |
-| DEL scheduled eligibility | Implemented | Tenant, membership section, schedule window checks |
-| DEL countdown/navigation/flags | Implemented | Student assessment player |
-| DEL 30-second auto-save and recovery | Implemented | Client interval plus persisted response API |
-| DEL live monitoring | Planned | Milestone 2; alerts are explicitly out of Release 1.0 |
-| EVL objective scoring/basic results | Implemented | Scoring service, submission endpoint and result view |
-| EVL governed re-evaluation | Planned | Milestone 2 |
-| RPT advanced reports | Planned | Milestone 2 |
-| NTF delivery engine | Foundation | RabbitMQ infrastructure; producers/workers planned |
-| ADM immutable audit viewer | Foundation | Audit table; full event coverage/viewer planned |
-| SET configuration screens | Planned | Milestone 2 |
-| No AI / no parent / no subjective / no app | Enforced | Types, routes and roadmap intentionally exclude them |
+| AUTH login, tenant selection, refresh, logout | Implemented | Auth API, JWT gateway, authentication audit events |
+| AUTH password recovery and password history | GA planned | Requires production email provider and final security policy |
+| ORG tenant isolation | Implemented | Signed tenant context and tenant-scoped repositories across M1/M2 modules |
+| ORG academic structure | Implemented | Subject/topic master APIs and settings interface |
+| USR role/status management | Implemented | Membership roles, method security, account state APIs |
+| USR CSV bulk import | GA planned | Validation and import hardening retained for M3 |
+| DSH role-specific intelligence | Implemented | Dashboard API and responsive intelligence dashboard |
+| QB Single/Multiple Correct MCQ | Implemented | Authoring domain, validation, versioning, bank |
+| QB bulk import and rich asset editor | GA planned | MinIO foundation exists; operational workflow retained for M3 |
+| QRV checklist and decision history | Implemented | Seven-point checklist, self-review block, review history table/API/UI |
+| QRV SLA escalation | Foundation | Critical workflow notifications and queue age are represented; production SLA scheduler remains M3 |
+| ASM governed approval | Implemented | Draft → Ready for Review → Approved → Published → Scheduled |
+| ASM approved-question invariant | Implemented | Service validation and database relationships |
+| DEL eligibility, recovery, timer, submit | Implemented | Student player and tenant/section/window checks |
+| DEL live monitoring | GA planned | Operational scale dashboard retained for M3 |
+| EVL objective auto-evaluation | Implemented | Negative/partial marking, grade bands, counts, evaluation timestamp/version |
+| EVL result publication | Implemented | Pending/published states, faculty/admin action, student score gating |
+| EVL governed re-evaluation | Implemented | Reason, before/after audit, version increment, publication reset |
+| RPT institution overview | Implemented | Average, pass rate, completion, score distribution, trend, at-risk rule |
+| RPT assessment/student/faculty reports | Implemented | Tenant/role-scoped APIs and responsive interfaces |
+| RPT question analytics | Implemented | Usage, correct rate, difficulty and discrimination indices, quality flag |
+| RPT CSV export | Implemented | Timestamped governed assessment and audit exports |
+| RPT PDF/native Excel export | GA planned | Reserved for Milestone 3 per product roadmap |
+| NTF in-app notification centre | Implemented | Inbox, unread state, preferences, critical override, event producers |
+| NTF email/SMS adapters | Foundation | Preferences/status/retry model exists; production providers remain M3 |
+| ADM immutable audit exploration | Implemented | Actor, role, IP, trace, filters, before/after, CSV; no mutation endpoints |
+| SET organisation settings | Implemented | Locale, defaults, thresholds, retention, branding API/UI |
+| SET contiguous grading bands | Implemented | Backend/frontend validation and tests enforce complete 0–100 coverage |
+| SET academic masters | Implemented | Subject/topic APIs; subject-in-use guard |
+| Release 1.0 exclusions | Enforced | No AI, parent portal, subjective evaluation, native app, or external LMS integration |

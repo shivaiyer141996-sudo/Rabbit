@@ -72,12 +72,34 @@ public final class AttemptDtos {
             UUID assessmentId,
             String assessmentTitle,
             AttemptStatus status,
+            ResultPublicationStatus publicationStatus,
             BigDecimal score,
             BigDecimal maxScore,
             BigDecimal percentage,
+            String grade,
             Instant submittedAt,
             int answered,
-            int questionCount
+            int questionCount,
+            int correctAnswers,
+            int wrongAnswers,
+            int unansweredAnswers,
+            Integer rank,
+            long timeTakenSeconds,
+            int evaluationVersion,
+            List<ResultQuestion> questions
+    ) {
+    }
+
+    public record ResultQuestion(
+            UUID questionId,
+            String stem,
+            UUID topicId,
+            Set<UUID> selectedOptionIds,
+            Set<UUID> correctOptionIds,
+            BigDecimal awardedMarks,
+            BigDecimal maxMarks,
+            boolean correct,
+            String explanation
     ) {
     }
 }

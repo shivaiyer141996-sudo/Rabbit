@@ -2,6 +2,7 @@ package com.rabbit.aip.auth;
 
 import com.rabbit.aip.auth.AuthDtos.AuthResponse;
 import com.rabbit.aip.auth.AuthDtos.OrganisationChoice;
+import com.rabbit.aip.audit.AuditService;
 import com.rabbit.aip.common.exception.DomainException;
 import com.rabbit.aip.organisation.Organisation;
 import com.rabbit.aip.organisation.OrganisationRepository;
@@ -34,6 +35,7 @@ public class AuthService {
     private final RefreshTokenRepository refreshTokens;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
+    private final AuditService audit;
     private final long refreshTtlDays;
 
     public AuthService(
@@ -43,6 +45,7 @@ public class AuthService {
             RefreshTokenRepository refreshTokens,
             PasswordEncoder passwordEncoder,
             JwtService jwtService,
+            AuditService audit,
             @Value("${rabbit.jwt.refresh-ttl-days}") long refreshTtlDays
     ) {
         this.users = users;
@@ -51,6 +54,7 @@ public class AuthService {
         this.refreshTokens = refreshTokens;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
+        this.audit = audit;
         this.refreshTtlDays = refreshTtlDays;
     }
 
@@ -87,6 +91,7 @@ public class AuthService {
                     choices
             );
         }
+        recordLogin(user, active.get(0));
         return session(user, active.get(0), choices);
     }
 
@@ -122,6 +127,7 @@ public class AuthService {
                         "ORGANISATION_ACCESS_DENIED",
                         "This organisation is not assigned to your account."
                 ));
+        recordLogin(user, membership);
         return session(
                 user,
                 membership,
@@ -140,6 +146,15 @@ public class AuthService {
         OrganisationMembership membership = memberships.findById(stored.getMembershipId())
                 .filter(item -> item.getStatus() == AccountStatus.ACTIVE)
                 .orElseThrow(this::invalidRefreshToken);
+        audit.recordAuthentication(
+                membership.getOrganisationId(),
+                user.getId(),
+                user.getEmail(),
+                membership.getRole(),
+                "TOKEN_REFRESH",
+                "EXPIRED_ACCESS_TOKEN",
+                "ACTIVE_SESSION"
+        );
         return session(
                 user,
                 membership,
@@ -152,7 +167,37 @@ public class AuthService {
 
     @Transactional
     public void logout(String rawToken) {
-        refreshTokens.findByTokenHash(hash(rawToken)).ifPresent(RefreshToken::revoke);
+        refreshTokens.findByTokenHash(hash(rawToken)).ifPresent(stored -> {
+            stored.revoke();
+            users.findById(stored.getUserId()).ifPresent(user ->
+                    memberships.findById(stored.getMembershipId()).ifPresent(membership ->
+                            audit.recordAuthentication(
+                                    stored.getOrganisationId(),
+                                    user.getId(),
+                                    user.getEmail(),
+                                    membership.getRole(),
+                                    "LOGOUT",
+                                    "ACTIVE_SESSION",
+                                    "REVOKED"
+                            )
+                    )
+            );
+        });
+    }
+
+    private void recordLogin(
+            UserAccount user,
+            OrganisationMembership membership
+    ) {
+        audit.recordAuthentication(
+                membership.getOrganisationId(),
+                user.getId(),
+                user.getEmail(),
+                membership.getRole(),
+                "LOGIN",
+                null,
+                "SUCCESS"
+        );
     }
 
     private AuthResponse session(

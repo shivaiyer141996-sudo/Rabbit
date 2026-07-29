@@ -34,6 +34,18 @@ public class AuditEvent extends TenantEntity {
     @Column(name = "after_value", columnDefinition = "text")
     private String afterValue;
 
+    @Column(name = "actor_email", length = 320)
+    private String actorEmail;
+
+    @Column(name = "actor_role", length = 30)
+    private String actorRole;
+
+    @Column(name = "ip_address", length = 64)
+    private String ipAddress;
+
+    @Column(name = "trace_id", length = 64)
+    private String traceId;
+
     protected AuditEvent() {
     }
 
@@ -45,7 +57,11 @@ public class AuditEvent extends TenantEntity {
             String entityType,
             UUID entityId,
             String beforeValue,
-            String afterValue
+            String afterValue,
+            String actorEmail,
+            String actorRole,
+            String ipAddress,
+            String traceId
     ) {
         super(organisationId);
         this.actorUserId = actorUserId;
@@ -56,5 +72,22 @@ public class AuditEvent extends TenantEntity {
         this.status = "SUCCESS";
         this.beforeValue = beforeValue;
         this.afterValue = afterValue;
+        this.actorEmail = actorEmail;
+        this.actorRole = actorRole;
+        this.ipAddress = ipAddress;
+        this.traceId = traceId;
     }
+
+    public UUID getActorUserId() { return actorUserId; }
+    public String getModule() { return module; }
+    public String getAction() { return action; }
+    public String getEntityType() { return entityType; }
+    public UUID getEntityId() { return entityId; }
+    public String getStatus() { return status; }
+    public String getBeforeValue() { return beforeValue; }
+    public String getAfterValue() { return afterValue; }
+    public String getActorEmail() { return actorEmail; }
+    public String getActorRole() { return actorRole; }
+    public String getIpAddress() { return ipAddress; }
+    public String getTraceId() { return traceId; }
 }

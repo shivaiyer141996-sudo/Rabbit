@@ -2,7 +2,7 @@
 
 The source documents contain two different uses of “milestone”: the product roadmap and the repository bootstrap discussed before coding. This repository treats the product roadmap as authoritative while delivering the engineering foundation needed to evolve it safely.
 
-## Milestone 1 — Foundation (this commit)
+## Milestone 1 — Foundation
 
 Product slices:
 
@@ -25,7 +25,7 @@ Engineering slices:
 
 The code is a functional foundation, not a claim that every FSD screen and every production NFR is GA-complete. The traceability document labels what is implemented now and what needs hardening.
 
-## Milestone 2 — Intelligence
+## Milestone 2 — Intelligence (delivered)
 
 - Rich role-specific dashboards and analytics
 - Full evaluation administration and governed re-evaluation
@@ -34,6 +34,13 @@ The code is a functional foundation, not a claim that every FSD screen and every
 - Immutable audit exploration and export
 - Organisation settings and master-data administration
 - Full question and assessment approval work queues
+
+Implementation boundary:
+
+- Evaluation remains objective MCQ evaluation only. “Manual evaluation” in an older roadmap is superseded by the approved Release 1.0 constraint excluding subjective evaluation.
+- Academic intelligence is deterministic and rules-based. Predictive models and AI recommendations remain post–Release 1.0.
+- Milestone 2 exports operational CSV files. Complete styled PDF and native Excel generation remains Milestone 3.
+- In-app notifications are fully represented. Email/SMS adapters require environment-specific providers during GA hardening.
 
 ## Milestone 3 — Release 1.0 GA
 

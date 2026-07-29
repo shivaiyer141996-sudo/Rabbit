@@ -2,14 +2,19 @@ package com.rabbit.aip.question;
 
 import com.rabbit.aip.audit.AuditService;
 import com.rabbit.aip.common.exception.DomainException;
+import com.rabbit.aip.notification.NotificationService;
+import com.rabbit.aip.notification.NotificationType;
 import com.rabbit.aip.question.QuestionDtos.OptionRequest;
 import com.rabbit.aip.question.QuestionDtos.QuestionRequest;
 import com.rabbit.aip.question.QuestionDtos.QuestionResponse;
 import com.rabbit.aip.question.QuestionDtos.ReviewDecision;
+import com.rabbit.aip.question.QuestionDtos.ReviewHistoryResponse;
 import com.rabbit.aip.security.CurrentSession;
+import com.rabbit.aip.user.UserRole;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 import org.springframework.stereotype.Service;
@@ -21,15 +26,21 @@ public class QuestionService {
     private final QuestionRepository questions;
     private final CurrentSession session;
     private final AuditService audit;
+    private final QuestionReviewRepository reviews;
+    private final NotificationService notifications;
 
     public QuestionService(
             QuestionRepository questions,
             CurrentSession session,
-            AuditService audit
+            AuditService audit,
+            QuestionReviewRepository reviews,
+            NotificationService notifications
     ) {
         this.questions = questions;
         this.session = session;
         this.audit = audit;
+        this.reviews = reviews;
+        this.notifications = notifications;
     }
 
     @Transactional(readOnly = true)
@@ -54,6 +65,26 @@ public class QuestionService {
     @Transactional(readOnly = true)
     public QuestionResponse get(UUID id) {
         return QuestionResponse.from(find(id));
+    }
+
+    @Transactional(readOnly = true)
+    public List<QuestionResponse> reviewQueue() {
+        return questions.findAllByOrganisationIdOrderByUpdatedAtDesc(
+                        session.organisationId()
+                ).stream()
+                .filter(question -> question.getStatus() == QuestionStatus.UNDER_REVIEW)
+                .map(QuestionResponse::from)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<ReviewHistoryResponse> reviewHistory(UUID id) {
+        find(id);
+        return reviews.findAllByOrganisationIdAndQuestionIdOrderByCreatedAtDesc(
+                        session.organisationId(), id
+                ).stream()
+                .map(ReviewHistoryResponse::from)
+                .toList();
     }
 
     @Transactional
@@ -169,11 +200,24 @@ public class QuestionService {
         audit.record(
                 "QB", "SUBMIT_FOR_REVIEW", "Question", id, "DRAFT", "UNDER_REVIEW"
         );
+        notifications.notifyRoles(
+                Set.of(UserRole.REVIEWER, UserRole.ACADEMIC_HEAD, UserRole.ORG_ADMIN),
+                NotificationType.WORKFLOW,
+                "Question waiting for review",
+                question.getCode() + " is ready for academic review.",
+                "/approvals",
+                true
+        );
         return QuestionResponse.from(question);
     }
 
     @Transactional
-    public QuestionResponse review(UUID id, ReviewDecision decision, String reason) {
+    public QuestionResponse review(
+            UUID id,
+            ReviewDecision decision,
+            String reason,
+            Set<ReviewChecklistItem> checklistItems
+    ) {
         Question question = find(id);
         if (question.getStatus() != QuestionStatus.UNDER_REVIEW) {
             throw DomainException.badRequest(
@@ -194,11 +238,26 @@ public class QuestionService {
                     "Return or rejection requires a reason of at least 10 characters."
             );
         }
+        if (decision == ReviewDecision.APPROVE
+                && !checklistItems.containsAll(Set.of(ReviewChecklistItem.values()))) {
+            throw DomainException.badRequest(
+                    "REVIEW_CHECKLIST_INCOMPLETE",
+                    "Complete every academic review check before approval."
+            );
+        }
         if (decision == ReviewDecision.APPROVE) {
             question.approve(session.userId());
         } else {
             question.returnToDraft(session.userId());
         }
+        reviews.save(new QuestionReview(
+                session.organisationId(),
+                id,
+                session.userId(),
+                decision,
+                reason == null ? null : reason.trim(),
+                checklistItems
+        ));
         audit.record(
                 "QRV",
                 decision.name(),
@@ -206,6 +265,14 @@ public class QuestionService {
                 id,
                 "UNDER_REVIEW",
                 question.getStatus().name() + (reason == null ? "" : ": " + reason.trim())
+        );
+        notifications.notifyUser(
+                question.getAuthorUserId(),
+                NotificationType.WORKFLOW,
+                "Question review completed",
+                question.getCode() + " was " + decision.name().toLowerCase(Locale.ROOT) + ".",
+                "/question-bank/" + id,
+                decision != ReviewDecision.APPROVE
         );
         return QuestionResponse.from(question);
     }

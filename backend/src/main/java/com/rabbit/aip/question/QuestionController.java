@@ -3,6 +3,7 @@ package com.rabbit.aip.question;
 import com.rabbit.aip.question.QuestionDtos.QuestionRequest;
 import com.rabbit.aip.question.QuestionDtos.QuestionResponse;
 import com.rabbit.aip.question.QuestionDtos.ReviewRequest;
+import com.rabbit.aip.question.QuestionDtos.ReviewHistoryResponse;
 import jakarta.validation.Valid;
 import java.util.List;
 import java.util.UUID;
@@ -44,6 +45,18 @@ public class QuestionController {
         return service.get(id);
     }
 
+    @GetMapping("/review-queue")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ORG_ADMIN','ACADEMIC_HEAD','REVIEWER')")
+    List<QuestionResponse> reviewQueue() {
+        return service.reviewQueue();
+    }
+
+    @GetMapping("/{id}/reviews")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ORG_ADMIN','ACADEMIC_HEAD','FACULTY','REVIEWER')")
+    List<ReviewHistoryResponse> reviewHistory(@PathVariable UUID id) {
+        return service.reviewHistory(id);
+    }
+
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     @PreAuthorize("hasAnyRole('SUPER_ADMIN','ORG_ADMIN','ACADEMIC_HEAD','FACULTY')")
@@ -72,6 +85,11 @@ public class QuestionController {
             @PathVariable UUID id,
             @Valid @RequestBody ReviewRequest request
     ) {
-        return service.review(id, request.decision(), request.reason());
+        return service.review(
+                id,
+                request.decision(),
+                request.reason(),
+                request.checklistItems()
+        );
     }
 }

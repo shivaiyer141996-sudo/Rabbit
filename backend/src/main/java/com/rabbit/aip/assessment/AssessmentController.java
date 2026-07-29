@@ -2,6 +2,8 @@ package com.rabbit.aip.assessment;
 
 import com.rabbit.aip.assessment.AssessmentDtos.AssessmentRequest;
 import com.rabbit.aip.assessment.AssessmentDtos.AssessmentResponse;
+import com.rabbit.aip.assessment.AssessmentDtos.AssessmentReviewRequest;
+import com.rabbit.aip.assessment.AssessmentDtos.AssessmentReviewResponse;
 import com.rabbit.aip.assessment.AssessmentDtos.ScheduleRequest;
 import jakarta.validation.Valid;
 import java.util.List;
@@ -18,7 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/v1/assessments")
-@PreAuthorize("hasAnyRole('SUPER_ADMIN','ORG_ADMIN','ACADEMIC_HEAD','FACULTY')")
+@PreAuthorize("hasAnyRole('SUPER_ADMIN','ORG_ADMIN','ACADEMIC_HEAD','FACULTY','REVIEWER')")
 public class AssessmentController {
 
     private final AssessmentService service;
@@ -39,16 +41,19 @@ public class AssessmentController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ORG_ADMIN','ACADEMIC_HEAD','FACULTY')")
     AssessmentResponse create(@Valid @RequestBody AssessmentRequest request) {
         return service.create(request);
     }
 
     @PostMapping("/{id}/publish")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ORG_ADMIN','ACADEMIC_HEAD','FACULTY')")
     AssessmentResponse publish(@PathVariable UUID id) {
         return service.publish(id);
     }
 
     @PostMapping("/{id}/schedule")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ORG_ADMIN','ACADEMIC_HEAD','FACULTY')")
     AssessmentResponse schedule(
             @PathVariable UUID id,
             @Valid @RequestBody ScheduleRequest request
@@ -59,5 +64,31 @@ public class AssessmentController {
                 request.endAt(),
                 request.eligibleSectionIds()
         );
+    }
+
+    @GetMapping("/review-queue")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ORG_ADMIN','ACADEMIC_HEAD','REVIEWER')")
+    List<AssessmentResponse> reviewQueue() {
+        return service.reviewQueue();
+    }
+
+    @GetMapping("/{id}/reviews")
+    List<AssessmentReviewResponse> reviewHistory(@PathVariable UUID id) {
+        return service.reviewHistory(id);
+    }
+
+    @PostMapping("/{id}/submit")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ORG_ADMIN','ACADEMIC_HEAD','FACULTY')")
+    AssessmentResponse submit(@PathVariable UUID id) {
+        return service.submit(id);
+    }
+
+    @PostMapping("/{id}/review")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ORG_ADMIN','ACADEMIC_HEAD','REVIEWER')")
+    AssessmentResponse review(
+            @PathVariable UUID id,
+            @Valid @RequestBody AssessmentReviewRequest request
+    ) {
+        return service.review(id, request.decision(), request.reason());
     }
 }

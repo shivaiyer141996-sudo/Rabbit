@@ -26,4 +26,9 @@ public interface QuestionRepository extends JpaRepository<Question, UUID> {
             String code,
             int version
     );
+
+    boolean existsByOrganisationIdAndSubjectId(
+            UUID organisationId,
+            UUID subjectId
+    );
 }

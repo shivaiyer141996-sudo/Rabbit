@@ -1,5 +1,6 @@
 package com.rabbit.aip.attempt;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -25,5 +26,24 @@ public interface AssessmentAttemptRepository
             UUID organisationId,
             UUID assessmentId,
             UUID studentUserId
+    );
+
+    Optional<AssessmentAttempt> findByIdAndOrganisationId(
+            UUID id,
+            UUID organisationId
+    );
+
+    List<AssessmentAttempt> findAllByOrganisationIdAndAssessmentIdOrderBySubmittedAtAsc(
+            UUID organisationId,
+            UUID assessmentId
+    );
+
+    List<AssessmentAttempt> findAllByOrganisationIdAndStudentUserIdOrderBySubmittedAtAsc(
+            UUID organisationId,
+            UUID studentUserId
+    );
+
+    List<AssessmentAttempt> findAllByOrganisationIdOrderBySubmittedAtDesc(
+            UUID organisationId
     );
 }
