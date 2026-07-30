@@ -120,6 +120,34 @@ END;
 $$;
 
 DO $$
+BEGIN
+    BEGIN
+        INSERT INTO pilot_sign_offs (
+            id, organisation_id, release_version, authorised_by,
+            authoriser_title, support_contact, rollback_owner, signed_at,
+            signed_by_user_id, created_at, updated_at
+        ) VALUES (
+            '27272727-2727-2727-2727-272727272727',
+            '12121212-1212-1212-1212-121212121212',
+            '1.0.0-pilot',
+            'Isolation Tester',
+            'Pilot Owner',
+            'support@example.test',
+            'Rollback Owner',
+            now(),
+            '33333333-3333-3333-3333-333333333301',
+            now(),
+            now()
+        );
+        RAISE EXCEPTION 'Pilot sign-off guard accepted an actor from another tenant';
+    EXCEPTION
+        WHEN check_violation THEN
+            RAISE NOTICE 'Cross-tenant pilot sign-off actor correctly rejected';
+    END;
+END;
+$$;
+
+DO $$
 DECLARE
     flag_count INTEGER;
 BEGIN

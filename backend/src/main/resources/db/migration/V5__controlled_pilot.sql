@@ -41,14 +41,15 @@ AS $$
 DECLARE
     actor_id UUID;
 BEGIN
-    actor_id := CASE TG_TABLE_NAME
-        WHEN 'pilot_check_results' THEN NEW.updated_by
-        WHEN 'pilot_sign_offs' THEN NEW.signed_by_user_id
-        ELSE NULL
-    END;
-
-    IF actor_id IS NULL AND TG_TABLE_NAME = 'pilot_check_results' THEN
-        RETURN NEW;
+    IF TG_TABLE_NAME = 'pilot_check_results' THEN
+        actor_id := NEW.updated_by;
+        IF actor_id IS NULL THEN
+            RETURN NEW;
+        END IF;
+    ELSIF TG_TABLE_NAME = 'pilot_sign_offs' THEN
+        actor_id := NEW.signed_by_user_id;
+    ELSE
+        RAISE EXCEPTION 'Unsupported pilot tenant-guard table: %', TG_TABLE_NAME;
     END IF;
 
     IF actor_id IS NULL OR NOT EXISTS (
