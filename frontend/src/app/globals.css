@@ -128,6 +128,72 @@ textarea:focus-visible {
   margin: 0 0 30px;
 }
 
+.activation-state {
+  align-items: center;
+  color: var(--muted);
+  display: flex;
+  gap: 10px;
+  min-height: 120px;
+}
+
+.activation-success {
+  color: var(--success);
+  display: grid;
+  gap: 12px;
+}
+
+.activation-success h2,
+.activation-success p {
+  margin: 0;
+}
+
+.activation-success p {
+  color: var(--muted);
+  margin-bottom: 12px;
+}
+
+.invitation-identity {
+  background: var(--canvas);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  display: grid;
+  gap: 4px;
+  margin-bottom: 24px;
+  padding: 16px;
+}
+
+.invitation-identity span,
+.invitation-identity small,
+.field-hint {
+  color: var(--muted);
+}
+
+.invitation-banner {
+  align-items: center;
+  background: var(--primary-soft);
+  border: 1px solid #d8ceff;
+  border-radius: 16px;
+  display: grid;
+  gap: 12px;
+  grid-template-columns: minmax(180px, 0.7fr) minmax(260px, 1.3fr) auto auto;
+  margin-bottom: 20px;
+  padding: 16px;
+}
+
+.invitation-banner > div {
+  display: grid;
+  gap: 4px;
+}
+
+.invitation-banner span {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.invitation-banner input {
+  min-width: 0;
+}
+
 .auth-visual {
   align-items: center;
   background:
@@ -3280,6 +3346,15 @@ textarea:focus-visible {
 }
 
 @media (max-width: 780px) {
+  .invitation-banner {
+    grid-template-columns: 1fr auto;
+  }
+
+  .invitation-banner > div,
+  .invitation-banner input {
+    grid-column: 1 / -1;
+  }
+
   .readiness-hero {
     align-items: start;
     grid-template-columns: auto 1fr;

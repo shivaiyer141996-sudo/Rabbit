@@ -7,6 +7,7 @@ import { FormEvent, useState } from "react";
 
 interface LoginResponse {
   requiresOrganisationSelection: boolean;
+  firstLogin?: boolean;
   role?: string;
   organisations: Array<{
     id: string;

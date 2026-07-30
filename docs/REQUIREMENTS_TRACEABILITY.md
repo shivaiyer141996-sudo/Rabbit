@@ -9,12 +9,13 @@ Status meanings:
 
 | Requirement group | Status | Evidence |
 | --- | --- | --- |
-| AUTH login, tenant selection, refresh, logout, lockout | Implemented | JWT gateway, rotating hashed refresh tokens, BCrypt, login audit, rate limits |
+| AUTH login, tenant selection, refresh, logout, lockout | Implemented | JWT gateway, rotating hashed refresh tokens, BCrypt, independently committed/row-locked failure counters, configurable lock expiry, full-stack PostgreSQL smoke |
+| AUTH invited-user activation | Implemented | Hashed expiring one-time tokens, strong password set, atomic account/membership activation, first-login E2E |
 | AUTH password recovery/provider delivery | Provider gate | Recovery interface and notification foundation; provider/consent approval required before activation |
 | ORG tenant isolation | Implemented | Signed tenant scope, tenant repositories, PostgreSQL relationship triggers, negative CI contract |
 | ORG academic structure | Implemented | Organisation, subject, topic, section, and academic-year foundation |
 | ORG live academic catalog | Implemented | Role-safe catalog API and live question/assessment/user/organisation interfaces |
-| USR role/status management | Implemented | Membership roles, method security, account state APIs |
+| USR role/status management | Implemented | Membership roles, method security, account state APIs, invitation issue/reissue controls |
 | USR/QB bulk import | Provider gate | `BULK_IMPORTS` defaults off pending institution template/data-governance approval |
 | DSH role-specific intelligence | Implemented | Role dashboard API and responsive intelligence interface |
 | QB Single/Multiple Correct MCQ | Implemented | Authoring, validation, versioning, bank, and database type constraint |
@@ -32,6 +33,7 @@ Status meanings:
 | SET settings, grading, academic masters | Implemented | Validated APIs/UI and contiguous 0–100 grade tests |
 | OPS observability and readiness | Implemented | Liveness/readiness, Prometheus, dependency probes, traffic/capacity/backlogs |
 | OPS rate limiting and security headers | Implemented | Redis + local fallback, Nginx edge zones, secure headers, production secret guard |
+| OPS software composition and secret assurance | Implemented | Clean production npm audit, Trivy API/web image SCA, dependency-review critical gate, Gitleaks history scan |
 | OPS feature rollout | Implemented | Tenant flags, deterministic percentage bucket, UI, audit |
 | OPS backup, restore, rollback | Pilot evidence | Checksum backup/restore scripts and runbook; quarterly drill must be evidenced |
 | NFR scale | Pilot evidence | k6 thresholds, pool/server limits, container-build gate; execute at target pilot load |

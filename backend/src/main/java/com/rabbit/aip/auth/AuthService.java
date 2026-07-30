@@ -14,6 +14,7 @@ import com.rabbit.aip.user.UserAccountRepository;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.time.Clock;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.HexFormat;
@@ -36,6 +37,8 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final AuditService audit;
+    private final LoginAttemptService loginAttempts;
+    private final Clock clock;
     private final long refreshTtlDays;
 
     public AuthService(
@@ -46,6 +49,8 @@ public class AuthService {
             PasswordEncoder passwordEncoder,
             JwtService jwtService,
             AuditService audit,
+            LoginAttemptService loginAttempts,
+            Clock clock,
             @Value("${rabbit.jwt.refresh-ttl-days}") long refreshTtlDays
     ) {
         this.users = users;
@@ -55,6 +60,8 @@ public class AuthService {
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
         this.audit = audit;
+        this.loginAttempts = loginAttempts;
+        this.clock = clock;
         this.refreshTtlDays = refreshTtlDays;
     }
 
@@ -62,15 +69,18 @@ public class AuthService {
     public AuthResponse login(String email, String password) {
         UserAccount user = users.findByEmailIgnoreCase(email.trim())
                 .orElseThrow(this::invalidCredentials);
-        if (user.getStatus() != AccountStatus.ACTIVE || user.isLocked()) {
+        if (user.getStatus() != AccountStatus.ACTIVE) {
             throw new DomainException(
                     "ACCOUNT_UNAVAILABLE",
-                    "Your account is inactive or locked. Contact your administrator.",
+                    "Your account is inactive. Contact your administrator.",
                     HttpStatus.LOCKED
             );
         }
+        if (user.isLocked(clock.instant())) throw accountLocked();
         if (!passwordEncoder.matches(password, user.getPasswordHash())) {
-            user.recordFailedAttempt();
+            LoginAttemptService.LoginAttemptResult result =
+                    loginAttempts.recordFailure(user.getId());
+            if (result.locked()) throw accountLocked();
             throw invalidCredentials();
         }
         user.clearFailedAttempts();
@@ -205,6 +215,7 @@ public class AuthService {
             OrganisationMembership membership,
             List<OrganisationChoice> choices
     ) {
+        boolean firstLogin = user.consumeFirstLogin();
         String rawRefresh = UUID.randomUUID() + "." + UUID.randomUUID();
         refreshTokens.save(new RefreshToken(
                 hash(rawRefresh),
@@ -219,7 +230,7 @@ public class AuthService {
                 rawRefresh,
                 jwtService.accessTtlSeconds(),
                 membership.getRole(),
-                user.isFirstLogin()
+                firstLogin
         );
     }
 
@@ -255,6 +266,14 @@ public class AuthService {
                 "REFRESH_TOKEN_INVALID",
                 "Your session has expired. Please sign in again.",
                 HttpStatus.UNAUTHORIZED
+        );
+    }
+
+    private DomainException accountLocked() {
+        return new DomainException(
+                "ACCOUNT_LOCKED",
+                "Too many unsuccessful sign-in attempts. Try again after the lock period.",
+                HttpStatus.LOCKED
         );
     }
 

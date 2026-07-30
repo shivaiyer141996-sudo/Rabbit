@@ -35,6 +35,7 @@ export async function POST(request: Request) {
     requiresOrganisationSelection: payload.requiresOrganisationSelection,
     organisations: payload.organisations ?? [],
     role: payload.role ?? null,
+    firstLogin: payload.firstLogin ?? false,
   });
 
   if (payload.requiresOrganisationSelection) {

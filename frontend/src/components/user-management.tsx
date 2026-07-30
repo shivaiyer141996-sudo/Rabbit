@@ -1,8 +1,10 @@
 "use client";
 
 import {
+  Copy,
   Download,
   Plus,
+  RefreshCw,
   Search,
   Upload,
   UserRoundCheck,
@@ -16,6 +18,7 @@ import { apiErrorMessage, apiFetch } from "@/lib/api";
 import {
   initials,
   type AcademicCatalog,
+  type InvitationIssue,
   type UserSummary,
 } from "@/lib/live-types";
 import type { UserRole } from "@/lib/types";
@@ -35,6 +38,8 @@ export function UserManagement() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
+  const [issuedInvitation, setIssuedInvitation] =
+    useState<InvitationIssue | null>(null);
   const [draft, setDraft] = useState({
     email: "",
     firstName: "",
@@ -84,7 +89,7 @@ export function UserManagement() {
     setError("");
     setMessage("");
     try {
-      await apiFetch<UserSummary>("/users", {
+      const issued = await apiFetch<InvitationIssue>("/users", {
         method: "POST",
         body: JSON.stringify({
           ...draft,
@@ -99,14 +104,50 @@ export function UserManagement() {
         sectionId: "",
       });
       setAdding(false);
+      setIssuedInvitation(issued);
       setMessage(
-        "Invitation record created. External invitation delivery remains disabled until a provider is approved.",
+        `Invitation created for ${issued.user.firstName} ${issued.user.lastName}.`,
       );
       await load();
     } catch (requestError) {
       setError(apiErrorMessage(requestError, "User could not be created."));
     } finally {
       setBusy("");
+    }
+  }
+
+  async function reissueInvitation(user: UserSummary) {
+    setBusy(user.membershipId);
+    setError("");
+    setMessage("");
+    try {
+      const issued = await apiFetch<InvitationIssue>(
+        `/users/${user.membershipId}/invitation`,
+        { method: "POST" },
+      );
+      setIssuedInvitation(issued);
+      setMessage(`A new activation link was generated for ${user.firstName}.`);
+    } catch (requestError) {
+      setError(
+        apiErrorMessage(
+          requestError,
+          "A new invitation link could not be generated.",
+        ),
+      );
+    } finally {
+      setBusy("");
+    }
+  }
+
+  async function copyInvitation() {
+    if (!issuedInvitation) return;
+    try {
+      await navigator.clipboard.writeText(issuedInvitation.activationUrl);
+      setMessage(
+        "Activation link copied. Share it only through an approved secure channel.",
+      );
+    } catch {
+      setError("Copy is unavailable in this browser. Select the link and copy it manually.");
     }
   }
 
@@ -198,11 +239,46 @@ export function UserManagement() {
       />
       {message && <div className="success-banner">{message}</div>}
       {error && <div className="form-error" role="alert">{error}</div>}
+      {issuedInvitation && (
+        <section className="invitation-banner" aria-label="New activation link">
+          <div>
+            <strong>One-time activation link</strong>
+            <span>
+              Expires {new Date(issuedInvitation.expiresAt).toLocaleString()}.
+              Generating another link invalidates this one.
+            </span>
+          </div>
+          <input
+            aria-label="Activation link"
+            onFocus={(event) => event.currentTarget.select()}
+            readOnly
+            value={issuedInvitation.activationUrl}
+          />
+          <button
+            className="button button-secondary"
+            onClick={() => void copyInvitation()}
+            type="button"
+          >
+            <Copy size={15} /> Copy link
+          </button>
+          <button
+            aria-label="Dismiss activation link"
+            className="icon-button"
+            onClick={() => setIssuedInvitation(null)}
+            type="button"
+          >
+            <X size={17} />
+          </button>
+        </section>
+      )}
 
       {adding && (
         <form className="form-section compact-form" onSubmit={create}>
           <h2>Create invitation record</h2>
-          <p>Email/SMS delivery remains provider-gated; this creates the audited account record.</p>
+          <p>
+            Rabbit creates a one-time activation link. Share it through your
+            institution&apos;s approved secure channel.
+          </p>
           <div className="field-row">
             <div className="field">
               <label htmlFor="new-first-name">First name</label>
@@ -348,6 +424,16 @@ export function UserManagement() {
                   type="button"
                 >
                   Activate
+                </button>
+              )}
+              {user.status === "INVITED" && (
+                <button
+                  className="button button-ghost"
+                  disabled={busy === user.membershipId}
+                  onClick={() => void reissueInvitation(user)}
+                  type="button"
+                >
+                  <RefreshCw size={15} /> New link
                 </button>
               )}
             </article>

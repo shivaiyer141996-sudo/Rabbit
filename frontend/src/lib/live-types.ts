@@ -134,6 +134,12 @@ export interface UserSummary {
   sectionId?: string;
 }
 
+export interface InvitationIssue {
+  user: UserSummary;
+  activationUrl: string;
+  expiresAt: string;
+}
+
 export interface StudentAssessmentSummary {
   id: string;
   title: string;

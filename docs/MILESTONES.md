@@ -81,6 +81,30 @@ Delivery boundary:
   be truthfully manufactured by the application.
 - Post–Release 1.0 capabilities remain excluded.
 
+## Milestone 4.1 — Release hardening (delivered)
+
+Milestone 4.1 contains only the blocking findings from the Milestone 4 technical
+review:
+
+- Persist failed credential counters in an independent row-locked transaction,
+  lock at the configured threshold, and reset cleanly after the configured expiry
+- Issue cryptographically random, hashed, expiring, one-time invitation tokens
+- Let invited users activate their account, set a strong password, and transition
+  both account and membership from `INVITED` to `ACTIVE` atomically
+- Consume the first-login marker exactly once and cover invitation, lockout, lock
+  expiry, and first login in the full-stack PostgreSQL smoke journey
+- Override vulnerable production `postcss` and `sharp` transitive versions and
+  enforce a clean `npm audit --omit=dev`
+- Add Gitleaks secret scanning, Trivy production-image SCA, and critical-severity
+  dependency-review failure gates to GitHub Actions
+
+Delivery boundary:
+
+- This hardening release does not add Milestone 5 or post–Release 1.0 product scope.
+- External email/SMS delivery remains provider-gated. An authorised administrator
+  receives the one-time activation URL and shares it through an approved channel.
+- Institution-owned pilot evidence and production operating approval remain required.
+
 ## Post–Release 1.0
 
 - AI-assisted question generation or recommendation

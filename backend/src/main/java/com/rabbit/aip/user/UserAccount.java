@@ -6,6 +6,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.Table;
+import java.time.Duration;
 import java.time.Instant;
 
 @Entity
@@ -88,18 +89,40 @@ public class UserAccount extends BaseEntity {
         return firstLogin;
     }
 
-    public boolean isLocked() {
-        return lockedUntil != null && lockedUntil.isAfter(Instant.now());
+    public boolean isLocked(Instant now) {
+        return lockedUntil != null && lockedUntil.isAfter(now);
     }
 
-    public void recordFailedAttempt() {
+    public void recordFailedAttempt(
+            int maximumAttempts,
+            Duration lockDuration,
+            Instant now
+    ) {
+        if (lockedUntil != null && !lockedUntil.isAfter(now)) {
+            clearFailedAttempts();
+        }
         failedAttempts += 1;
-        if (failedAttempts >= 5) lockedUntil = Instant.now().plusSeconds(30 * 60L);
+        if (failedAttempts >= maximumAttempts) {
+            lockedUntil = now.plus(lockDuration);
+        }
     }
 
     public void clearFailedAttempts() {
         failedAttempts = 0;
         lockedUntil = null;
+    }
+
+    public void activate(String encodedPassword) {
+        passwordHash = encodedPassword;
+        status = AccountStatus.ACTIVE;
+        firstLogin = true;
+        clearFailedAttempts();
+    }
+
+    public boolean consumeFirstLogin() {
+        boolean first = firstLogin;
+        firstLogin = false;
+        return first;
     }
 
     public void setStatus(AccountStatus status) {

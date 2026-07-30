@@ -4,7 +4,8 @@
 
 Release only an immutable `v*` tag after:
 
-1. CI frontend, backend, PostgreSQL contract, and container-build jobs pass.
+1. CI frontend, backend, PostgreSQL contract, secret scan, dependency audit, image
+   SCA, and container-build jobs pass.
 2. The UAT checklist is signed off for the pilot tenant.
 3. Production secrets are stored outside Git and the `production` profile starts cleanly.
 4. Database and MinIO backups complete and their SHA-256 manifest verifies.
@@ -34,6 +35,19 @@ Create `infra/deploy/production.env` from the example using a secret manager or 
 - Tenant operations console: `/operations`
 
 Alert when readiness is down for two consecutive minutes, five-minute server error rate exceeds 1%, p95 API latency exceeds 500 ms, the notification failed backlog is non-zero for 15 minutes, or a governance review exceeds 48 hours.
+
+## Identity hardening controls
+
+- `LOGIN_MAX_FAILED_ATTEMPTS` defaults to `5`.
+- `LOGIN_LOCK_DURATION` defaults to `PT30M`.
+- `INVITATION_TTL` defaults to `PT72H`.
+- `INVITATION_ACTIVATION_BASE_URL` must be the public HTTPS `/activate` route.
+
+Failed-login counters are intentionally committed even when authentication returns
+an error. Do not wrap or merge the independent login-attempt transaction into the
+outer authentication transaction. Invitation links are capability secrets: share
+them only through an institution-approved channel, never place them in tickets or
+logs, and reissue immediately if disclosure is suspected.
 
 ## Backup
 

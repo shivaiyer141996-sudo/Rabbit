@@ -6,6 +6,7 @@ import com.rabbit.aip.common.web.RateLimitService;
 import com.rabbit.aip.common.web.RequestMetrics;
 import com.rabbit.aip.common.web.RequestMetricsFilter;
 import java.nio.charset.StandardCharsets;
+import java.time.Clock;
 import java.util.Arrays;
 import java.util.Collection;
 import javax.crypto.SecretKey;
@@ -79,6 +80,11 @@ public class SecurityConfig {
     @Bean
     PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder(12);
+    }
+
+    @Bean
+    Clock clock() {
+        return Clock.systemUTC();
     }
 
     @Bean

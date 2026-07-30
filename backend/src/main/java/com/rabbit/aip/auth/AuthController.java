@@ -6,6 +6,10 @@ import com.rabbit.aip.auth.AuthDtos.LogoutRequest;
 import com.rabbit.aip.auth.AuthDtos.MeResponse;
 import com.rabbit.aip.auth.AuthDtos.RefreshRequest;
 import com.rabbit.aip.auth.AuthDtos.SelectOrganisationRequest;
+import com.rabbit.aip.auth.InvitationDtos.ActivateInvitationRequest;
+import com.rabbit.aip.auth.InvitationDtos.ActivationResponse;
+import com.rabbit.aip.auth.InvitationDtos.InvitationDetails;
+import com.rabbit.aip.auth.InvitationDtos.InvitationTokenRequest;
 import com.rabbit.aip.common.exception.DomainException;
 import com.rabbit.aip.organisation.Organisation;
 import com.rabbit.aip.organisation.OrganisationRepository;
@@ -25,17 +29,20 @@ import org.springframework.web.bind.annotation.RestController;
 public class AuthController {
 
     private final AuthService authService;
+    private final InvitationService invitationService;
     private final CurrentSession session;
     private final UserAccountRepository users;
     private final OrganisationRepository organisations;
 
     public AuthController(
             AuthService authService,
+            InvitationService invitationService,
             CurrentSession session,
             UserAccountRepository users,
             OrganisationRepository organisations
     ) {
         this.authService = authService;
+        this.invitationService = invitationService;
         this.session = session;
         this.users = users;
         this.organisations = organisations;
@@ -63,6 +70,20 @@ public class AuthController {
     ResponseEntity<Void> logout(@Valid @RequestBody LogoutRequest request) {
         authService.logout(request.refreshToken());
         return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/invitations/validate")
+    InvitationDetails validateInvitation(
+            @Valid @RequestBody InvitationTokenRequest request
+    ) {
+        return invitationService.validate(request.token());
+    }
+
+    @PostMapping("/invitations/activate")
+    ActivationResponse activateInvitation(
+            @Valid @RequestBody ActivateInvitationRequest request
+    ) {
+        return invitationService.activate(request.token(), request.password());
     }
 
     @GetMapping("/me")

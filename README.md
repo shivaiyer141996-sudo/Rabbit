@@ -57,6 +57,20 @@ Milestone 3 makes the codebase **GA-ready for controlled pilot validation**. Act
 
 Milestone 4 makes the interface suitable for genuine controlled-pilot execution. A deployment is not production-authorised until the institution records the mandatory evidence and completes sign-off in **Pilot readiness**.
 
+## Milestone 4.1 release hardening delivered
+
+- Failed-login counters persist despite rejected authentication transactions, with
+  configurable threshold, timed lock, expiry reset, and concurrent row locking
+- Invited users receive hashed, expiring, one-time activation links, set their own
+  strong password, and activate both account and membership atomically
+- Full-stack PostgreSQL smoke coverage proves invitation, first login, lockout, and
+  timed unlock alongside the existing controlled-pilot journey
+- Production npm advisories are resolved with tested transitive overrides
+- GitHub Actions now enforce production dependency audit, API/web image SCA,
+  full-history secret scanning, and critical dependency-review gates
+
+Milestone 4.1 is release hardening only. It does not begin Milestone 5.
+
 ## Run with Docker
 
 ```bash

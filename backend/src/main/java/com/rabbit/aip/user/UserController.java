@@ -1,19 +1,17 @@
 package com.rabbit.aip.user;
 
 import com.rabbit.aip.audit.AuditService;
+import com.rabbit.aip.auth.InvitationService;
 import com.rabbit.aip.common.exception.DomainException;
 import com.rabbit.aip.security.CurrentSession;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import java.security.SecureRandom;
-import java.util.Base64;
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -31,20 +29,20 @@ public class UserController {
     private final UserAccountRepository users;
     private final OrganisationMembershipRepository memberships;
     private final CurrentSession session;
-    private final PasswordEncoder passwords;
+    private final InvitationService invitations;
     private final AuditService audit;
 
     public UserController(
             UserAccountRepository users,
             OrganisationMembershipRepository memberships,
             CurrentSession session,
-            PasswordEncoder passwords,
+            InvitationService invitations,
             AuditService audit
     ) {
         this.users = users;
         this.memberships = memberships;
         this.session = session;
-        this.passwords = passwords;
+        this.invitations = invitations;
         this.audit = audit;
     }
 
@@ -62,34 +60,26 @@ public class UserController {
     }
 
     @PostMapping
-    @Transactional
-    UserResponse create(@Valid @RequestBody CreateUserRequest request) {
-        if (users.findByEmailIgnoreCase(request.email()).isPresent()) {
-            throw new DomainException(
-                    "EMAIL_ALREADY_EXISTS",
-                    "Email must be unique across the platform.",
-                    HttpStatus.CONFLICT
-            );
-        }
-        byte[] random = new byte[24];
-        new SecureRandom().nextBytes(random);
-        UserAccount user = users.save(new UserAccount(
+    InvitationResponse create(@Valid @RequestBody CreateUserRequest request) {
+        InvitationService.IssuedInvitation issued = invitations.create(
+                session.organisationId(),
+                session.userId(),
                 request.email(),
-                passwords.encode(Base64.getUrlEncoder().withoutPadding().encodeToString(random)),
                 request.firstName(),
                 request.lastName(),
-                AccountStatus.INVITED,
-                true
-        ));
-        OrganisationMembership membership = memberships.save(new OrganisationMembership(
-                session.organisationId(),
-                user.getId(),
                 request.role(),
-                AccountStatus.INVITED,
                 request.sectionId()
+        );
+        return InvitationResponse.from(issued);
+    }
+
+    @PostMapping("/{membershipId}/invitation")
+    InvitationResponse reissueInvitation(@PathVariable UUID membershipId) {
+        return InvitationResponse.from(invitations.reissue(
+                session.organisationId(),
+                session.userId(),
+                membershipId
         ));
-        audit.record("USR", "CREATE", "UserAccount", user.getId(), null, user.getEmail());
-        return UserResponse.from(user, membership);
     }
 
     @PatchMapping("/{membershipId}/status")
@@ -105,6 +95,13 @@ public class UserController {
                         "User membership was not found."
                 ));
         AccountStatus before = membership.getStatus();
+        if (before == AccountStatus.INVITED
+                || request.status() == AccountStatus.INVITED) {
+            throw DomainException.badRequest(
+                    "INVITATION_ACTIVATION_REQUIRED",
+                    "Invited users must activate their account using a valid invitation."
+            );
+        }
         membership.setStatus(request.status());
         UserAccount user = users.findById(membership.getUserId()).orElseThrow();
         audit.record(
@@ -130,7 +127,7 @@ public class UserController {
     record UpdateStatusRequest(@NotNull AccountStatus status) {
     }
 
-    record UserResponse(
+    public record UserResponse(
             UUID userId,
             UUID membershipId,
             String email,
@@ -153,6 +150,20 @@ public class UserController {
                     membership.getRole(),
                     membership.getStatus(),
                     membership.getSectionId()
+            );
+        }
+    }
+
+    record InvitationResponse(
+            UserResponse user,
+            String activationUrl,
+            Instant expiresAt
+    ) {
+        static InvitationResponse from(InvitationService.IssuedInvitation issued) {
+            return new InvitationResponse(
+                    UserResponse.from(issued.user(), issued.membership()),
+                    issued.activationUrl(),
+                    issued.expiresAt()
             );
         }
     }

@@ -82,7 +82,7 @@ info:
   app:
     name: Rabbit AiP
     version: 1.0.0
-    milestone: Release 1.0 Controlled Pilot
+    milestone: Release 1.0 Milestone 4.1 Hardening
 
 rabbit:
   jwt:
@@ -97,6 +97,12 @@ rabbit:
   cors:
     allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000,http://localhost}
   security:
+    authentication:
+      max-failed-attempts: ${LOGIN_MAX_FAILED_ATTEMPTS:5}
+      lock-duration: ${LOGIN_LOCK_DURATION:PT30M}
+    invitation:
+      ttl: ${INVITATION_TTL:PT72H}
+      activation-base-url: ${INVITATION_ACTIVATION_BASE_URL:http://localhost/activate}
     rate-limit:
       enabled: ${RATE_LIMIT_ENABLED:true}
       anonymous-per-minute: ${RATE_LIMIT_ANONYMOUS_PER_MINUTE:20}

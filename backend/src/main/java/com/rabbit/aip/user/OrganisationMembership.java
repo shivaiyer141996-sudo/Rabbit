@@ -69,4 +69,8 @@ public class OrganisationMembership extends BaseEntity {
     public void setStatus(AccountStatus status) {
         this.status = status;
     }
+
+    public void activateInvitation() {
+        status = AccountStatus.ACTIVE;
+    }
 }

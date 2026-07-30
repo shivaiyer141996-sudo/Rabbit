@@ -148,6 +148,31 @@ END;
 $$;
 
 DO $$
+BEGIN
+    BEGIN
+        INSERT INTO invitation_tokens (
+            id, organisation_id, user_id, membership_id, token_hash,
+            expires_at, created_by_user_id, created_at, updated_at
+        ) VALUES (
+            '28282828-2828-2828-2828-282828282828',
+            '12121212-1212-1212-1212-121212121212',
+            '33333333-3333-3333-3333-333333333301',
+            '44444444-4444-4444-4444-444444444401',
+            repeat('a', 64),
+            now() + interval '24 hours',
+            '33333333-3333-3333-3333-333333333301',
+            now(),
+            now()
+        );
+        RAISE EXCEPTION 'Invitation guard accepted a cross-tenant membership';
+    EXCEPTION
+        WHEN check_violation THEN
+            RAISE NOTICE 'Cross-tenant invitation correctly rejected';
+    END;
+END;
+$$;
+
+DO $$
 DECLARE
     flag_count INTEGER;
 BEGIN

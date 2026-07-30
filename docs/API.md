@@ -12,9 +12,12 @@ All tenant-owned endpoints derive the organisation from the signed access token.
 | POST | `/auth/select-organisation` | Exchange a selection token for tenant-scoped tokens |
 | POST | `/auth/refresh` | Rotate refresh token and issue a new access token |
 | POST | `/auth/logout` | Revoke the current refresh token |
+| POST | `/auth/invitations/validate` | Validate an expiring one-time invitation token |
+| POST | `/auth/invitations/activate` | Set the invited user's password and atomically activate account and membership |
 | GET | `/auth/me` | Return current user, organisation, and role |
 | GET/POST | `/organisations` | Organisation administration |
-| GET/POST | `/users` | Organisation user administration |
+| GET/POST | `/users` | List users or create an invitation with a one-time activation URL |
+| POST | `/users/{id}/invitation` | Invalidate and replace an invited user's activation URL |
 | PATCH | `/users/{id}/status` | Change membership state |
 | GET | `/academic-catalog` | Role-safe academic years, departments, sections, subjects, and topics |
 
@@ -87,7 +90,11 @@ All tenant-owned endpoints derive the organisation from the signed access token.
 | PUT | `/pilot-readiness/checks/{key}` | Record a pilot result, tester, evidence, defect, and notes |
 | POST | `/pilot-readiness/sign-off` | Lock and audit sign-off after every mandatory check passes |
 
-All API responses include `X-Trace-Id`. Rate-limited responses use status `429`, include `Retry-After` and `X-RateLimit-*` headers, and retain the standard error envelope.
+All API responses include `X-Trace-Id`. Rate-limited responses use status `429`,
+include `Retry-After` and `X-RateLimit-*` headers, and retain the standard error
+envelope. Failed credentials persist in an independent transaction; the default
+fifth failure locks the account for 30 minutes. Invitation tokens are stored only
+as SHA-256 hashes, expire after 72 hours by default, and are consumed once.
 
 ## Error envelope
 
