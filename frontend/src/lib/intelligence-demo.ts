@@ -171,6 +171,7 @@ export const demoAssessmentReport: AssessmentReport = {
       attemptId: "99999999-9999-9999-9999-999999999902",
       assessmentId: "77777777-7777-7777-7777-777777777703",
       assessmentTitle: "Physics Motion Progress Check",
+      studentName: "Rohan Iyer",
       submittedAt: "2026-07-15T04:54:00Z",
       score: 8,
       maxScore: 8,

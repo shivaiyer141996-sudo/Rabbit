@@ -94,6 +94,18 @@ export function AssessmentReportDetail({ assessmentId }: { assessmentId: string 
             >
               <Download size={15} /> Export CSV
             </a>
+            <a
+              className="button button-secondary"
+              href={`/gateway/backend/reports/assessments/${assessmentId}/export.pdf`}
+            >
+              <Download size={15} /> Export PDF
+            </a>
+            <a
+              className="button button-secondary"
+              href={`/gateway/backend/reports/assessments/${assessmentId}/export.xlsx`}
+            >
+              <Download size={15} /> Export Excel
+            </a>
             <button
               className="button button-primary"
               disabled={busy || !evaluation?.pendingPublicationCount}
@@ -138,7 +150,7 @@ export function AssessmentReportDetail({ assessmentId }: { assessmentId: string 
           <table className="data-table">
             <thead>
               <tr>
-                <th>Attempt</th>
+                <th>Student</th>
                 <th>Submitted</th>
                 <th>Score</th>
                 <th>Percentage</th>
@@ -149,7 +161,12 @@ export function AssessmentReportDetail({ assessmentId }: { assessmentId: string 
             <tbody>
               {report.studentResults.map((result) => (
                 <tr key={result.attemptId}>
-                  <td><code>{result.attemptId.slice(0, 8)}</code></td>
+                  <td>
+                    <strong>{result.studentName}</strong>
+                    <span className="table-subtitle">
+                      Attempt {result.attemptId.slice(0, 8)}
+                    </span>
+                  </td>
                   <td>{new Date(result.submittedAt).toLocaleString()}</td>
                   <td>{result.score} / {result.maxScore}</td>
                   <td>{result.percentage}%</td>

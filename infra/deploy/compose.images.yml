@@ -1,0 +1,23 @@
+services:
+  postgres:
+    restart: unless-stopped
+  redis:
+    restart: unless-stopped
+  rabbitmq:
+    restart: unless-stopped
+  minio:
+    restart: unless-stopped
+  backend:
+    image: ${RABBIT_API_IMAGE:?Set RABBIT_API_IMAGE to an immutable release image}
+    restart: unless-stopped
+    read_only: true
+    tmpfs:
+      - /tmp:size=128m,mode=1777
+  frontend:
+    image: ${RABBIT_WEB_IMAGE:?Set RABBIT_WEB_IMAGE to an immutable release image}
+    restart: unless-stopped
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m,mode=1777
+  nginx:
+    restart: unless-stopped

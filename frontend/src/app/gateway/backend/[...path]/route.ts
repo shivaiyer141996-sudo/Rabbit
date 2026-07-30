@@ -17,10 +17,15 @@ async function proxy(request: Request, context: RouteContext) {
       : await request.arrayBuffer();
 
   async function send(token?: string) {
+    const traceId = request.headers.get("x-trace-id");
+    const forwardedFor = request.headers.get("x-forwarded-for");
     return fetch(`${backend}/${path.join("/")}${url.search}`, {
       method: request.method,
       headers: {
         "Content-Type": request.headers.get("content-type") ?? "application/json",
+        Accept: request.headers.get("accept") ?? "*/*",
+        ...(traceId ? { "X-Trace-Id": traceId } : {}),
+        ...(forwardedFor ? { "X-Forwarded-For": forwardedFor } : {}),
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
       body: requestBody,
@@ -66,12 +71,28 @@ async function proxy(request: Request, context: RouteContext) {
 
   const responseBody =
     upstream.status === 204 ? null : await upstream.arrayBuffer();
+  const responseHeaders = new Headers();
+  [
+    "content-type",
+    "content-disposition",
+    "content-length",
+    "cache-control",
+    "x-content-type-options",
+    "x-trace-id",
+    "x-ratelimit-limit",
+    "x-ratelimit-remaining",
+    "x-ratelimit-reset",
+    "retry-after",
+  ].forEach((name) => {
+    const value = upstream.headers.get(name);
+    if (value) responseHeaders.set(name, value);
+  });
+  if (!responseHeaders.has("content-type")) {
+    responseHeaders.set("content-type", "application/json");
+  }
   return new NextResponse(responseBody, {
     status: upstream.status,
-    headers: {
-      "Content-Type":
-        upstream.headers.get("content-type") ?? "application/json",
-    },
+    headers: responseHeaders,
   });
 }
 

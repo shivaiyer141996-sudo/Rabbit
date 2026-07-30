@@ -42,13 +42,19 @@ Implementation boundary:
 - Milestone 2 exports operational CSV files. Complete styled PDF and native Excel generation remains Milestone 3.
 - In-app notifications are fully represented. Email/SMS adapters require environment-specific providers during GA hardening.
 
-## Milestone 3 — Release 1.0 GA
+## Milestone 3 — Release 1.0 GA readiness (delivered)
 
 - Performance, security, accessibility, backup, and disaster-recovery hardening
-- Complete PDF/Excel exports and operational dashboards
-- Production observability, rate limiting, feature flags, and deployment automation
-- Scale and isolation verification against Release 1.0 NFRs
-- UAT closure and controlled institutional pilot
+- Complete PDF/Excel exports and tenant operational dashboards
+- Production observability, dual-layer rate limiting, audited feature flags, and tagged image automation
+- PostgreSQL cross-tenant integrity contracts, container builds, and a repeatable k6 load profile
+- Controlled-pilot UAT checklist, release gates, rollback procedure, and operating runbook
+
+Delivery boundary:
+
+- The implementation and automated gates are complete in the repository.
+- A controlled institutional pilot is an environment-and-people activity. It is not claimed complete until the UAT checklist, restore drill, load evidence, accessibility review, and security review are signed off.
+- Email/SMS delivery remains feature-flagged off until an institution approves a provider, credentials, consent wording, monitoring, and escalation ownership.
 
 ## Post–Release 1.0
 

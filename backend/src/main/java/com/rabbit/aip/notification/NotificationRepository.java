@@ -6,6 +6,10 @@ import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface NotificationRepository extends JpaRepository<Notification, UUID> {
+    List<Notification> findAllByOrganisationIdOrderByCreatedAtDesc(
+            UUID organisationId
+    );
+
     List<Notification> findAllByOrganisationIdAndRecipientUserIdOrderByCreatedAtDesc(
             UUID organisationId,
             UUID recipientUserId
@@ -25,5 +29,10 @@ public interface NotificationRepository extends JpaRepository<Notification, UUID
     List<Notification> findTop50ByDeliveryStatusAndRetryCountLessThanOrderByCreatedAtAsc(
             DeliveryStatus status,
             int retryCount
+    );
+
+    long countByOrganisationIdAndDeliveryStatus(
+            UUID organisationId,
+            DeliveryStatus deliveryStatus
     );
 }

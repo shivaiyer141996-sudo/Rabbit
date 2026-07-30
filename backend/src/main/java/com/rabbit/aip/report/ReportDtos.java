@@ -44,6 +44,7 @@ public final class ReportDtos {
             UUID attemptId,
             UUID assessmentId,
             String assessmentTitle,
+            String studentName,
             Instant submittedAt,
             BigDecimal score,
             BigDecimal maxScore,

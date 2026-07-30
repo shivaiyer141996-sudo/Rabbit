@@ -1,6 +1,8 @@
 # Environment and secrets
 .env
 .env.local
+.env.production
+infra/deploy/production.env
 *.pem
 *.key
 
@@ -26,4 +28,5 @@ Thumbs.db
 
 # Runtime data
 data/
+backups/
 *.log

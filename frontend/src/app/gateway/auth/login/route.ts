@@ -5,9 +5,15 @@ const backend = process.env.BACKEND_INTERNAL_URL ?? "http://localhost:8080/api/v
 
 export async function POST(request: Request) {
   const body = await request.text();
+  const forwardedFor = request.headers.get("x-forwarded-for");
+  const traceId = request.headers.get("x-trace-id");
   const upstream = await fetch(`${backend}/auth/login`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      ...(forwardedFor ? { "X-Forwarded-For": forwardedFor } : {}),
+      ...(traceId ? { "X-Trace-Id": traceId } : {}),
+    },
     body,
     cache: "no-store",
   }).catch(() => null);

@@ -2,7 +2,7 @@
 
 Rabbit is a **Student Progress & Academic Intelligence Platform**. Assessments are the mechanism; student success is the outcome.
 
-This repository contains the Milestone 1 Foundation and Milestone 2 Intelligence implementation for Rabbit AiP Release 1.0. Release 1.0 is deliberately limited to web-based **Single Correct MCQ** and **Multiple Correct MCQ** workflows. AI, parent access, subjective evaluation, native mobile apps, proctoring, and LMS/ERP/SIS integrations are excluded.
+This repository contains the Milestone 1 Foundation, Milestone 2 Intelligence, and Milestone 3 GA-readiness implementation for Rabbit AiP Release 1.0. Release 1.0 is deliberately limited to web-based **Single Correct MCQ** and **Multiple Correct MCQ** workflows. AI, parent access, subjective evaluation, native mobile apps, proctoring, and LMS/ERP/SIS integrations are excluded.
 
 ## Milestone 1 delivered
 
@@ -29,6 +29,21 @@ This repository contains the Milestone 1 Foundation and Milestone 2 Intelligence
 - Responsive interfaces for dashboards, approvals, reports, settings, notifications, audit logs, and published student results
 - PostgreSQL Milestone 2 migration, demonstration intelligence data, and additional backend/frontend tests
 
+## Milestone 3 delivered
+
+- Styled, governed PDF reports and native three-sheet Excel workbooks alongside CSV
+- Tenant operations console for dependency health, traffic, capacity, workflow backlogs, and pilot release gates
+- Audited tenant feature flags with deterministic percentage rollouts
+- Redis-backed application rate limiting with safe in-process fallback and Nginx edge limits
+- Prometheus metrics, request latency/error instrumentation, trace/tenant/user log context, and readiness/liveness probes
+- Database tenant-integrity triggers and a PostgreSQL CI contract that rejects cross-tenant and cross-parent relationships
+- Hardened security headers, graceful shutdown, production secret validation, pool/server limits, and no-store exports
+- Reproducible PostgreSQL/MinIO backup and destructive-confirmation restore tooling
+- Container-build CI, tagged GHCR release automation with SBOM/provenance, and automated dependency update configuration
+- Controlled-pilot UAT, accessibility, load-test, backup/restore, rollback, and operations runbooks
+
+Milestone 3 makes the codebase **GA-ready for controlled pilot validation**. Actual production sign-off still requires institution UAT evidence, an environment-specific security review, a successful restore drill, approved notification providers, and a named operating team.
+
 ## Run with Docker
 
 ```bash
@@ -40,6 +55,7 @@ Open:
 
 - Portal: `http://localhost`
 - API health: `http://localhost/api/actuator/health`
+- Operations console: `http://localhost/operations`
 - RabbitMQ console: `http://localhost:15672`
 - MinIO console: `http://localhost:9001`
 
@@ -81,7 +97,7 @@ docker compose up postgres redis rabbitmq minio
 Rabbit/
 ├── frontend/            Next.js portal and assessment player
 ├── backend/             Spring Boot API and database migrations
-├── infra/nginx/         Reverse proxy configuration
+├── infra/               Reverse proxy, backup, deployment, database, and load tools
 ├── docs/                Architecture, milestones, API, and traceability
 ├── .github/workflows/   Continuous integration
 └── docker-compose.yml   Complete local environment
@@ -97,4 +113,4 @@ The implementation is derived from:
 
 Where the older PRD roadmap mentions AI in its third milestone, the CPO-approved FSD's explicit Release 1.0 constraint wins: **there are no AI features in Release 1.0**. AI capabilities are treated as post–Release 1.0.
 
-See [docs/MILESTONES.md](docs/MILESTONES.md), [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), and [docs/REQUIREMENTS_TRACEABILITY.md](docs/REQUIREMENTS_TRACEABILITY.md) for the implementation boundary and remaining GA hardening.
+See [docs/MILESTONES.md](docs/MILESTONES.md), [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), [docs/REQUIREMENTS_TRACEABILITY.md](docs/REQUIREMENTS_TRACEABILITY.md), and [docs/UAT_CHECKLIST.md](docs/UAT_CHECKLIST.md) for the implementation boundary and controlled-pilot exit gates.

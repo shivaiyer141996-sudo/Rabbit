@@ -46,4 +46,14 @@ public interface AssessmentAttemptRepository
     List<AssessmentAttempt> findAllByOrganisationIdOrderBySubmittedAtDesc(
             UUID organisationId
     );
+
+    long countByOrganisationIdAndStatus(
+            UUID organisationId,
+            AttemptStatus status
+    );
+
+    long countByOrganisationIdAndResultStatusAndSubmittedAtIsNotNull(
+            UUID organisationId,
+            ResultPublicationStatus resultStatus
+    );
 }

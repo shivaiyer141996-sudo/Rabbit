@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
+  Activity,
   BarChart3,
   BookOpenCheck,
   Building2,
@@ -75,6 +76,12 @@ const navigation: NavigationItem[] = [
     icon: ShieldCheck,
     roles: ["SUPER_ADMIN", "ORG_ADMIN"],
   },
+  {
+    href: "/operations",
+    label: "Operations",
+    icon: Activity,
+    roles: ["SUPER_ADMIN", "ORG_ADMIN"],
+  },
 ];
 
 export function AppShell({
@@ -100,11 +107,16 @@ export function AppShell({
 
   return (
     <div className="app-frame">
+      <a className="skip-link" href="#main-content">Skip to main content</a>
       <div
         className={`mobile-overlay ${mobileOpen ? "open" : ""}`}
         onClick={() => setMobileOpen(false)}
+        aria-hidden="true"
       />
-      <aside className={`sidebar ${mobileOpen ? "open" : ""}`}>
+      <aside
+        className={`sidebar ${mobileOpen ? "open" : ""}`}
+        id="workspace-navigation"
+      >
         <div className="sidebar-brand">
           <Image src="/rabbit-mark.svg" width={42} height={42} alt="" />
           <div className="brand-copy">
@@ -141,6 +153,7 @@ export function AppShell({
                 href={item.href}
                 key={item.href}
                 onClick={() => setMobileOpen(false)}
+                aria-current={active ? "page" : undefined}
               >
                 <item.icon size={17} />
                 {item.label}
@@ -184,6 +197,8 @@ export function AppShell({
             className="icon-button mobile-menu"
             onClick={() => setMobileOpen(true)}
             aria-label="Open navigation"
+            aria-controls="workspace-navigation"
+            aria-expanded={mobileOpen}
           >
             <Menu size={20} />
           </button>
@@ -199,7 +214,7 @@ export function AppShell({
           <NotificationPopover />
         </div>
       </header>
-      <main>{children}</main>
+      <main id="main-content" tabIndex={-1}>{children}</main>
     </div>
   );
 }

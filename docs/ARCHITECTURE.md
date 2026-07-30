@@ -1,8 +1,8 @@
-# Architecture
+# Release 1.0 architecture
 
 ## Shape
 
-Rabbit Milestones 1 and 2 use a modular monolith. This preserves strong transactional boundaries while the product and domain model are still evolving.
+Rabbit Release 1.0 uses a modular monolith. This preserves strong transactional boundaries while the product and domain model are still evolving.
 
 ```mermaid
 flowchart TB
@@ -13,6 +13,7 @@ flowchart TB
   API --> Cache[("Redis")]
   API --> Queue["RabbitMQ"]
   API --> Assets[("MinIO")]
+  API --> Metrics["Prometheus metrics"]
 ```
 
 ## Core boundaries
@@ -31,6 +32,8 @@ flowchart TB
 | `notification` | Tenant/user inbox, preferences, delivery status, and retry worker |
 | `audit` | Immutable event capture, search, trace context, and export |
 | `settings` | Organisation defaults, grading bands, branding, subjects, and topics |
+| `feature` | Tenant feature flags, deterministic rollout, and audit |
+| `operations` | Dependency probes, traffic, capacity, workflow health, and release gates |
 | `common` | Errors, audit fields, tenant context and API conventions |
 
 ## Multi-tenancy
@@ -40,7 +43,9 @@ flowchart TB
 - The selected organisation is signed into the access token as `org_id`.
 - Services obtain the tenant from the authenticated context and use tenant-scoped repository methods.
 - Client-supplied organisation identifiers never override the signed tenant context.
-- Database row-level security is a planned defence-in-depth control before production GA.
+- PostgreSQL triggers independently reject cross-tenant question, assessment, attempt, response, section, and option relationships.
+- CI applies every real PostgreSQL migration and executes negative isolation contracts.
+- Service repositories still require the signed organisation scope, so application and database controls reinforce each other.
 
 ## Security
 
@@ -50,6 +55,10 @@ flowchart TB
 - Method-level role checks guard administrative and academic workflows.
 - API errors use one stable envelope and do not disclose stack traces.
 - Secrets are injected through the environment and are never stored in source.
+- The production profile refuses local/default secrets, wildcard/local CORS, and an unidentified environment.
+- Redis-backed per-identity limits and Nginx per-IP limits protect authentication and API traffic.
+- Nginx applies clickjacking, MIME-sniffing, referrer, permissions, and content-security headers.
+- Sensitive report downloads are no-store and feature-flag governed.
 
 ## Reliability
 
@@ -62,3 +71,6 @@ flowchart TB
 - Reports only consume published results, preventing premature or mutable data from entering intelligence views.
 - In-app notifications are persisted and retryable; RabbitMQ remains available for environment-specific external delivery adapters.
 - Redis, RabbitMQ, and MinIO remain provisioned for GA caching, external-channel delivery, and file workflows.
+- Liveness/readiness probes, Prometheus metrics, trace IDs, request/error/latency counters, pool capacity, and tenant workflow backlogs support operations.
+- Tagged release workflows publish immutable API and web images with SBOM and provenance after environment approval.
+- Backups cover PostgreSQL and MinIO with a checksum manifest; restore requires an explicit destructive confirmation and post-restore smoke test.

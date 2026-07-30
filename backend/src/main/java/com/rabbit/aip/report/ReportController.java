@@ -5,10 +5,12 @@ import com.rabbit.aip.report.ReportDtos.FacultyPerformance;
 import com.rabbit.aip.report.ReportDtos.IntelligenceOverview;
 import com.rabbit.aip.report.ReportDtos.QuestionPerformance;
 import com.rabbit.aip.report.ReportDtos.StudentPerformanceReport;
+import com.rabbit.aip.report.ReportExportService.ExportedReport;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.UUID;
 import org.springframework.http.ContentDisposition;
+import org.springframework.http.CacheControl;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -23,9 +25,11 @@ import org.springframework.web.bind.annotation.RestController;
 public class ReportController {
 
     private final ReportService service;
+    private final ReportExportService exports;
 
-    public ReportController(ReportService service) {
+    public ReportController(ReportService service, ReportExportService exports) {
         this.service = service;
+        this.exports = exports;
     }
 
     @GetMapping("/overview")
@@ -79,5 +83,39 @@ public class ReportController {
                                 .toString()
                 )
                 .body(data);
+    }
+
+    @GetMapping(
+            value = "/assessments/{assessmentId}/export.pdf",
+            produces = MediaType.APPLICATION_PDF_VALUE
+    )
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ORG_ADMIN','ACADEMIC_HEAD','FACULTY')")
+    ResponseEntity<byte[]> exportAssessmentPdf(@PathVariable UUID assessmentId) {
+        return downloadable(exports.pdf(assessmentId));
+    }
+
+    @GetMapping(
+            value = "/assessments/{assessmentId}/export.xlsx",
+            produces = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ORG_ADMIN','ACADEMIC_HEAD','FACULTY')")
+    ResponseEntity<byte[]> exportAssessmentExcel(@PathVariable UUID assessmentId) {
+        return downloadable(exports.excel(assessmentId));
+    }
+
+    private ResponseEntity<byte[]> downloadable(ExportedReport report) {
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType(report.contentType()))
+                .contentLength(report.content().length)
+                .cacheControl(CacheControl.noStore())
+                .header(
+                        HttpHeaders.CONTENT_DISPOSITION,
+                        ContentDisposition.attachment()
+                                .filename(report.filename())
+                                .build()
+                                .toString()
+                )
+                .header("X-Content-Type-Options", "nosniff")
+                .body(report.content());
     }
 }

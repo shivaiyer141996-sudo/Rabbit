@@ -17,15 +17,20 @@ export default function ForgotPasswordPage() {
             <label htmlFor="recovery-email">Email address</label>
             <input id="recovery-email" type="email" placeholder="you@institution.edu" />
           </div>
-          <button className="button button-primary button-full">
-            Send OTP
+          <button
+            aria-describedby="recovery-provider-note"
+            className="button button-primary button-full"
+            disabled
+          >
+            Recovery unavailable in pilot
           </button>
           <Link className="button button-ghost button-full" href="/login">
             <ArrowLeft size={16} /> Back to sign in
           </Link>
-          <div className="demo-note">
-            OTP delivery is documented for Milestone 2 because it depends on the
-            notification worker. No recovery secret is exposed in Milestone 1.
+          <div className="demo-note" id="recovery-provider-note">
+            Recovery delivery remains disabled in the controlled pilot until the
+            institution approves its email provider, consent wording, and support
+            escalation process. No recovery secret is exposed by this page.
           </div>
         </div>
       </section>

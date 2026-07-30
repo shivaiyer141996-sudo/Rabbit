@@ -135,9 +135,24 @@ public class ReportService {
         long passed = percentages.stream()
                 .filter(value -> value.compareTo(passMark) >= 0)
                 .count();
+        Map<UUID, String> studentNames = users.findAllById(
+                        published.stream()
+                                .map(AssessmentAttempt::getStudentUserId)
+                                .distinct()
+                                .toList()
+                ).stream()
+                .collect(Collectors.toMap(
+                        UserAccount::getId,
+                        user -> user.getFirstName() + " " + user.getLastName()
+                ));
         List<StudentResultPoint> studentResults = published.stream()
                 .sorted(Comparator.comparing(AssessmentAttempt::getSubmittedAt))
-                .map(item -> resultPoint(item, assessment, "STABLE"))
+                .map(item -> resultPoint(
+                        item,
+                        assessment,
+                        "STABLE",
+                        studentNames.getOrDefault(item.getStudentUserId(), "Unknown student")
+                ))
                 .toList();
         return new AssessmentReport(
                 assessmentId,
@@ -203,7 +218,10 @@ public class ReportService {
             if (assessment == null) continue;
             List<BigDecimal> untilNow = percentages.subList(0, index + 1);
             points.add(resultPoint(
-                    attempt, assessment, ReportMath.trajectory(untilNow)
+                    attempt,
+                    assessment,
+                    ReportMath.trajectory(untilNow),
+                    student.getFirstName() + " " + student.getLastName()
             ));
         }
         BigDecimal passMark = organisationSettings().getAtRiskThreshold();
@@ -293,12 +311,7 @@ public class ReportService {
                 "student,assessment,score,max_score,percentage,grade,submitted_at\n"
         );
         report.studentResults().forEach(item -> {
-            UserAccount student = attempts.findByIdAndOrganisationId(
-                            item.attemptId(), session.organisationId()
-                    )
-                    .flatMap(attempt -> users.findById(attempt.getStudentUserId()))
-                    .orElseThrow();
-            csv.append(cell(student.getFirstName() + " " + student.getLastName())).append(',')
+            csv.append(cell(item.studentName())).append(',')
                     .append(cell(item.assessmentTitle())).append(',')
                     .append(cell(item.score())).append(',')
                     .append(cell(item.maxScore())).append(',')
@@ -428,12 +441,14 @@ public class ReportService {
     private StudentResultPoint resultPoint(
             AssessmentAttempt attempt,
             Assessment assessment,
-            String trajectory
+            String trajectory,
+            String studentName
     ) {
         return new StudentResultPoint(
                 attempt.getId(),
                 assessment.getId(),
                 assessment.getTitle(),
+                studentName,
                 attempt.getSubmittedAt(),
                 attempt.getScore(),
                 attempt.getMaxScore(),

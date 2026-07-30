@@ -8,7 +8,7 @@ RUN mvn --batch-mode package -DskipTests
 FROM eclipse-temurin:17-jre-alpine
 WORKDIR /app
 RUN addgroup -S rabbit && adduser -S rabbit -G rabbit
-COPY --from=builder /workspace/target/rabbit-aip-api-0.1.0.jar app.jar
+COPY --from=builder /workspace/target/rabbit-aip-api.jar app.jar
 USER rabbit
 EXPOSE 8080
-ENTRYPOINT ["java", "-XX:MaxRAMPercentage=75", "-jar", "/app/app.jar"]
+ENTRYPOINT ["java", "-XX:MaxRAMPercentage=75", "-XX:+ExitOnOutOfMemoryError", "-jar", "/app/app.jar"]

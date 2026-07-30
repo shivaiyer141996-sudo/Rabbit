@@ -15,9 +15,15 @@ export async function POST(request: Request) {
   }
 
   const requestBody = await request.json();
+  const forwardedFor = request.headers.get("x-forwarded-for");
+  const traceId = request.headers.get("x-trace-id");
   const upstream = await fetch(`${backend}/auth/select-organisation`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      ...(forwardedFor ? { "X-Forwarded-For": forwardedFor } : {}),
+      ...(traceId ? { "X-Trace-Id": traceId } : {}),
+    },
     body: JSON.stringify({ ...requestBody, selectionToken }),
     cache: "no-store",
   }).catch(() => null);

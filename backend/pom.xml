@@ -13,9 +13,9 @@
 
     <groupId>com.rabbit</groupId>
     <artifactId>rabbit-aip-api</artifactId>
-    <version>0.2.0</version>
+    <version>1.0.0</version>
     <name>Rabbit AiP API</name>
-    <description>Milestone 2 Intelligence API for Rabbit AiP</description>
+    <description>Rabbit AiP Release 1.0 GA API</description>
 
     <properties>
         <java.version>17</java.version>
@@ -56,6 +56,11 @@
             <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
         <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-registry-prometheus</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
             <groupId>org.flywaydb</groupId>
             <artifactId>flyway-core</artifactId>
         </dependency>
@@ -87,6 +92,7 @@
     </dependencies>
 
     <build>
+        <finalName>rabbit-aip-api</finalName>
         <plugins>
             <plugin>
                 <groupId>org.springframework.boot</groupId>

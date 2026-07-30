@@ -1,6 +1,10 @@
 package com.rabbit.aip.config;
 
 import com.nimbusds.jose.jwk.source.ImmutableSecret;
+import com.rabbit.aip.common.web.RateLimitFilter;
+import com.rabbit.aip.common.web.RateLimitService;
+import com.rabbit.aip.common.web.RequestMetrics;
+import com.rabbit.aip.common.web.RequestMetricsFilter;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Collection;
@@ -25,6 +29,7 @@ import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
+import org.springframework.security.oauth2.server.resource.web.authentication.BearerTokenAuthenticationFilter;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
@@ -37,8 +42,14 @@ public class SecurityConfig {
     @Bean
     SecurityFilterChain securityFilterChain(
             HttpSecurity http,
-            Converter<Jwt, ? extends AbstractAuthenticationToken> jwtConverter
+            Converter<Jwt, ? extends AbstractAuthenticationToken> jwtConverter,
+            RateLimitService rateLimitService,
+            RequestMetrics requestMetrics
     ) throws Exception {
+        RateLimitFilter rateLimitFilter = new RateLimitFilter(
+                rateLimitService, requestMetrics
+        );
+        RequestMetricsFilter requestMetricsFilter = new RequestMetricsFilter(requestMetrics);
         return http
                 .csrf(csrf -> csrf.disable())
                 .cors(cors -> {
@@ -49,10 +60,18 @@ public class SecurityConfig {
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers("/api/v1/auth/**").permitAll()
                         .requestMatchers("/actuator/health/**", "/actuator/info").permitAll()
+                        .requestMatchers("/actuator/prometheus")
+                            .hasAnyRole("SUPER_ADMIN", "ORG_ADMIN")
                         .anyRequest().authenticated()
                 )
                 .oauth2ResourceServer(resource ->
                         resource.jwt(jwt -> jwt.jwtAuthenticationConverter(jwtConverter))
+                )
+                .addFilterAfter(
+                        rateLimitFilter, BearerTokenAuthenticationFilter.class
+                )
+                .addFilterBefore(
+                        requestMetricsFilter, BearerTokenAuthenticationFilter.class
                 )
                 .build();
     }

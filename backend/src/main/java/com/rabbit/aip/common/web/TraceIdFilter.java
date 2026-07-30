@@ -24,7 +24,8 @@ public class TraceIdFilter extends OncePerRequestFilter {
             FilterChain filterChain
     ) throws ServletException, IOException {
         String traceId = Optional.ofNullable(request.getHeader("X-Trace-Id"))
-                .filter(value -> value.length() <= 64)
+                .map(String::trim)
+                .filter(value -> value.matches("[A-Za-z0-9._-]{8,64}"))
                 .orElseGet(() -> UUID.randomUUID().toString());
         MDC.put("traceId", traceId);
         response.setHeader("X-Trace-Id", traceId);

@@ -1,6 +1,7 @@
 package com.rabbit.aip.question;
 
 import java.util.Collection;
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -30,5 +31,16 @@ public interface QuestionRepository extends JpaRepository<Question, UUID> {
     boolean existsByOrganisationIdAndSubjectId(
             UUID organisationId,
             UUID subjectId
+    );
+
+    long countByOrganisationIdAndStatus(
+            UUID organisationId,
+            QuestionStatus status
+    );
+
+    long countByOrganisationIdAndStatusAndUpdatedAtBefore(
+            UUID organisationId,
+            QuestionStatus status,
+            Instant updatedBefore
     );
 }

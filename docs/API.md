@@ -60,6 +60,8 @@ All tenant-owned endpoints derive the organisation from the signed access token.
 | GET | `/reports/questions` | Question quality analytics |
 | GET | `/reports/faculty` | Faculty contribution report |
 | GET | `/reports/assessments/{id}/export` | Assessment CSV snapshot |
+| GET | `/reports/assessments/{id}/export.pdf` | Styled governed PDF report |
+| GET | `/reports/assessments/{id}/export.xlsx` | Native Excel workbook with summary, students, and questions |
 
 ## Notifications, audit, and settings
 
@@ -77,6 +79,11 @@ All tenant-owned endpoints derive the organisation from the signed access token.
 | POST | `/settings/subjects` | Create a subject |
 | PATCH | `/settings/subjects/{id}/deactivate` | Deactivate unused subject |
 | POST | `/settings/topics` | Create a topic |
+| GET | `/operations/readiness` | Admin-only dependency, traffic, capacity, workflow, and GA gate snapshot |
+| GET | `/feature-flags` | Admin-only tenant feature rollout state |
+| PATCH | `/feature-flags/{key}` | Audit and update enabled state and rollout percentage |
+
+All API responses include `X-Trace-Id`. Rate-limited responses use status `429`, include `Retry-After` and `X-RateLimit-*` headers, and retain the standard error envelope.
 
 ## Error envelope
 

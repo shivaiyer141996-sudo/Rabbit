@@ -19,4 +19,9 @@ public interface AssessmentRepository extends JpaRepository<Assessment, UUID> {
             UUID organisationId,
             AssessmentStatus status
     );
+    long countByOrganisationIdAndStatusAndUpdatedAtBefore(
+            UUID organisationId,
+            AssessmentStatus status,
+            Instant updatedBefore
+    );
 }

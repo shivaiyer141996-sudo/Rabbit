@@ -146,6 +146,7 @@ export interface StudentResultPoint {
   attemptId: string;
   assessmentId: string;
   assessmentTitle: string;
+  studentName: string;
   submittedAt: string;
   score: number;
   maxScore: number;
@@ -250,4 +251,67 @@ export interface SettingsBundle {
   gradeBands: GradeBand[];
   subjects: Array<{ id: string; code: string; name: string; active: boolean }>;
   topics: Array<{ id: string; subjectId: string; name: string; active: boolean }>;
+}
+
+export type FeatureFlagKey =
+  | "PDF_EXPORTS"
+  | "EXCEL_EXPORTS"
+  | "OPERATIONS_CONSOLE"
+  | "PILOT_MODE"
+  | "BULK_IMPORTS"
+  | "EXTERNAL_DELIVERY";
+
+export interface FeatureFlag {
+  key: FeatureFlagKey;
+  label: string;
+  description: string;
+  enabled: boolean;
+  rolloutPercentage: number;
+  activeForCurrentUser: boolean;
+}
+
+export interface DependencyCheck {
+  name: string;
+  status: "UP" | "DOWN";
+  latencyMs: number;
+  detail: string;
+}
+
+export interface OperationalSnapshot {
+  overallStatus: "READY" | "READY_WITH_ACTIONS" | "NOT_READY";
+  generatedAt: string;
+  releaseVersion: string;
+  environment: string;
+  uptimeSeconds: number;
+  dependencies: DependencyCheck[];
+  traffic: {
+    requests: number;
+    serverErrors: number;
+    errorRate: number;
+    averageLatencyMs: number;
+    rateLimitedRequests: number;
+  };
+  capacity: {
+    databaseActiveConnections: number;
+    databaseIdleConnections: number;
+    databaseMaximumConnections: number;
+    jvmUsedMemoryMb: number;
+    jvmMaximumMemoryMb: number;
+    availableProcessors: number;
+  };
+  workflows: {
+    activeAssessmentAttempts: number;
+    pendingResultPublications: number;
+    pendingQuestionReviews: number;
+    pendingAssessmentReviews: number;
+    queuedNotifications: number;
+    failedNotifications: number;
+    overdueReviewItems: number;
+  };
+  readiness: Array<{
+    key: string;
+    label: string;
+    status: "PASS" | "WARN" | "FAIL";
+    detail: string;
+  }>;
 }
