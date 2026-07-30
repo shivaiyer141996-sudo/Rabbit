@@ -68,7 +68,7 @@ public class RateLimitService {
             return new Decision(
                     count <= limit,
                     limit,
-                    Math.max(0, limit - (int) count),
+                    Math.max(0, limit - count.intValue()),
                     Instant.now().plusSeconds(60)
             );
         } catch (RuntimeException unavailable) {
