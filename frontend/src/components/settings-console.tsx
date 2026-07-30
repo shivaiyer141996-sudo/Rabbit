@@ -10,22 +10,45 @@ import {
   SlidersHorizontal,
 } from "lucide-react";
 import { FormEvent, useEffect, useState } from "react";
+import { ErrorState, LoadingState } from "@/components/data-state";
 import { PageHeader } from "@/components/page-header";
-import { apiFetch, ApiError } from "@/lib/api";
-import { demoSettings } from "@/lib/intelligence-demo";
+import { apiErrorMessage, apiFetch, ApiError } from "@/lib/api";
 import { validateGradeBands } from "@/lib/settings-validation";
 import type { GradeBand, SettingsBundle } from "@/lib/types";
 
 type SettingsTab = "general" | "grading" | "masters";
 
+const emptySettings: SettingsBundle = {
+  general: {
+    timezone: "Asia/Kolkata",
+    language: "en",
+    passPercentage: 40,
+    atRiskThreshold: 35,
+    defaultDurationMinutes: 45,
+    defaultAttemptsAllowed: 1,
+    shuffleQuestions: true,
+    shuffleOptions: false,
+    emailNotificationsEnabled: false,
+    smsNotificationsEnabled: false,
+    auditRetentionDays: 365,
+    displayName: "",
+    primaryColour: "#5936C8",
+  },
+  gradeBands: [],
+  subjects: [],
+  topics: [],
+};
+
 export function SettingsConsole() {
   const [tab, setTab] = useState<SettingsTab>("general");
-  const [bundle, setBundle] = useState<SettingsBundle>(demoSettings);
+  const [bundle, setBundle] = useState<SettingsBundle>(emptySettings);
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
   const [live, setLive] = useState(false);
   const [subjectCode, setSubjectCode] = useState("");
   const [subjectName, setSubjectName] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
 
   useEffect(() => {
     let active = true;
@@ -35,7 +58,14 @@ export function SettingsConsole() {
         setBundle(value);
         setLive(true);
       })
-      .catch(() => setLive(false));
+      .catch((requestError) => {
+        if (!active) return;
+        setLive(false);
+        setLoadError(apiErrorMessage(requestError, "Settings could not be loaded."));
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
     return () => {
       active = false;
     };
@@ -131,19 +161,21 @@ export function SettingsConsole() {
     }
   }
 
+  if (loading) {
+    return <div className="page"><LoadingState label="Loading live organisation settings…" /></div>;
+  }
+  if (!live) {
+    return <div className="page"><ErrorState message={loadError} /></div>;
+  }
+
   return (
     <div className="page">
       <PageHeader
-        eyebrow="Organisation configuration"
+        eyebrow="Organisation configuration · Live"
         title="Settings & academic masters"
         description="Configure grading, assessment defaults, notifications, branding, and master data without code changes."
       />
 
-      {!live && (
-        <div className="preview-banner">
-          Preview settings are visible until the live API is available.
-        </div>
-      )}
       {message && <div className="workflow-message">{message}</div>}
 
       <div className="segmented-control" role="tablist" aria-label="Settings category">

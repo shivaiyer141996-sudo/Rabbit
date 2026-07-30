@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 
 const backend = process.env.BACKEND_INTERNAL_URL ?? "http://localhost:8080/api/v1";
+const secureCookies = process.env.SESSION_COOKIE_SECURE === "true";
 
 type RouteContext = { params: Promise<{ path: string[] }> };
 
@@ -53,14 +54,14 @@ async function proxy(request: Request, context: RouteContext) {
       accessToken = refreshed.accessToken;
       store.set("rabbit_access_token", refreshed.accessToken, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
+        secure: secureCookies,
         sameSite: "strict",
         path: "/",
         maxAge: refreshed.accessTokenExpiresIn,
       });
       store.set("rabbit_refresh_token", refreshed.refreshToken, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
+        secure: secureCookies,
         sameSite: "strict",
         path: "/",
         maxAge: 60 * 60 * 24 * 7,

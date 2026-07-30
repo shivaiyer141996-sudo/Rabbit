@@ -9,6 +9,8 @@ Release only an immutable `v*` tag after:
 3. Production secrets are stored outside Git and the `production` profile starts cleanly.
 4. Database and MinIO backups complete and their SHA-256 manifest verifies.
 5. A named rollback owner and pilot support contact are on duty.
+6. The tenant's `/pilot-readiness` register shows every mandatory check as passed
+   and contains the institution's locked sign-off.
 
 The tag-triggered `Release images` workflow publishes SBOM/provenance-enabled API and web images to GitHub Container Registry. Production deployment remains an explicit environment-approved action.
 
@@ -68,4 +70,4 @@ After restore, verify readiness, login, question assets, one student assessment,
 
 ## Pilot closure
 
-A controlled pilot is not GA sign-off by itself. Close it only when the UAT checklist, accessibility review, load-test evidence, restore evidence, security review, and operational ownership are recorded. Provider-backed email/SMS remains disabled until credentials, consent wording, delivery monitoring, and escalation ownership are approved.
+A controlled pilot is not GA sign-off by itself. Close it only when the UAT checklist, accessibility review, load-test evidence, restore evidence, security review, and operational ownership are recorded in `/pilot-readiness`, and an authorised institution representative completes the locked sign-off. Provider-backed email/SMS remains disabled until credentials, consent wording, delivery monitoring, and escalation ownership are approved.

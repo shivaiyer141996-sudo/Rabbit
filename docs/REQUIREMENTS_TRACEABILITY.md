@@ -13,6 +13,7 @@ Status meanings:
 | AUTH password recovery/provider delivery | Provider gate | Recovery interface and notification foundation; provider/consent approval required before activation |
 | ORG tenant isolation | Implemented | Signed tenant scope, tenant repositories, PostgreSQL relationship triggers, negative CI contract |
 | ORG academic structure | Implemented | Organisation, subject, topic, section, and academic-year foundation |
+| ORG live academic catalog | Implemented | Role-safe catalog API and live question/assessment/user/organisation interfaces |
 | USR role/status management | Implemented | Membership roles, method security, account state APIs |
 | USR/QB bulk import | Provider gate | `BULK_IMPORTS` defaults off pending institution template/data-governance approval |
 | DSH role-specific intelligence | Implemented | Role dashboard API and responsive intelligence interface |
@@ -35,4 +36,6 @@ Status meanings:
 | OPS backup, restore, rollback | Pilot evidence | Checksum backup/restore scripts and runbook; quarterly drill must be evidenced |
 | NFR scale | Pilot evidence | k6 thresholds, pool/server limits, container-build gate; execute at target pilot load |
 | Accessibility | Pilot evidence | Skip navigation, focus state, semantic labels, reduced motion, responsive/print views; human audit required |
+| PIL controlled-pilot evidence and sign-off | Implemented | Tenant-scoped check register, evidence/defect capture, mandatory gate, locked sign-off, audit trail |
+| PIL institutional execution | Pilot evidence | Named institution must perform checks and provide genuine evidence before sign-off |
 | Release 1.0 exclusions | Post–Release 1.0 | AI, predictive models, parent portal, subjective grading, native app, proctoring, LMS/ERP/SIS/payment integrations |

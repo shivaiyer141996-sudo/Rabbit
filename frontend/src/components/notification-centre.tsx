@@ -11,9 +11,9 @@ import {
   Save,
 } from "lucide-react";
 import { useEffect, useState } from "react";
+import { ErrorState, LoadingState } from "@/components/data-state";
 import { PageHeader } from "@/components/page-header";
-import { apiFetch } from "@/lib/api";
-import { demoNotifications } from "@/lib/intelligence-demo";
+import { apiErrorMessage, apiFetch } from "@/lib/api";
 import type { NotificationInbox } from "@/lib/types";
 
 interface Preferences {
@@ -35,12 +35,17 @@ const defaultPreferences: Preferences = {
 };
 
 export function NotificationCentre() {
-  const [inbox, setInbox] = useState<NotificationInbox>(demoNotifications);
+  const [inbox, setInbox] = useState<NotificationInbox>({
+    unreadCount: 0,
+    items: [],
+  });
   const [preferences, setPreferences] =
     useState<Preferences>(defaultPreferences);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
   const [live, setLive] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     let active = true;
@@ -54,16 +59,26 @@ export function NotificationCentre() {
         setPreferences(nextPreferences);
         setLive(true);
       })
-      .catch(() => setLive(false));
+      .catch((requestError) => {
+        if (!active) return;
+        setLive(false);
+        setError(apiErrorMessage(requestError, "Notifications could not be loaded."));
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
     return () => {
       active = false;
     };
   }, []);
 
   async function markRead(id: string) {
-    await apiFetch(`/notifications/${id}/read`, { method: "PATCH" }).catch(
-      () => undefined,
-    );
+    try {
+      await apiFetch(`/notifications/${id}/read`, { method: "PATCH" });
+    } catch (requestError) {
+      setError(apiErrorMessage(requestError, "Notification could not be updated."));
+      return;
+    }
     setInbox((current) => {
       const target = current.items.find((item) => item.id === id);
       return {
@@ -76,9 +91,12 @@ export function NotificationCentre() {
   }
 
   async function markAllRead() {
-    await apiFetch("/notifications/read-all", { method: "PATCH" }).catch(
-      () => undefined,
-    );
+    try {
+      await apiFetch("/notifications/read-all", { method: "PATCH" });
+    } catch (requestError) {
+      setError(apiErrorMessage(requestError, "Notifications could not be updated."));
+      return;
+    }
     setInbox((current) => ({
       unreadCount: 0,
       items: current.items.map((item) => ({ ...item, read: true })),
@@ -96,6 +114,8 @@ export function NotificationCentre() {
       setPreferences(saved);
       setLive(true);
       setMessage("Notification preferences saved.");
+    } catch (requestError) {
+      setError(apiErrorMessage(requestError, "Preferences could not be saved."));
     } finally {
       setBusy(false);
     }
@@ -139,10 +159,11 @@ export function NotificationCentre() {
         }
       />
 
-      {!live && <div className="preview-banner">Preview notifications are currently shown.</div>}
+      {loading && <LoadingState label="Loading live notifications…" />}
+      {!loading && error && <ErrorState message={error} />}
       {message && <div className="success-banner">{message}</div>}
 
-      <div className="notification-page-grid">
+      {!loading && live && <div className="notification-page-grid">
         <section className="panel inbox-panel">
           <div className="panel-header">
             <div><h2>Inbox</h2><p>{inbox.unreadCount} unread notification(s)</p></div>
@@ -192,7 +213,7 @@ export function NotificationCentre() {
             <Save size={15} /> Save preferences
           </button>
         </aside>
-      </div>
+      </div>}
     </div>
   );
 }

@@ -3050,6 +3050,203 @@ textarea:focus-visible {
   color: var(--danger);
 }
 
+.data-state {
+  align-items: center;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  display: flex;
+  gap: 12px;
+  min-height: 92px;
+  padding: 20px;
+}
+
+.data-state > div {
+  display: grid;
+  gap: 4px;
+  margin-right: auto;
+}
+
+.data-state span {
+  color: var(--muted);
+}
+
+.data-state-error {
+  background: #fff7f7;
+  border-color: #f2c5c5;
+  color: var(--danger);
+}
+
+.data-state-error > div span {
+  color: #8b4747;
+}
+
+.compact-form {
+  margin-bottom: 20px;
+}
+
+.checkbox-list {
+  display: grid;
+  gap: 10px;
+  max-height: 220px;
+  overflow: auto;
+  padding: 4px;
+}
+
+.student-home {
+  background: var(--canvas);
+  min-height: 100vh;
+}
+
+.student-home-header {
+  align-items: center;
+  background: var(--surface);
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  justify-content: space-between;
+  padding: 16px clamp(20px, 5vw, 72px);
+}
+
+.student-home-main {
+  display: grid;
+  gap: 24px;
+  margin: 0 auto;
+  max-width: 1240px;
+  padding: 44px clamp(20px, 5vw, 72px);
+}
+
+.student-home-main h1 {
+  font-size: clamp(30px, 4vw, 44px);
+  margin: 8px 0;
+}
+
+.player-state {
+  align-items: center;
+  display: grid;
+  padding: clamp(24px, 8vw, 96px);
+}
+
+.player-save-error {
+  background: #fff1f1;
+  border-bottom: 1px solid #efc3c3;
+  color: var(--danger);
+  padding: 10px 24px;
+  text-align: center;
+}
+
+.pilot-metrics {
+  margin-bottom: 20px;
+}
+
+.pilot-gate {
+  align-items: center;
+  background: #fff8e8;
+  border: 1px solid #eed89d;
+  border-radius: 16px;
+  display: flex;
+  gap: 14px;
+  margin-bottom: 28px;
+  padding: 18px 20px;
+}
+
+.pilot-gate > div {
+  display: grid;
+  gap: 4px;
+}
+
+.pilot-gate span {
+  color: var(--muted);
+}
+
+.pilot-gate.ready,
+.pilot-gate.signed {
+  background: #eefaf3;
+  border-color: #b8e1c8;
+  color: var(--success);
+}
+
+.pilot-category {
+  margin-bottom: 28px;
+}
+
+.pilot-check-list {
+  display: grid;
+  gap: 12px;
+}
+
+.pilot-check {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-left: 4px solid #b8b3c4;
+  border-radius: 14px;
+  display: grid;
+  gap: 16px;
+  padding: 18px;
+}
+
+.pilot-check.status-pass {
+  border-left-color: var(--success);
+}
+
+.pilot-check.status-fail {
+  border-left-color: var(--danger);
+}
+
+.pilot-check.status-blocked {
+  border-left-color: var(--warning);
+}
+
+.pilot-check-heading {
+  align-items: center;
+  display: flex;
+  gap: 12px;
+}
+
+.pilot-check-heading > div {
+  display: grid;
+  gap: 3px;
+}
+
+.pilot-check-heading span,
+.pilot-check-footer {
+  color: var(--muted);
+}
+
+.pilot-check-icon {
+  align-items: center;
+  background: var(--canvas);
+  border-radius: 10px;
+  display: inline-flex;
+  height: 36px;
+  justify-content: center;
+  width: 36px;
+}
+
+.pilot-check-fields {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.pilot-check-fields .field,
+.pilot-notes {
+  margin: 0;
+}
+
+.pilot-check-footer {
+  align-items: end;
+  display: flex;
+  gap: 10px;
+}
+
+.pilot-notes {
+  flex: 1;
+}
+
+.pilot-signoff {
+  margin-top: 30px;
+}
+
 @media (max-width: 1100px) {
   .intelligence-grid,
   .approval-layout,
@@ -3071,6 +3268,10 @@ textarea:focus-visible {
 
   .operations-grid {
     grid-template-columns: 1fr;
+  }
+
+  .pilot-check-fields {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .settings-savebar {
@@ -3133,6 +3334,11 @@ textarea:focus-visible {
     flex-direction: column;
     gap: 14px;
   }
+
+  .pilot-check-footer {
+    align-items: stretch;
+    flex-direction: column;
+  }
 }
 
 @media (max-width: 520px) {
@@ -3176,6 +3382,19 @@ textarea:focus-visible {
   .readiness-row .badge {
     grid-column: 2;
     justify-self: start;
+  }
+
+  .student-home-header {
+    align-items: flex-start;
+    gap: 14px;
+  }
+
+  .student-home-header .button {
+    padding-inline: 10px;
+  }
+
+  .pilot-check-fields {
+    grid-template-columns: 1fr;
   }
 }
 

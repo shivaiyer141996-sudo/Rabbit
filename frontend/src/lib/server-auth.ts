@@ -2,7 +2,7 @@ import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import type { UserRole } from "./types";
 
-const secure = process.env.NODE_ENV === "production";
+const secure = process.env.SESSION_COOKIE_SECURE === "true";
 
 export interface TokenResponse {
   accessToken: string;

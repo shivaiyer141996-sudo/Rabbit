@@ -39,7 +39,7 @@ export async function POST(request: Request) {
     return NextResponse.json(payload, { status: upstream.status });
   }
 
-  const response = NextResponse.json({ selected: true });
+  const response = NextResponse.json({ selected: true, role: payload.role });
   response.cookies.delete("rabbit_selection_token");
   await setSessionCookies(response, payload as TokenResponse);
   return response;

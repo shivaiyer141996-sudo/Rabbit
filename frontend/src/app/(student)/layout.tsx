@@ -7,8 +7,9 @@ export default async function StudentLayout({
   children: React.ReactNode;
 }) {
   const session = await getPortalSession();
-  if (!session.accessToken && process.env.NODE_ENV === "production") {
+  if (!session.accessToken) {
     redirect("/login");
   }
+  if (session.role !== "STUDENT") redirect("/dashboard");
   return children;
 }

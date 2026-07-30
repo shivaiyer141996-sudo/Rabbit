@@ -13,6 +13,7 @@ import {
   LayoutDashboard,
   LogOut,
   Menu,
+  Rocket,
   Search,
   ShieldCheck,
   Settings,
@@ -20,8 +21,10 @@ import {
   X,
   type LucideIcon,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { NotificationPopover } from "@/components/notification-popover";
+import { apiFetch } from "@/lib/api";
+import { initials, type MeProfile } from "@/lib/live-types";
 import type { UserRole } from "@/lib/types";
 
 interface NavigationItem {
@@ -82,6 +85,12 @@ const navigation: NavigationItem[] = [
     icon: Activity,
     roles: ["SUPER_ADMIN", "ORG_ADMIN"],
   },
+  {
+    href: "/pilot-readiness",
+    label: "Pilot readiness",
+    icon: Rocket,
+    roles: ["SUPER_ADMIN", "ORG_ADMIN"],
+  },
 ];
 
 export function AppShell({
@@ -94,6 +103,21 @@ export function AppShell({
   const pathname = usePathname();
   const router = useRouter();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [profile, setProfile] = useState<MeProfile | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    apiFetch<MeProfile>("/auth/me")
+      .then((value) => {
+        if (active) setProfile(value);
+      })
+      .catch(() => {
+        if (active) setProfile(null);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const visibleNavigation = navigation.filter(
     (item) => item.roles.includes("ALL") || item.roles.includes(role),
@@ -179,9 +203,15 @@ export function AppShell({
 
         <div className="sidebar-footer">
           <div className="user-mini">
-            <span className="avatar">AR</span>
+            <span className="avatar">
+              {profile ? initials(profile.firstName, profile.lastName) : "…"}
+            </span>
             <div>
-              <strong>Ananya Rao</strong>
+              <strong>
+                {profile
+                  ? `${profile.firstName} ${profile.lastName}`
+                  : "Loading profile…"}
+              </strong>
               <span>{role.replaceAll("_", " ")}</span>
             </div>
             <button className="icon-button" onClick={logout} aria-label="Log out">
@@ -203,8 +233,12 @@ export function AppShell({
             <Menu size={20} />
           </button>
           <div className="topbar-context">
-            <strong>Rabbit Demo Academy</strong>
-            <span>Academic Year 2026–27 · Chennai</span>
+            <strong>{profile?.organisationName ?? "Loading organisation…"}</strong>
+            <span>
+              {profile
+                ? `${profile.organisationCode} · ${profile.timezone}`
+                : "Validating live session"}
+            </span>
           </div>
         </div>
         <div className="topbar-actions">

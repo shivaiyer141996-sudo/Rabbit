@@ -11,6 +11,15 @@ export class ApiError extends Error {
   }
 }
 
+export function apiErrorMessage(
+  error: unknown,
+  fallback = "Rabbit could not complete the request.",
+) {
+  return error instanceof ApiError || error instanceof Error
+    ? error.message
+    : fallback;
+}
+
 export async function apiFetch<T>(
   path: string,
   init?: RequestInit,

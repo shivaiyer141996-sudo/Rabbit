@@ -8,7 +8,7 @@ export default async function PortalLayout({
   children: React.ReactNode;
 }) {
   const session = await getPortalSession();
-  if (!session.accessToken && process.env.NODE_ENV === "production") {
+  if (!session.accessToken) {
     redirect("/login");
   }
   return <AppShell role={session.role}>{children}</AppShell>;

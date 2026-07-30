@@ -6,7 +6,12 @@ import com.rabbit.aip.auth.AuthDtos.LogoutRequest;
 import com.rabbit.aip.auth.AuthDtos.MeResponse;
 import com.rabbit.aip.auth.AuthDtos.RefreshRequest;
 import com.rabbit.aip.auth.AuthDtos.SelectOrganisationRequest;
+import com.rabbit.aip.common.exception.DomainException;
+import com.rabbit.aip.organisation.Organisation;
+import com.rabbit.aip.organisation.OrganisationRepository;
 import com.rabbit.aip.security.CurrentSession;
+import com.rabbit.aip.user.UserAccount;
+import com.rabbit.aip.user.UserAccountRepository;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -21,10 +26,19 @@ public class AuthController {
 
     private final AuthService authService;
     private final CurrentSession session;
+    private final UserAccountRepository users;
+    private final OrganisationRepository organisations;
 
-    public AuthController(AuthService authService, CurrentSession session) {
+    public AuthController(
+            AuthService authService,
+            CurrentSession session,
+            UserAccountRepository users,
+            OrganisationRepository organisations
+    ) {
         this.authService = authService;
         this.session = session;
+        this.users = users;
+        this.organisations = organisations;
     }
 
     @PostMapping("/login")
@@ -53,10 +67,25 @@ public class AuthController {
 
     @GetMapping("/me")
     MeResponse me() {
+        UserAccount user = users.findById(session.userId())
+                .orElseThrow(() -> DomainException.notFound(
+                        "USER_NOT_FOUND",
+                        "The signed-in account no longer exists."
+                ));
+        Organisation organisation = organisations.findById(session.organisationId())
+                .orElseThrow(() -> DomainException.notFound(
+                        "ORGANISATION_NOT_FOUND",
+                        "The selected organisation no longer exists."
+                ));
         return new MeResponse(
                 session.userId(),
                 session.email(),
+                user.getFirstName(),
+                user.getLastName(),
                 session.organisationId(),
+                organisation.getCode(),
+                organisation.getName(),
+                organisation.getTimezone(),
                 session.role()
         );
     }

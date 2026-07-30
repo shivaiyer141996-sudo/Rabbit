@@ -10,15 +10,11 @@ import {
   LineChart,
   UsersRound,
 } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { ErrorState, LoadingState } from "@/components/data-state";
 import { PageHeader } from "@/components/page-header";
 import { StatusBadge } from "@/components/status-badge";
-import { apiFetch } from "@/lib/api";
-import {
-  demoFaculty,
-  demoOverview,
-  demoQuestionAnalytics,
-} from "@/lib/intelligence-demo";
+import { apiErrorMessage, apiFetch } from "@/lib/api";
 import type {
   FacultyPerformance,
   IntelligenceOverview,
@@ -29,43 +25,57 @@ type ReportTab = "overview" | "questions" | "faculty";
 
 export function ReportsDashboard() {
   const [tab, setTab] = useState<ReportTab>("overview");
-  const [overview, setOverview] =
-    useState<IntelligenceOverview>(demoOverview);
-  const [questionRows, setQuestionRows] =
-    useState<QuestionPerformance[]>(demoQuestionAnalytics);
-  const [facultyRows, setFacultyRows] =
-    useState<FacultyPerformance[]>(demoFaculty);
-  const [live, setLive] = useState(false);
+  const [overview, setOverview] = useState<IntelligenceOverview | null>(null);
+  const [questionRows, setQuestionRows] = useState<QuestionPerformance[]>([]);
+  const [facultyRows, setFacultyRows] = useState<FacultyPerformance[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
-  useEffect(() => {
-    let active = true;
-    Promise.all([
-      apiFetch<IntelligenceOverview>("/reports/overview"),
-      apiFetch<QuestionPerformance[]>("/reports/questions"),
-      apiFetch<FacultyPerformance[]>("/reports/faculty").catch(() => demoFaculty),
-    ])
-      .then(([nextOverview, nextQuestions, nextFaculty]) => {
-        if (!active) return;
-        setOverview(nextOverview);
-        setQuestionRows(nextQuestions);
-        setFacultyRows(nextFaculty);
-        setLive(true);
-      })
-      .catch(() => setLive(false));
-    return () => {
-      active = false;
-    };
+  const load = useCallback(async () => {
+    setLoading(true);
+    setError("");
+    try {
+      const [nextOverview, nextQuestions, nextFaculty] = await Promise.all([
+        apiFetch<IntelligenceOverview>("/reports/overview"),
+        apiFetch<QuestionPerformance[]>("/reports/questions"),
+        apiFetch<FacultyPerformance[]>("/reports/faculty").catch(() => []),
+      ]);
+      setOverview(nextOverview);
+      setQuestionRows(nextQuestions);
+      setFacultyRows(nextFaculty);
+    } catch (requestError) {
+      setOverview(null);
+      setError(apiErrorMessage(requestError, "Reports could not be loaded."));
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
+  useEffect(() => {
+    const initial = window.setTimeout(() => void load(), 0);
+    return () => window.clearTimeout(initial);
+  }, [load]);
+
   const distributionMax = useMemo(
-    () => Math.max(...overview.scoreDistribution.map((item) => item.value), 1),
-    [overview.scoreDistribution],
+    () =>
+      Math.max(
+        ...(overview?.scoreDistribution.map((item) => item.value) ?? []),
+        1,
+      ),
+    [overview],
   );
+
+  if (loading) {
+    return <div className="page"><LoadingState label="Loading published report data…" /></div>;
+  }
+  if (!overview) {
+    return <div className="page"><ErrorState message={error} retry={() => void load()} /></div>;
+  }
 
   return (
     <div className="page">
       <PageHeader
-        eyebrow="Reports & academic intelligence"
+        eyebrow="Reports & academic intelligence · Live"
         title="Turn results into action"
         description="Every insight is calculated from published MCQ evaluations within your organisation."
         actions={
@@ -74,12 +84,6 @@ export function ReportsDashboard() {
           </button>
         }
       />
-
-      {!live && (
-        <div className="preview-banner">
-          Preview data is visible while the live reporting API is unavailable.
-        </div>
-      )}
 
       <div className="segmented-control" role="tablist" aria-label="Report category">
         {(["overview", "questions", "faculty"] as ReportTab[]).map((item) => (
@@ -279,6 +283,11 @@ export function ReportsDashboard() {
               </dl>
             </article>
           ))}
+          {!facultyRows.length && (
+            <div className="empty-state">
+              Faculty contribution is available to Organisation Admin and Academic Head roles.
+            </div>
+          )}
         </section>
       )}
     </div>

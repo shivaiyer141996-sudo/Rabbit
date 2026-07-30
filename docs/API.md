@@ -16,6 +16,7 @@ All tenant-owned endpoints derive the organisation from the signed access token.
 | GET/POST | `/organisations` | Organisation administration |
 | GET/POST | `/users` | Organisation user administration |
 | PATCH | `/users/{id}/status` | Change membership state |
+| GET | `/academic-catalog` | Role-safe academic years, departments, sections, subjects, and topics |
 
 ## Questions and approvals
 
@@ -82,6 +83,9 @@ All tenant-owned endpoints derive the organisation from the signed access token.
 | GET | `/operations/readiness` | Admin-only dependency, traffic, capacity, workflow, and GA gate snapshot |
 | GET | `/feature-flags` | Admin-only tenant feature rollout state |
 | PATCH | `/feature-flags/{key}` | Audit and update enabled state and rollout percentage |
+| GET | `/pilot-readiness` | Tenant UAT evidence, summary, and institutional sign-off |
+| PUT | `/pilot-readiness/checks/{key}` | Record a pilot result, tester, evidence, defect, and notes |
+| POST | `/pilot-readiness/sign-off` | Lock and audit sign-off after every mandatory check passes |
 
 All API responses include `X-Trace-Id`. Rate-limited responses use status `429`, include `Retry-After` and `X-RateLimit-*` headers, and retain the standard error envelope.
 

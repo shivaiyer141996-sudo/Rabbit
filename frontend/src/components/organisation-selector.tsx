@@ -11,36 +11,34 @@ interface OrganisationChoice {
   role: string;
 }
 
-const fallbackChoices: OrganisationChoice[] = [
-  {
-    id: "11111111-1111-1111-1111-111111111111",
-    name: "Rabbit Demo Academy",
-    code: "DEMO",
-    role: "ORG_ADMIN",
-  },
-];
-
 export function OrganisationSelector() {
   const router = useRouter();
-  const [choices, setChoices] = useState(fallbackChoices);
-  const [selected, setSelected] = useState(fallbackChoices[0].id);
+  const [choices, setChoices] = useState<OrganisationChoice[]>([]);
+  const [selected, setSelected] = useState("");
+  const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => {
     const stored = sessionStorage.getItem("rabbit_org_choices");
-    if (!stored) return;
-    try {
-      const parsed = JSON.parse(stored) as OrganisationChoice[];
-      if (parsed.length) {
-        queueMicrotask(() => {
-          setChoices(parsed);
-          setSelected(parsed[0].id);
-        });
+    queueMicrotask(() => {
+      if (!stored) {
+        setError("Your organisation selection has expired. Sign in again.");
+        setLoading(false);
+        return;
       }
-    } catch {
-      sessionStorage.removeItem("rabbit_org_choices");
-    }
+      try {
+        const parsed = JSON.parse(stored) as OrganisationChoice[];
+        if (!parsed.length) throw new Error("No organisation choices");
+        setChoices(parsed);
+        setSelected(parsed[0].id);
+      } catch {
+        sessionStorage.removeItem("rabbit_org_choices");
+        setError("Your organisation selection has expired. Sign in again.");
+      } finally {
+        setLoading(false);
+      }
+    });
   }, []);
 
   async function continueToWorkspace() {
@@ -57,7 +55,7 @@ export function OrganisationSelector() {
         throw new Error(body?.message ?? "The workspace could not be selected.");
       }
       sessionStorage.removeItem("rabbit_org_choices");
-      router.replace("/dashboard");
+      router.replace(body?.role === "STUDENT" ? "/student/assessments" : "/dashboard");
       router.refresh();
     } catch (requestError) {
       setError(
@@ -73,6 +71,7 @@ export function OrganisationSelector() {
   return (
     <>
       {error && <div className="form-error" role="alert">{error}</div>}
+      {loading && <div className="empty-state">Loading organisation choices…</div>}
       <div className="org-list">
         {choices.map((choice) => (
           <button
@@ -92,7 +91,7 @@ export function OrganisationSelector() {
       </div>
       <button
         className="button button-primary button-full"
-        disabled={submitting}
+        disabled={submitting || loading || !selected}
         onClick={continueToWorkspace}
         style={{ marginTop: 20 }}
       >

@@ -4,29 +4,40 @@ import Link from "next/link";
 import { Bell, CheckCheck } from "lucide-react";
 import { useEffect, useState } from "react";
 import { apiFetch } from "@/lib/api";
-import { demoNotifications } from "@/lib/intelligence-demo";
 import type { NotificationInbox } from "@/lib/types";
 
 export function NotificationPopover() {
-  const [inbox, setInbox] = useState<NotificationInbox>(demoNotifications);
+  const [inbox, setInbox] = useState<NotificationInbox>({
+    unreadCount: 0,
+    items: [],
+  });
   const [open, setOpen] = useState(false);
+  const [available, setAvailable] = useState(true);
 
   useEffect(() => {
     let active = true;
     apiFetch<NotificationInbox>("/notifications")
       .then((value) => {
-        if (active) setInbox(value);
+        if (active) {
+          setInbox(value);
+          setAvailable(true);
+        }
       })
-      .catch(() => undefined);
+      .catch(() => {
+        if (active) setAvailable(false);
+      });
     return () => {
       active = false;
     };
   }, []);
 
   async function markAllRead() {
-    await apiFetch("/notifications/read-all", { method: "PATCH" }).catch(
-      () => undefined,
-    );
+    try {
+      await apiFetch("/notifications/read-all", { method: "PATCH" });
+    } catch {
+      setAvailable(false);
+      return;
+    }
     setInbox((current) => ({
       unreadCount: 0,
       items: current.items.map((item) => ({ ...item, read: true })),
@@ -55,6 +66,12 @@ export function NotificationPopover() {
             </button>
           </div>
           <div className="popover-list">
+            {!available && (
+              <div className="empty-state">Notifications are unavailable.</div>
+            )}
+            {available && !inbox.items.length && (
+              <div className="empty-state">No notifications yet.</div>
+            )}
             {inbox.items.slice(0, 4).map((item) => (
               <Link
                 className={`popover-item ${item.read ? "" : "unread"}`}

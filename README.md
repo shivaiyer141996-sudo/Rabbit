@@ -2,7 +2,7 @@
 
 Rabbit is a **Student Progress & Academic Intelligence Platform**. Assessments are the mechanism; student success is the outcome.
 
-This repository contains the Milestone 1 Foundation, Milestone 2 Intelligence, and Milestone 3 GA-readiness implementation for Rabbit AiP Release 1.0. Release 1.0 is deliberately limited to web-based **Single Correct MCQ** and **Multiple Correct MCQ** workflows. AI, parent access, subjective evaluation, native mobile apps, proctoring, and LMS/ERP/SIS integrations are excluded.
+This repository contains the Milestone 1 Foundation, Milestone 2 Intelligence, Milestone 3 GA-readiness, and Milestone 4 controlled-pilot implementation for Rabbit AiP Release 1.0. Release 1.0 is deliberately limited to web-based **Single Correct MCQ** and **Multiple Correct MCQ** workflows. AI, parent access, subjective evaluation, native mobile apps, proctoring, and LMS/ERP/SIS integrations are excluded.
 
 ## Milestone 1 delivered
 
@@ -44,6 +44,19 @@ This repository contains the Milestone 1 Foundation, Milestone 2 Intelligence, a
 
 Milestone 3 makes the codebase **GA-ready for controlled pilot validation**. Actual production sign-off still requires institution UAT evidence, an environment-specific security review, a successful restore drill, approved notification providers, and a named operating team.
 
+## Milestone 4 delivered
+
+- Removed all demo-data fallbacks from authenticated product screens; API failures now render explicit loading, empty, and error states
+- Live signed-in identity and organisation context in the application shell
+- Persisted Question Bank list/detail/create/edit/submit journeys backed by academic masters
+- Persisted assessment list/create/review hand-off/publish/schedule lifecycle
+- Live user and organisation administration with tenant-scoped academic structure
+- End-to-end student assessment discovery, server attempt recovery, response saving, timed submission, and governed result viewing
+- Institution-owned pilot evidence register with mandatory checks, tester/evidence/defect capture, locking sign-off, and immutable audit events
+- Release 1.0 remains scope-frozen; Milestone 4 is a delivery-validation milestone, not a post–Release 1.0 feature expansion
+
+Milestone 4 makes the interface suitable for genuine controlled-pilot execution. A deployment is not production-authorised until the institution records the mandatory evidence and completes sign-off in **Pilot readiness**.
+
 ## Run with Docker
 
 ```bash
@@ -58,6 +71,11 @@ Open:
 - Operations console: `http://localhost/operations`
 - RabbitMQ console: `http://localhost:15672`
 - MinIO console: `http://localhost:9001`
+
+For Android pilot testing on the same Wi-Fi, open
+`http://<laptop-ip-address>` in Chrome instead of `localhost`. The local
+environment intentionally sets `SESSION_COOKIE_SECURE=false` for HTTP access;
+deployments behind HTTPS must use the production value `true`.
 
 Demo accounts use the password `Rabbit@123`:
 

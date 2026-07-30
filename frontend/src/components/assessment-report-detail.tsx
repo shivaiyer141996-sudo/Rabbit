@@ -8,10 +8,10 @@ import {
   RefreshCw,
   Send,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { ErrorState, LoadingState } from "@/components/data-state";
 import { PageHeader } from "@/components/page-header";
-import { apiFetch, ApiError } from "@/lib/api";
-import { demoAssessmentReport } from "@/lib/intelligence-demo";
+import { apiErrorMessage, apiFetch } from "@/lib/api";
 import type { AssessmentReport } from "@/lib/types";
 
 interface EvaluationSummary {
@@ -22,45 +22,42 @@ interface EvaluationSummary {
 }
 
 export function AssessmentReportDetail({ assessmentId }: { assessmentId: string }) {
-  const [report, setReport] =
-    useState<AssessmentReport>({ ...demoAssessmentReport, assessmentId });
+  const [report, setReport] = useState<AssessmentReport | null>(null);
   const [evaluation, setEvaluation] = useState<EvaluationSummary | null>(null);
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
-  async function load() {
-    const [nextReport, nextEvaluation] = await Promise.all([
-      apiFetch<AssessmentReport>(`/reports/assessments/${assessmentId}`),
-      apiFetch<EvaluationSummary>(
-        `/evaluation/assessments/${assessmentId}/results`,
-      ),
-    ]);
-    setReport(nextReport);
-    setEvaluation(nextEvaluation);
-  }
+  const load = useCallback(async () => {
+    setLoading(true);
+    setError("");
+    try {
+      const [nextReport, nextEvaluation] = await Promise.all([
+        apiFetch<AssessmentReport>(`/reports/assessments/${assessmentId}`),
+        apiFetch<EvaluationSummary>(
+          `/evaluation/assessments/${assessmentId}/results`,
+        ),
+      ]);
+      setReport(nextReport);
+      setEvaluation(nextEvaluation);
+    } catch (requestError) {
+      setReport(null);
+      setError(apiErrorMessage(requestError, "Assessment report could not be loaded."));
+    } finally {
+      setLoading(false);
+    }
+  }, [assessmentId]);
 
   useEffect(() => {
-    let active = true;
-    Promise.all([
-      apiFetch<AssessmentReport>(`/reports/assessments/${assessmentId}`),
-      apiFetch<EvaluationSummary>(
-        `/evaluation/assessments/${assessmentId}/results`,
-      ),
-    ])
-      .then(([nextReport, nextEvaluation]) => {
-        if (!active) return;
-        setReport(nextReport);
-        setEvaluation(nextEvaluation);
-      })
-      .catch(() => undefined);
-    return () => {
-      active = false;
-    };
-  }, [assessmentId]);
+    const initial = window.setTimeout(() => void load(), 0);
+    return () => window.clearTimeout(initial);
+  }, [load]);
 
   async function publish() {
     setBusy(true);
     setMessage("");
+    setError("");
     try {
       const response = await apiFetch<{ publishedCount: number }>(
         `/evaluation/assessments/${assessmentId}/publish`,
@@ -69,12 +66,17 @@ export function AssessmentReportDetail({ assessmentId }: { assessmentId: string 
       setMessage(`${response.publishedCount} result(s) published to students.`);
       await load();
     } catch (error) {
-      setMessage(
-        error instanceof ApiError ? error.message : "Results could not be published.",
-      );
+      setError(apiErrorMessage(error, "Results could not be published."));
     } finally {
       setBusy(false);
     }
+  }
+
+  if (loading) {
+    return <div className="page"><LoadingState label="Loading live assessment report…" /></div>;
+  }
+  if (!report) {
+    return <div className="page"><ErrorState message={error} retry={() => void load()} /></div>;
   }
 
   return (
@@ -83,7 +85,7 @@ export function AssessmentReportDetail({ assessmentId }: { assessmentId: string 
         <ArrowLeft size={15} /> Back to reports
       </Link>
       <PageHeader
-        eyebrow="Assessment intelligence"
+        eyebrow="Assessment intelligence · Live"
         title={report.title}
         description={`Generated ${new Date(report.generatedAt).toLocaleString()} · ${report.generatedBy}`}
         actions={
@@ -119,6 +121,7 @@ export function AssessmentReportDetail({ assessmentId }: { assessmentId: string 
       />
 
       {message && <div className="success-banner">{message}</div>}
+      {error && <div className="form-error" role="alert">{error}</div>}
 
       <section className="metrics-grid report-metrics">
         {[

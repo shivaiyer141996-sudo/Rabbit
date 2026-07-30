@@ -56,6 +56,31 @@ Delivery boundary:
 - A controlled institutional pilot is an environment-and-people activity. It is not claimed complete until the UAT checklist, restore drill, load evidence, accessibility review, and security review are signed off.
 - Email/SMS delivery remains feature-flagged off until an institution approves a provider, credentials, consent wording, monitoring, and escalation ownership.
 
+## Milestone 4 — Controlled pilot execution (delivered)
+
+This is an engineering delivery milestone after the three-stage product roadmap. It
+does not change the frozen Release 1.0 product scope.
+
+- Replace authenticated preview fallbacks with explicit live loading, empty, and
+  failure states
+- Connect the question, assessment, user, organisation, student attempt, and result
+  interfaces to their tenant-scoped APIs
+- Restore student attempts and answers from the server, persist every response, and
+  submit through the objective evaluation workflow
+- Expose the live academic catalog to authorised staff without granting settings
+  administration
+- Record every UAT row with result, tester, evidence, defect, notes, and timestamp
+- Block institutional sign-off until all mandatory checks pass; lock and audit the
+  evidence register after sign-off
+
+Delivery boundary:
+
+- Repository automation verifies the code and database contract.
+- Institutions still own the evidence itself: accessibility review, security review,
+  load evidence, restore evidence, named operators, and written authorisation cannot
+  be truthfully manufactured by the application.
+- Post–Release 1.0 capabilities remain excluded.
+
 ## Post–Release 1.0
 
 - AI-assisted question generation or recommendation

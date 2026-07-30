@@ -13,9 +13,9 @@ import {
   XCircle,
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { ErrorState, LoadingState } from "@/components/data-state";
 import { PageHeader } from "@/components/page-header";
-import { apiFetch, ApiError } from "@/lib/api";
-import { demoFeatureFlags, demoOperationalSnapshot } from "@/lib/ga-demo";
+import { apiErrorMessage, apiFetch, ApiError } from "@/lib/api";
 import type {
   FeatureFlag,
   FeatureFlagKey,
@@ -29,15 +29,15 @@ function duration(seconds: number) {
 }
 
 export function OperationsConsole() {
-  const [snapshot, setSnapshot] =
-    useState<OperationalSnapshot>(demoOperationalSnapshot);
-  const [flags, setFlags] = useState<FeatureFlag[]>(demoFeatureFlags);
-  const [live, setLive] = useState(false);
-  const [busy, setBusy] = useState<FeatureFlagKey | "refresh" | null>(null);
+  const [snapshot, setSnapshot] = useState<OperationalSnapshot | null>(null);
+  const [flags, setFlags] = useState<FeatureFlag[]>([]);
+  const [busy, setBusy] = useState<FeatureFlagKey | "refresh" | null>("refresh");
   const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
 
   const load = useCallback(async () => {
     setBusy("refresh");
+    setError("");
     try {
       const [nextSnapshot, nextFlags] = await Promise.all([
         apiFetch<OperationalSnapshot>("/operations/readiness"),
@@ -45,10 +45,10 @@ export function OperationsConsole() {
       ]);
       setSnapshot(nextSnapshot);
       setFlags(nextFlags);
-      setLive(true);
       setMessage("");
-    } catch {
-      setLive(false);
+    } catch (requestError) {
+      setSnapshot(null);
+      setError(apiErrorMessage(requestError, "Operations readiness could not be loaded."));
     } finally {
       setBusy(null);
     }
@@ -78,7 +78,6 @@ export function OperationsConsole() {
       setFlags((current) =>
         current.map((flag) => (flag.key === key ? updated : flag)),
       );
-      setLive(true);
       setMessage(`${updated.label} updated and recorded in the audit log.`);
     } catch (error) {
       setMessage(
@@ -92,25 +91,33 @@ export function OperationsConsole() {
   }
 
   const databaseUtilisation = useMemo(() => {
+    if (!snapshot) return 0;
     const maximum = snapshot.capacity.databaseMaximumConnections;
     if (!maximum) return 0;
     return Math.round(
       (snapshot.capacity.databaseActiveConnections / maximum) * 100,
     );
-  }, [snapshot.capacity]);
+  }, [snapshot]);
 
   const readinessTone =
-    snapshot.overallStatus === "READY"
+    snapshot?.overallStatus === "READY"
       ? "success"
-      : snapshot.overallStatus === "NOT_READY"
+      : snapshot?.overallStatus === "NOT_READY"
         ? "danger"
         : "warning";
+
+  if (!snapshot && busy === "refresh") {
+    return <div className="page"><LoadingState label="Probing live dependencies and release gates…" /></div>;
+  }
+  if (!snapshot) {
+    return <div className="page"><ErrorState message={error} retry={() => void load()} /></div>;
+  }
 
   return (
     <div className="page">
       <PageHeader
-        eyebrow="Release 1.0 operations"
-        title="Pilot readiness & controls"
+        eyebrow="Release 1.0 operations · Live"
+        title="Service readiness & controls"
         description="Live service health, workflow backlogs, capacity, release gates, and tenant-scoped feature rollout."
         actions={
           <button
@@ -127,11 +134,6 @@ export function OperationsConsole() {
         }
       />
 
-      {!live && (
-        <div className="preview-banner" role="status">
-          Preview readiness data is visible while the live operations API is unavailable.
-        </div>
-      )}
       {message && <div className="workflow-message" role="status">{message}</div>}
 
       <section className={`readiness-hero readiness-${readinessTone}`}>

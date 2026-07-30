@@ -81,7 +81,12 @@ public final class AuthDtos {
     public record MeResponse(
             UUID userId,
             String email,
+            String firstName,
+            String lastName,
             UUID organisationId,
+            String organisationCode,
+            String organisationName,
+            String timezone,
             UserRole role
     ) {
     }

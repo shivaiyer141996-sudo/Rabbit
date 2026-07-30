@@ -34,6 +34,7 @@ flowchart TB
 | `settings` | Organisation defaults, grading bands, branding, subjects, and topics |
 | `feature` | Tenant feature flags, deterministic rollout, and audit |
 | `operations` | Dependency probes, traffic, capacity, workflow health, and release gates |
+| `pilot` | Tenant UAT evidence, mandatory exit gates, locked institutional sign-off, and audit |
 | `common` | Errors, audit fields, tenant context and API conventions |
 
 ## Multi-tenancy
@@ -74,3 +75,7 @@ flowchart TB
 - Liveness/readiness probes, Prometheus metrics, trace IDs, request/error/latency counters, pool capacity, and tenant workflow backlogs support operations.
 - Tagged release workflows publish immutable API and web images with SBOM and provenance after environment approval.
 - Backups cover PostgreSQL and MinIO with a checksum manifest; restore requires an explicit destructive confirmation and post-restore smoke test.
+- Authenticated web screens do not substitute demo data when an API call fails; loading,
+  empty, and error states preserve the integrity of pilot evidence.
+- Pilot evidence is tenant-scoped, sign-off is blocked until every mandatory check
+  passes, and the register becomes immutable after authorisation.

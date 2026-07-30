@@ -119,6 +119,9 @@ export function QuestionBankTable({ questions }: { questions: Question[] }) {
             ))}
           </tbody>
         </table>
+        {!filtered.length && (
+          <div className="empty-state">No persisted questions match these filters.</div>
+        )}
         <div className="pager">
           <span>Showing {filtered.length} of {questions.length} questions</span>
           <div className="pager-buttons">

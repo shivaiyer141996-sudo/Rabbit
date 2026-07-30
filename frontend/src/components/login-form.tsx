@@ -7,6 +7,7 @@ import { FormEvent, useState } from "react";
 
 interface LoginResponse {
   requiresOrganisationSelection: boolean;
+  role?: string;
   organisations: Array<{
     id: string;
     name: string;
@@ -45,7 +46,7 @@ export function LoginForm() {
         );
         router.push("/select-organisation");
       } else {
-        router.push("/dashboard");
+        router.push(result.role === "STUDENT" ? "/student/assessments" : "/dashboard");
       }
       router.refresh();
     } catch (requestError) {

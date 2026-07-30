@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { setSessionCookies, type TokenResponse } from "@/lib/server-auth";
 
 const backend = process.env.BACKEND_INTERNAL_URL ?? "http://localhost:8080/api/v1";
+const secureCookies = process.env.SESSION_COOKIE_SECURE === "true";
 
 export async function POST(request: Request) {
   const body = await request.text();
@@ -33,12 +34,13 @@ export async function POST(request: Request) {
   const response = NextResponse.json({
     requiresOrganisationSelection: payload.requiresOrganisationSelection,
     organisations: payload.organisations ?? [],
+    role: payload.role ?? null,
   });
 
   if (payload.requiresOrganisationSelection) {
     response.cookies.set("rabbit_selection_token", payload.selectionToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
+      secure: secureCookies,
       sameSite: "strict",
       path: "/",
       maxAge: 300,

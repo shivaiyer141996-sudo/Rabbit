@@ -97,6 +97,29 @@ END;
 $$;
 
 DO $$
+BEGIN
+    BEGIN
+        INSERT INTO pilot_check_results (
+            id, organisation_id, check_key, status, updated_by,
+            created_at, updated_at
+        ) VALUES (
+            '26262626-2626-2626-2626-262626262626',
+            '12121212-1212-1212-1212-121212121212',
+            'ADMIN_LOGIN',
+            'PASS',
+            '33333333-3333-3333-3333-333333333301',
+            now(),
+            now()
+        );
+        RAISE EXCEPTION 'Pilot guard accepted an actor from another tenant';
+    EXCEPTION
+        WHEN check_violation THEN
+            RAISE NOTICE 'Cross-tenant pilot actor correctly rejected';
+    END;
+END;
+$$;
+
+DO $$
 DECLARE
     flag_count INTEGER;
 BEGIN

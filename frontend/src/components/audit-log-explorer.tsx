@@ -7,21 +7,24 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import { FormEvent, useEffect, useState } from "react";
+import { ErrorState, LoadingState } from "@/components/data-state";
 import { PageHeader } from "@/components/page-header";
-import { apiFetch } from "@/lib/api";
-import { demoAuditEvents } from "@/lib/intelligence-demo";
+import { apiErrorMessage, apiFetch } from "@/lib/api";
 import type { AuditEvent } from "@/lib/types";
 
 export function AuditLogExplorer() {
-  const [events, setEvents] = useState<AuditEvent[]>(demoAuditEvents);
+  const [events, setEvents] = useState<AuditEvent[]>([]);
   const [module, setModule] = useState("");
   const [action, setAction] = useState("");
   const [actor, setActor] = useState("");
   const [live, setLive] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
+  const [error, setError] = useState("");
 
   async function search() {
     setLoading(true);
+    setError("");
     const query = new URLSearchParams();
     if (module) query.set("module", module);
     if (action) query.set("action", action);
@@ -32,6 +35,8 @@ export function AuditLogExplorer() {
       );
       setEvents(rows);
       setLive(true);
+    } catch (requestError) {
+      setError(apiErrorMessage(requestError, "Audit events could not be loaded."));
     } finally {
       setLoading(false);
     }
@@ -45,7 +50,14 @@ export function AuditLogExplorer() {
         setEvents(rows);
         setLive(true);
       })
-      .catch(() => setLive(false));
+      .catch((requestError) => {
+        if (!active) return;
+        setLive(false);
+        setError(apiErrorMessage(requestError, "Audit events could not be loaded."));
+      })
+      .finally(() => {
+        if (active) setInitialLoading(false);
+      });
     return () => {
       active = false;
     };
@@ -77,11 +89,8 @@ export function AuditLogExplorer() {
         }
       />
 
-      {!live && (
-        <div className="preview-banner">
-          Preview audit events are visible while the live API is unavailable.
-        </div>
-      )}
+      {initialLoading && <LoadingState label="Loading immutable audit events…" />}
+      {!initialLoading && !live && <ErrorState message={error} />}
 
       <form className="audit-toolbar" onSubmit={submit}>
         <div className="search-wrap">

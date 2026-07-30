@@ -10,9 +10,10 @@ import {
   XCircle,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
+import { ErrorState, LoadingState } from "@/components/data-state";
 import { PageHeader } from "@/components/page-header";
 import { StatusBadge } from "@/components/status-badge";
-import { apiFetch, ApiError } from "@/lib/api";
+import { apiErrorMessage, apiFetch, ApiError } from "@/lib/api";
 
 const checklist = [
   ["CLEAR_STEM", "Question stem is clear and unambiguous"],
@@ -52,37 +53,10 @@ interface ReviewHistory {
   createdAt: string;
 }
 
-const previewQuestions: ApprovalQuestion[] = [
-  {
-    id: "55555555-5555-5555-5555-555555555503",
-    code: "CHE-ORG-014",
-    stem: "Which of the following compounds can exhibit geometrical isomerism?",
-    status: "UNDER_REVIEW",
-    difficulty: "HARD",
-    authorUserId: "33333333-3333-3333-3333-333333333302",
-    updatedAt: new Date().toISOString(),
-  },
-];
-
-const previewAssessments: ApprovalAssessment[] = [
-  {
-    id: "preview-assessment",
-    code: "PHY-UNIT-07",
-    title: "Physics Unit Test — Motion",
-    status: "READY_FOR_REVIEW",
-    questionCount: 20,
-    totalMarks: 80,
-    durationMinutes: 60,
-    createdAt: new Date().toISOString(),
-  },
-];
-
 export function ApprovalWorkspace() {
   const [tab, setTab] = useState<"questions" | "assessments">("questions");
-  const [questionQueue, setQuestionQueue] =
-    useState<ApprovalQuestion[]>(previewQuestions);
-  const [assessmentQueue, setAssessmentQueue] =
-    useState<ApprovalAssessment[]>(previewAssessments);
+  const [questionQueue, setQuestionQueue] = useState<ApprovalQuestion[]>([]);
+  const [assessmentQueue, setAssessmentQueue] = useState<ApprovalAssessment[]>([]);
   const [selectedQuestion, setSelectedQuestion] =
     useState<ApprovalQuestion | null>(null);
   const [selectedAssessment, setSelectedAssessment] =
@@ -93,8 +67,11 @@ export function ApprovalWorkspace() {
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
   const [live, setLive] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
 
   async function loadQueues() {
+    setLoadError("");
     const [questions, assessments] = await Promise.all([
       apiFetch<ApprovalQuestion[]>("/questions/review-queue"),
       apiFetch<ApprovalAssessment[]>("/assessments/review-queue"),
@@ -116,7 +93,14 @@ export function ApprovalWorkspace() {
         setAssessmentQueue(assessments);
         setLive(true);
       })
-      .catch(() => setLive(false));
+      .catch((requestError) => {
+        if (!active) return;
+        setLive(false);
+        setLoadError(apiErrorMessage(requestError, "Approval queues could not be loaded."));
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
     return () => {
       active = false;
     };
@@ -228,10 +212,19 @@ export function ApprovalWorkspace() {
         description="Question authors and assessment creators cannot approve their own work. Every decision is retained in audit history."
       />
 
-      {!live && (
-        <div className="preview-banner">
-          Preview queues are visible until the live API is available.
-        </div>
+      {loading && <LoadingState label="Loading live approval queues…" />}
+      {!loading && loadError && (
+        <ErrorState
+          message={loadError}
+          retry={() => {
+            setLoading(true);
+            void loadQueues()
+              .catch((requestError) =>
+                setLoadError(apiErrorMessage(requestError)),
+              )
+              .finally(() => setLoading(false));
+          }}
+        />
       )}
       {message && <div className="workflow-message">{message}</div>}
 

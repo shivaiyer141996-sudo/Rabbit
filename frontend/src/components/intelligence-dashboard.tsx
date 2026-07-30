@@ -9,39 +9,50 @@ import {
   GraduationCap,
   ShieldAlert,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { ErrorState, LoadingState } from "@/components/data-state";
 import { PageHeader } from "@/components/page-header";
-import { apiFetch } from "@/lib/api";
-import { demoDashboard } from "@/lib/intelligence-demo";
+import { apiErrorMessage, apiFetch } from "@/lib/api";
 import type { DashboardResponse } from "@/lib/types";
 
 const icons = [GraduationCap, BarChart3, CheckCircle2, ShieldAlert];
 
 export function IntelligenceDashboard() {
-  const [dashboard, setDashboard] =
-    useState<DashboardResponse>(demoDashboard);
-  const [live, setLive] = useState(false);
+  const [dashboard, setDashboard] = useState<DashboardResponse | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    setError("");
+    try {
+      setDashboard(await apiFetch<DashboardResponse>("/dashboard"));
+    } catch (requestError) {
+      setDashboard(null);
+      setError(apiErrorMessage(requestError, "Dashboard could not be loaded."));
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    let active = true;
-    apiFetch<DashboardResponse>("/dashboard")
-      .then((value) => {
-        if (!active) return;
-        setDashboard(value);
-        setLive(true);
-      })
-      .catch(() => setLive(false));
-    return () => {
-      active = false;
-    };
-  }, []);
+    const initial = window.setTimeout(() => void load(), 0);
+    return () => window.clearTimeout(initial);
+  }, [load]);
+
+  if (loading) {
+    return <div className="page"><LoadingState label="Loading live academic intelligence…" /></div>;
+  }
+  if (!dashboard) {
+    return <div className="page"><ErrorState message={error} retry={() => void load()} /></div>;
+  }
 
   const maxTrend = Math.max(...dashboard.trend.map((item) => item.value), 1);
 
   return (
     <div className="page">
       <PageHeader
-        eyebrow="Milestone 2 · Academic intelligence"
+        eyebrow="Academic intelligence · Live"
         title={dashboard.greeting}
         description={dashboard.description}
         actions={
@@ -50,13 +61,6 @@ export function IntelligenceDashboard() {
           </Link>
         }
       />
-
-      {!live && (
-        <div className="preview-banner" role="status">
-          Showing the Milestone 2 interface preview. Sign in to the running API
-          to see live organisation data.
-        </div>
-      )}
 
       <section className="metrics-grid" aria-label="Academic intelligence metrics">
         {dashboard.metrics.map((metric, index) => {
