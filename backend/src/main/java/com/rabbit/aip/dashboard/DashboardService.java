@@ -1,25 +1,39 @@
 package com.rabbit.aip.dashboard;
 
+import com.rabbit.aip.assessment.Assessment;
 import com.rabbit.aip.assessment.AssessmentRepository;
 import com.rabbit.aip.assessment.AssessmentStatus;
+import com.rabbit.aip.attempt.AssessmentAttempt;
 import com.rabbit.aip.attempt.AssessmentAttemptRepository;
+import com.rabbit.aip.attempt.AttemptStatus;
+import com.rabbit.aip.attempt.ResultPublicationStatus;
 import com.rabbit.aip.dashboard.DashboardDtos.DashboardAttention;
 import com.rabbit.aip.dashboard.DashboardDtos.DashboardMetric;
 import com.rabbit.aip.dashboard.DashboardDtos.DashboardResponse;
 import com.rabbit.aip.dashboard.DashboardDtos.DashboardTrend;
 import com.rabbit.aip.notification.NotificationRepository;
+import com.rabbit.aip.question.Question;
 import com.rabbit.aip.question.QuestionRepository;
 import com.rabbit.aip.question.QuestionStatus;
 import com.rabbit.aip.report.ReportDtos.IntelligenceOverview;
 import com.rabbit.aip.report.ReportDtos.StudentPerformanceReport;
 import com.rabbit.aip.report.ReportService;
 import com.rabbit.aip.security.CurrentSession;
+import com.rabbit.aip.user.AccountStatus;
+import com.rabbit.aip.user.OrganisationMembership;
 import com.rabbit.aip.user.OrganisationMembershipRepository;
 import com.rabbit.aip.user.UserAccount;
 import com.rabbit.aip.user.UserAccountRepository;
 import com.rabbit.aip.user.UserRole;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Set;
+import java.util.UUID;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -57,150 +71,289 @@ public class DashboardService {
 
     @Transactional(readOnly = true)
     public DashboardResponse dashboard() {
-        return session.role() == UserRole.STUDENT
-                ? studentDashboard()
-                : staffDashboard();
+        return switch (session.role()) {
+            case STUDENT -> studentDashboard();
+            case REVIEWER -> reviewerDashboard();
+            case FACULTY -> facultyDashboard();
+            case ACADEMIC_HEAD -> academicHeadDashboard();
+            case SUPER_ADMIN, ORG_ADMIN -> administratorDashboard();
+        };
     }
 
-    private DashboardResponse staffDashboard() {
+    private DashboardResponse administratorDashboard() {
         IntelligenceOverview overview = reports.overview();
-        long pendingQuestions = questions
-                .findAllByOrganisationIdOrderByUpdatedAtDesc(session.organisationId())
-                .stream()
-                .filter(item -> item.getStatus() == QuestionStatus.UNDER_REVIEW)
-                .count();
-        long pendingAssessments = assessments
-                .findAllByOrganisationIdOrderByUpdatedAtDesc(session.organisationId())
-                .stream()
-                .filter(item -> item.getStatus() == AssessmentStatus.READY_FOR_REVIEW)
-                .count();
-        long pendingResults = attempts
-                .findAllByOrganisationIdOrderBySubmittedAtDesc(session.organisationId())
-                .stream()
-                .filter(item -> item.getSubmittedAt() != null)
-                .filter(item -> item.getResultStatus()
-                        == com.rabbit.aip.attempt.ResultPublicationStatus.PENDING_PUBLICATION)
-                .count();
-        long activeStudents = memberships
-                .findAllByOrganisationIdOrderByCreatedAtDesc(session.organisationId())
-                .stream()
-                .filter(item -> item.getRole() == UserRole.STUDENT)
-                .count();
-        List<DashboardAttention> attention = new ArrayList<>();
-        attention.add(new DashboardAttention(
-                "Questions waiting for review",
-                "Complete the academic checklist before making a decision.",
-                pendingQuestions,
-                pendingQuestions > 0 ? "WARNING" : "NEUTRAL",
-                "/approvals"
-        ));
-        attention.add(new DashboardAttention(
-                "Assessments waiting for approval",
-                "Creator and reviewer separation is enforced.",
-                pendingAssessments,
-                pendingAssessments > 0 ? "WARNING" : "NEUTRAL",
-                "/approvals"
-        ));
-        attention.add(new DashboardAttention(
-                "Evaluated results to publish",
-                "Students cannot see scores until publication.",
-                pendingResults,
-                pendingResults > 0 ? "INFO" : "NEUTRAL",
-                "/reports"
-        ));
-        return new DashboardResponse(
-                session.role().name(),
-                greeting(),
-                "Academic performance, governance queues, and interventions in one view.",
+        DashboardCounts counts = counts();
+        return response(
+                "Institution performance, governance, publication, and learner risk in one view.",
                 List.of(
-                        new DashboardMetric(
-                                "Active students",
-                                String.valueOf(activeStudents),
-                                "Current organisation",
-                                "PRIMARY",
-                                "/users"
-                        ),
-                        new DashboardMetric(
-                                "Average score",
-                                overview.averageScore() + "%",
-                                "Published results",
-                                "SUCCESS",
-                                "/reports"
-                        ),
-                        new DashboardMetric(
-                                "Pass rate",
-                                overview.passRate() + "%",
-                                "Configured grade threshold",
-                                "INFO",
-                                "/reports"
-                        ),
-                        new DashboardMetric(
-                                "At-risk students",
-                                String.valueOf(overview.atRiskStudents()),
-                                "Below threshold twice",
-                                overview.atRiskStudents() > 0 ? "DANGER" : "SUCCESS",
-                                "/reports"
-                        )
+                        metric("Active students", counts.activeStudents(), "Current organisation", "PRIMARY", "/users"),
+                        metric("Average score", overview.averageScore() + "%", "Published results", "SUCCESS", "/reports"),
+                        metric("Pass rate", overview.passRate() + "%", "Organisation threshold", "INFO", "/reports"),
+                        metric("At-risk students", overview.atRiskStudents(), "Below threshold twice", overview.atRiskStudents() > 0 ? "DANGER" : "SUCCESS", "/reports")
                 ),
                 overview.performanceTrend().stream()
                         .map(item -> new DashboardTrend(item.label(), item.value()))
                         .toList(),
-                attention,
-                unread()
+                governanceAttention(counts)
+        );
+    }
+
+    private DashboardResponse academicHeadDashboard() {
+        IntelligenceOverview overview = reports.overview();
+        DashboardCounts counts = counts();
+        return response(
+                "Academic quality, approval queues, learner outcomes, and interventions for your institution.",
+                List.of(
+                        metric("Questions to review", counts.pendingQuestions(), "Academic governance", counts.pendingQuestions() > 0 ? "WARNING" : "SUCCESS", "/approvals"),
+                        metric("Assessments to approve", counts.pendingAssessments(), "Creator-reviewer control", counts.pendingAssessments() > 0 ? "WARNING" : "SUCCESS", "/approvals"),
+                        metric("Results to publish", counts.pendingResults(), "Evaluated, not visible", counts.pendingResults() > 0 ? "INFO" : "SUCCESS", "/reports"),
+                        metric("At-risk students", overview.atRiskStudents(), "Intervention candidates", overview.atRiskStudents() > 0 ? "DANGER" : "SUCCESS", "/reports")
+                ),
+                overview.performanceTrend().stream()
+                        .map(item -> new DashboardTrend(item.label(), item.value()))
+                        .toList(),
+                governanceAttention(counts)
+        );
+    }
+
+    private DashboardResponse facultyDashboard() {
+        UUID userId = session.userId();
+        List<Question> authoredQuestions = organisationQuestions().stream()
+                .filter(item -> item.getAuthorUserId().equals(userId))
+                .toList();
+        List<Assessment> authoredAssessments = organisationAssessments().stream()
+                .filter(item -> item.getCreatedBy().equals(userId))
+                .toList();
+        Set<UUID> assessmentIds = authoredAssessments.stream()
+                .map(Assessment::getId)
+                .collect(java.util.stream.Collectors.toSet());
+        List<AssessmentAttempt> facultyAttempts = organisationAttempts().stream()
+                .filter(item -> assessmentIds.contains(item.getAssessmentId()))
+                .toList();
+        List<AssessmentAttempt> published = facultyAttempts.stream()
+                .filter(item -> item.getResultStatus() == ResultPublicationStatus.PUBLISHED)
+                .filter(item -> item.getPercentage() != null)
+                .toList();
+        long pendingPublication = facultyAttempts.stream()
+                .filter(item -> item.getStatus() != AttemptStatus.IN_PROGRESS)
+                .filter(item -> item.getResultStatus() == ResultPublicationStatus.PENDING_PUBLICATION)
+                .count();
+        long activeDeliveries = authoredAssessments.stream()
+                .filter(item -> item.isOpenAt(Instant.now()))
+                .count();
+        List<DashboardTrend> trend = authoredAssessments.stream()
+                .map(assessment -> new DashboardTrend(
+                        assessment.getTitle(),
+                        average(published.stream()
+                                .filter(item -> item.getAssessmentId().equals(assessment.getId()))
+                                .map(AssessmentAttempt::getPercentage)
+                                .toList())
+                ))
+                .filter(item -> item.value().signum() > 0)
+                .limit(6)
+                .toList();
+        List<DashboardAttention> attention = List.of(
+                attention("Draft assessments", "Complete and submit your draft assessments for review.", authoredAssessments.stream().filter(item -> item.getStatus() == AssessmentStatus.DRAFT).count(), "WARNING", "/assessments"),
+                attention("Live assessments", "Monitor students currently inside an open delivery window.", activeDeliveries, "INFO", "/assessments"),
+                attention("Results awaiting publication", "Review evaluated submissions before students see them.", pendingPublication, "INFO", "/reports")
+        );
+        return response(
+                "Your question authoring, assessment delivery, and learner outcomes in one place.",
+                List.of(
+                        metric("Questions authored", authoredQuestions.size(), "Your question bank", "PRIMARY", "/question-bank"),
+                        metric("Assessments created", authoredAssessments.size(), "Your lifecycle queue", "INFO", "/assessments"),
+                        metric("Student submissions", published.size(), "Published evaluations", "SUCCESS", "/reports"),
+                        metric("Average score", average(published.stream().map(AssessmentAttempt::getPercentage).toList()) + "%", "Your assessments", "SUCCESS", "/reports")
+                ),
+                trend,
+                attention
+        );
+    }
+
+    private DashboardResponse reviewerDashboard() {
+        Instant overdueBefore = Instant.now().minus(Duration.ofHours(48));
+        long pendingQuestions = questions.countByOrganisationIdAndStatus(
+                session.organisationId(), QuestionStatus.UNDER_REVIEW
+        );
+        long pendingAssessments = assessments.countByOrganisationIdAndStatus(
+                session.organisationId(), AssessmentStatus.READY_FOR_REVIEW
+        );
+        long overdueQuestions = questions.countByOrganisationIdAndStatusAndUpdatedAtBefore(
+                session.organisationId(), QuestionStatus.UNDER_REVIEW, overdueBefore
+        );
+        long overdueAssessments = assessments.countByOrganisationIdAndStatusAndUpdatedAtBefore(
+                session.organisationId(), AssessmentStatus.READY_FOR_REVIEW, overdueBefore
+        );
+        return response(
+                "Independent academic review queues, ageing, and quality controls for your role.",
+                List.of(
+                        metric("Question reviews", pendingQuestions, "Waiting for decision", pendingQuestions > 0 ? "WARNING" : "SUCCESS", "/approvals"),
+                        metric("Assessment reviews", pendingAssessments, "Waiting for decision", pendingAssessments > 0 ? "WARNING" : "SUCCESS", "/approvals"),
+                        metric("Overdue questions", overdueQuestions, "Older than 48 hours", overdueQuestions > 0 ? "DANGER" : "SUCCESS", "/approvals"),
+                        metric("Overdue assessments", overdueAssessments, "Older than 48 hours", overdueAssessments > 0 ? "DANGER" : "SUCCESS", "/approvals")
+                ),
+                List.of(
+                        new DashboardTrend("Questions", BigDecimal.valueOf(pendingQuestions)),
+                        new DashboardTrend("Assessments", BigDecimal.valueOf(pendingAssessments))
+                ),
+                List.of(
+                        attention("Questions waiting for review", "Apply the academic checklist and record a governed decision.", pendingQuestions, pendingQuestions > 0 ? "WARNING" : "NEUTRAL", "/approvals"),
+                        attention("Assessments waiting for review", "Creator and reviewer separation is enforced.", pendingAssessments, pendingAssessments > 0 ? "WARNING" : "NEUTRAL", "/approvals")
+                )
         );
     }
 
     private DashboardResponse studentDashboard() {
         StudentPerformanceReport performance = reports.myPerformance();
-        long available = assessments
-                .findAllByOrganisationIdOrderByUpdatedAtDesc(session.organisationId())
-                .stream()
-                .filter(item -> item.getStatus() == AssessmentStatus.SCHEDULED)
+        OrganisationMembership membership = memberships
+                .findByUserIdAndOrganisationIdAndStatus(
+                        session.userId(), session.organisationId(), AccountStatus.ACTIVE
+                )
+                .orElseThrow();
+        Instant now = Instant.now();
+        long available = organisationAssessments().stream()
+                .filter(item -> item.isOpenAt(now))
+                .filter(item -> item.getEligibleSectionIds().isEmpty()
+                        || membership.getSectionId() != null
+                        && item.getEligibleSectionIds().contains(membership.getSectionId()))
                 .count();
-        return new DashboardResponse(
-                session.role().name(),
-                greeting(),
-                "Track published results and focus on the next assessment.",
+        List<AssessmentAttempt> history = attempts
+                .findAllByOrganisationIdAndStudentUserIdOrderBySubmittedAtAsc(
+                        session.organisationId(), session.userId()
+                );
+        long pending = history.stream()
+                .filter(item -> item.getStatus() != AttemptStatus.IN_PROGRESS)
+                .filter(item -> item.getResultStatus() == ResultPublicationStatus.PENDING_PUBLICATION)
+                .count();
+        List<DashboardAttention> attention = new ArrayList<>();
+        attention.add(attention(
+                "Assessments available now",
+                "Read the instructions before starting or resuming an attempt.",
+                available,
+                available > 0 ? "INFO" : "NEUTRAL",
+                "/student/assessments"
+        ));
+        attention.add(attention(
+                "Results awaiting publication",
+                "Your submitted attempts are evaluated but not yet released.",
+                pending,
+                pending > 0 ? "INFO" : "NEUTRAL",
+                "/student/history"
+        ));
+        if (performance.atRisk()) {
+            attention.add(attention(
+                    "Academic support recommended",
+                    "Review your published history and speak with your faculty member.",
+                    1,
+                    "DANGER",
+                    "/student/history"
+            ));
+        }
+        return response(
+                "Your upcoming assessments, submitted attempts, and published progress.",
                 List.of(
-                        new DashboardMetric(
-                                "Upcoming assessments",
-                                String.valueOf(available),
-                                "Scheduled for your organisation",
-                                "PRIMARY",
-                                "/student/assessments"
-                        ),
-                        new DashboardMetric(
-                                "Average score",
-                                performance.averagePercentage() + "%",
-                                "Published results",
-                                "SUCCESS",
-                                "/reports"
-                        ),
-                        new DashboardMetric(
-                                "Best score",
-                                performance.bestPercentage() + "%",
-                                "Personal best",
-                                "INFO",
-                                "/reports"
-                        ),
-                        new DashboardMetric(
-                                "Progress",
-                                performance.trajectory(),
-                                performance.atRisk()
-                                        ? "Academic support recommended"
-                                        : "Based on recent results",
-                                performance.atRisk() ? "DANGER" : "SUCCESS",
-                                "/reports"
-                        )
+                        metric("Available now", available, "Eligible open assessments", "PRIMARY", "/student/assessments"),
+                        metric("Average score", performance.averagePercentage() + "%", "Published results", "SUCCESS", "/student/history"),
+                        metric("Best score", performance.bestPercentage() + "%", "Personal best", "INFO", "/student/history"),
+                        metric("Progress", performance.trajectory(), performance.atRisk() ? "Support recommended" : "Recent published results", performance.atRisk() ? "DANGER" : "SUCCESS", "/student/history")
                 ),
                 performance.results().stream()
                         .map(item -> new DashboardTrend(
                                 item.assessmentTitle(), item.percentage()
                         ))
                         .toList(),
-                List.of(),
-                unread()
+                attention
         );
+    }
+
+    private DashboardResponse response(
+            String description,
+            List<DashboardMetric> metrics,
+            List<DashboardTrend> trend,
+            List<DashboardAttention> attention
+    ) {
+        return new DashboardResponse(
+                session.role().name(), greeting(), description, metrics, trend,
+                attention, unread()
+        );
+    }
+
+    private DashboardCounts counts() {
+        List<OrganisationMembership> organisationMemberships = memberships
+                .findAllByOrganisationIdOrderByCreatedAtDesc(session.organisationId());
+        long pendingResults = organisationAttempts().stream()
+                .filter(item -> item.getSubmittedAt() != null)
+                .filter(item -> item.getResultStatus() == ResultPublicationStatus.PENDING_PUBLICATION)
+                .count();
+        return new DashboardCounts(
+                organisationMemberships.stream()
+                        .filter(item -> item.getRole() == UserRole.STUDENT)
+                        .filter(item -> item.getStatus() == AccountStatus.ACTIVE)
+                        .count(),
+                questions.countByOrganisationIdAndStatus(
+                        session.organisationId(), QuestionStatus.UNDER_REVIEW
+                ),
+                assessments.countByOrganisationIdAndStatus(
+                        session.organisationId(), AssessmentStatus.READY_FOR_REVIEW
+                ),
+                pendingResults
+        );
+    }
+
+    private List<DashboardAttention> governanceAttention(DashboardCounts counts) {
+        return List.of(
+                attention("Questions waiting for review", "Complete the academic checklist before making a decision.", counts.pendingQuestions(), counts.pendingQuestions() > 0 ? "WARNING" : "NEUTRAL", "/approvals"),
+                attention("Assessments waiting for approval", "Creator and reviewer separation is enforced.", counts.pendingAssessments(), counts.pendingAssessments() > 0 ? "WARNING" : "NEUTRAL", "/approvals"),
+                attention("Evaluated results to publish", "Students cannot see scores until publication.", counts.pendingResults(), counts.pendingResults() > 0 ? "INFO" : "NEUTRAL", "/reports")
+        );
+    }
+
+    private DashboardMetric metric(
+            String label,
+            Object value,
+            String context,
+            String tone,
+            String href
+    ) {
+        return new DashboardMetric(label, String.valueOf(value), context, tone, href);
+    }
+
+    private DashboardAttention attention(
+            String title,
+            String description,
+            long count,
+            String severity,
+            String href
+    ) {
+        return new DashboardAttention(title, description, count, severity, href);
+    }
+
+    private List<Question> organisationQuestions() {
+        return questions.findAllByOrganisationIdOrderByUpdatedAtDesc(
+                session.organisationId()
+        );
+    }
+
+    private List<Assessment> organisationAssessments() {
+        return assessments.findAllByOrganisationIdOrderByUpdatedAtDesc(
+                session.organisationId()
+        );
+    }
+
+    private List<AssessmentAttempt> organisationAttempts() {
+        return attempts.findAllByOrganisationIdOrderBySubmittedAtDesc(
+                session.organisationId()
+        );
+    }
+
+    private BigDecimal average(List<BigDecimal> values) {
+        List<BigDecimal> present = values.stream()
+                .filter(java.util.Objects::nonNull)
+                .toList();
+        if (present.isEmpty()) return BigDecimal.ZERO.setScale(2);
+        return present.stream()
+                .reduce(BigDecimal.ZERO, BigDecimal::add)
+                .divide(BigDecimal.valueOf(present.size()), 2, RoundingMode.HALF_UP);
     }
 
     private String greeting() {
@@ -213,5 +366,13 @@ public class DashboardService {
                 .countByOrganisationIdAndRecipientUserIdAndReadAtIsNull(
                         session.organisationId(), session.userId()
                 );
+    }
+
+    private record DashboardCounts(
+            long activeStudents,
+            long pendingQuestions,
+            long pendingAssessments,
+            long pendingResults
+    ) {
     }
 }

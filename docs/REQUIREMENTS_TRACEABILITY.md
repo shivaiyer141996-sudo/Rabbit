@@ -17,15 +17,15 @@ Status meanings:
 | ORG live academic catalog | Implemented | Role-safe catalog API and live question/assessment/user/organisation interfaces |
 | USR role/status management | Implemented | Membership roles, method security, account state APIs, invitation issue/reissue controls |
 | USR/QB bulk import | Provider gate | `BULK_IMPORTS` defaults off pending institution template/data-governance approval |
-| DSH role-specific intelligence | Implemented | Role dashboard API and responsive intelligence interface |
+| DSH role-specific intelligence | Implemented | Distinct Admin, Academic Head, Faculty, Reviewer, and Student metrics, actions, queues, and role-safe navigation |
 | QB Single/Multiple Correct MCQ | Implemented | Authoring, validation, versioning, bank, and database type constraint |
 | QB rich assets | Implemented | MinIO-ready asset service boundary and backup coverage; pilot validates final media limits |
 | QRV/ASM governed approval | Implemented | Checklist/history, creator-reviewer separation, review queues, 48-hour operations signal |
-| DEL eligibility, recovery, timer, submit | Implemented | Student player, tenant/section/window checks, persisted response recovery, idempotent submit |
-| DEL live monitoring | Implemented | Tenant operations console exposes active attempts and workload |
-| EVL objective scoring and re-evaluation | Implemented | Both supported MCQ types, marking rules, grades, versioned governed recalculation |
+| DEL eligibility, recovery, timer, submit | Implemented | Instructions, tenant/section/window checks, stable per-attempt shuffle, persisted recovery, row-locked saves, server expiry worker, idempotent submit, and attempt history |
+| DEL live monitoring | Implemented | Dedicated assessment monitor shows persisted answer progress, attempt state, and remaining server time |
+| EVL objective scoring and re-evaluation | Implemented | Both supported MCQ types, marking rules, grades, reason-gated re-evaluation UI, versioning, and publication reset |
 | EVL result publication | Implemented | Pending/published states and explicit faculty/admin publication |
-| RPT institution/assessment/student/faculty/question reports | Implemented | Published-data-only APIs and responsive interfaces |
+| RPT institution/assessment/student/faculty/question reports | Implemented | Published-data-only APIs/UI, consolidated student filters, individual drill-down, and department/section comparison |
 | RPT CSV, PDF, and Excel | Implemented | Audited downloads; valid multi-page PDF and native three-sheet XLSX tests |
 | NTF in-app centre and retry state | Implemented | Inbox, preferences, critical override, worker state |
 | NTF email/SMS adapters | Provider gate | `EXTERNAL_DELIVERY` defaults off pending approved provider and monitoring |

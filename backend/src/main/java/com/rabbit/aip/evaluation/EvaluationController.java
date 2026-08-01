@@ -4,6 +4,7 @@ import com.rabbit.aip.evaluation.EvaluationDtos.AssessmentEvaluationSummary;
 import com.rabbit.aip.evaluation.EvaluationDtos.EvaluationRow;
 import com.rabbit.aip.evaluation.EvaluationDtos.PublicationResponse;
 import com.rabbit.aip.evaluation.EvaluationDtos.ReEvaluationRequest;
+import com.rabbit.aip.evaluation.EvaluationDtos.AssessmentMonitor;
 import jakarta.validation.Valid;
 import java.util.UUID;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -28,6 +29,11 @@ public class EvaluationController {
     @GetMapping("/assessments/{assessmentId}/results")
     AssessmentEvaluationSummary results(@PathVariable UUID assessmentId) {
         return service.assessmentResults(assessmentId);
+    }
+
+    @GetMapping("/assessments/{assessmentId}/monitor")
+    AssessmentMonitor monitor(@PathVariable UUID assessmentId) {
+        return service.monitor(assessmentId);
     }
 
     @PostMapping("/assessments/{assessmentId}/publish")

@@ -105,6 +105,28 @@ Delivery boundary:
   receives the one-time activation URL and shares it through an approved channel.
 - Institution-owned pilot evidence and production operating approval remain required.
 
+## Milestone 4.2 — Functional and UI completion (verification pending)
+
+Milestone 4.2 closes the functional gaps identified by the post–Milestone 4.1 UI and
+workflow review:
+
+- Make configured question/option shuffle effective and stable for an attempt
+- Auto-submit and evaluate expired attempts on the server independently of the browser
+- Provide distinct dashboards, actions, and navigation for every Release 1.0 role
+- Add consolidated filtered student reports and department/section comparisons
+- Expose reason-gated re-evaluation, evaluation version, and publication state in UI
+- Add student instructions/history and a dedicated live assessment monitor
+- Expand the full-stack smoke journey over the completed delivery/reporting workflow
+
+Delivery boundary:
+
+- The implementation branch must pass backend, frontend, PostgreSQL V1–V7, security,
+  image, live-stack, and authenticated smoke gates on one exact commit.
+- Manual desktop and 360 px Android Docker acceptance remains institution-owned and is
+  required before the milestone is published to `main`.
+- AI, subjective assessment, proctoring, native apps, and external integrations remain
+  outside Release 1.0.
+
 ## Post–Release 1.0
 
 - AI-assisted question generation or recommendation

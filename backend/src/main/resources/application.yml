@@ -82,9 +82,11 @@ info:
   app:
     name: Rabbit AiP
     version: 1.0.0
-    milestone: Release 1.0 Milestone 4.1 Hardening
+    milestone: Release 1.0 Milestone 4.2 Functional and UI Completion
 
 rabbit:
+  attempt-expiry:
+    fixed-delay-ms: ${ATTEMPT_EXPIRY_FIXED_DELAY_MS:5000}
   jwt:
     secret: ${JWT_SECRET:rabbit-local-development-secret-change-me}
     access-ttl-minutes: ${JWT_ACCESS_TTL_MINUTES:15}

@@ -5,10 +5,13 @@ import com.rabbit.aip.report.ReportDtos.FacultyPerformance;
 import com.rabbit.aip.report.ReportDtos.IntelligenceOverview;
 import com.rabbit.aip.report.ReportDtos.QuestionPerformance;
 import com.rabbit.aip.report.ReportDtos.StudentPerformanceReport;
+import com.rabbit.aip.report.ReportDtos.StudentReport;
+import com.rabbit.aip.assessment.AssessmentType;
 import com.rabbit.aip.report.ReportExportService.ExportedReport;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.UUID;
+import java.time.Instant;
 import org.springframework.http.ContentDisposition;
 import org.springframework.http.CacheControl;
 import org.springframework.http.HttpHeaders;
@@ -18,6 +21,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -48,6 +52,28 @@ public class ReportController {
     @PreAuthorize("hasRole('STUDENT')")
     StudentPerformanceReport me() {
         return service.myPerformance();
+    }
+
+    @GetMapping("/students")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ORG_ADMIN','ACADEMIC_HEAD','FACULTY')")
+    StudentReport students(
+            @RequestParam(required = false) String query,
+            @RequestParam(required = false) UUID subjectId,
+            @RequestParam(required = false) AssessmentType assessmentType,
+            @RequestParam(required = false) UUID departmentId,
+            @RequestParam(required = false) UUID sectionId,
+            @RequestParam(required = false) Instant submittedFrom,
+            @RequestParam(required = false) Instant submittedBefore
+    ) {
+        return service.students(
+                query,
+                subjectId,
+                assessmentType,
+                departmentId,
+                sectionId,
+                submittedFrom,
+                submittedBefore
+        );
     }
 
     @GetMapping("/students/{studentId}")

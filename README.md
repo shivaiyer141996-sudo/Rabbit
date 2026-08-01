@@ -71,6 +71,22 @@ Milestone 4 makes the interface suitable for genuine controlled-pilot execution.
 
 Milestone 4.1 is release hardening only. It does not begin Milestone 5.
 
+## Milestone 4.2 functional and UI completion
+
+- Stable per-attempt question and option shuffle, with server-side expiry submission
+  even after the student's browser closes
+- Distinct Admin, Academic Head, Faculty, Reviewer, and Student dashboards and
+  role-appropriate navigation/actions
+- Consolidated student reporting with subject, assessment type, department, section,
+  date, and text filters plus department/section comparisons
+- Reason-gated re-evaluation controls with version and publication-state visibility
+- Student instructions and attempt history, plus live staff assessment monitoring
+- Expanded Docker smoke coverage for timeout, monitoring, confidentiality,
+  re-evaluation, republishing, history, and filtered reporting
+
+Milestone 4.2 remains un-published while branch CI and manual desktop/Android Docker
+acceptance are pending. It does not begin Milestone 5 or expand the frozen MCQ scope.
+
 ## Run with Docker
 
 ```bash

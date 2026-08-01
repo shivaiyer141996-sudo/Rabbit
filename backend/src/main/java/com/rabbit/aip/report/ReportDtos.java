@@ -65,6 +65,45 @@ public final class ReportDtos {
     ) {
     }
 
+    public record StudentReportRow(
+            UUID studentUserId,
+            String studentName,
+            String studentEmail,
+            UUID departmentId,
+            String departmentName,
+            UUID sectionId,
+            String sectionName,
+            long publishedResults,
+            BigDecimal averagePercentage,
+            BigDecimal bestPercentage,
+            Instant latestSubmissionAt,
+            String trajectory,
+            boolean atRisk
+    ) {
+    }
+
+    public record StudentGroupComparison(
+            UUID groupId,
+            String label,
+            long studentCount,
+            long publishedResults,
+            BigDecimal averagePercentage,
+            BigDecimal passRate
+    ) {
+    }
+
+    public record StudentReport(
+            long totalStudents,
+            long studentsWithResults,
+            long publishedResults,
+            BigDecimal averagePercentage,
+            long atRiskStudents,
+            List<StudentReportRow> students,
+            List<StudentGroupComparison> departments,
+            List<StudentGroupComparison> sections
+    ) {
+    }
+
     public record QuestionPerformance(
             UUID questionId,
             String code,

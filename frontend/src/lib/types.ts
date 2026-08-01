@@ -155,6 +155,52 @@ export interface StudentResultPoint {
   trajectory: "IMPROVING" | "STABLE" | "DECLINING";
 }
 
+export interface StudentPerformanceReport {
+  studentUserId: string;
+  studentName: string;
+  averagePercentage: number;
+  bestPercentage: number;
+  trajectory: "IMPROVING" | "STABLE" | "DECLINING";
+  atRisk: boolean;
+  results: StudentResultPoint[];
+}
+
+export interface StudentReportRow {
+  studentUserId: string;
+  studentName: string;
+  studentEmail: string;
+  departmentId?: string;
+  departmentName: string;
+  sectionId?: string;
+  sectionName: string;
+  publishedResults: number;
+  averagePercentage: number;
+  bestPercentage: number;
+  latestSubmissionAt?: string;
+  trajectory: "IMPROVING" | "STABLE" | "DECLINING";
+  atRisk: boolean;
+}
+
+export interface StudentGroupComparison {
+  groupId?: string;
+  label: string;
+  studentCount: number;
+  publishedResults: number;
+  averagePercentage: number;
+  passRate: number;
+}
+
+export interface StudentReport {
+  totalStudents: number;
+  studentsWithResults: number;
+  publishedResults: number;
+  averagePercentage: number;
+  atRiskStudents: number;
+  students: StudentReportRow[];
+  departments: StudentGroupComparison[];
+  sections: StudentGroupComparison[];
+}
+
 export interface AssessmentReport {
   assessmentId: string;
   title: string;
@@ -168,6 +214,58 @@ export interface AssessmentReport {
   questionAnalytics: QuestionPerformance[];
   generatedAt: string;
   generatedBy: string;
+}
+
+export interface EvaluationRow {
+  attemptId: string;
+  studentUserId: string;
+  studentName: string;
+  attemptStatus: "SUBMITTED" | "AUTO_SUBMITTED";
+  publicationStatus: "PENDING_PUBLICATION" | "PUBLISHED";
+  score: number;
+  maxScore: number;
+  percentage: number;
+  grade: string;
+  correctAnswers: number;
+  wrongAnswers: number;
+  unansweredAnswers: number;
+  evaluationVersion: number;
+  evaluatedAt: string;
+  publishedAt?: string;
+}
+
+export interface AssessmentEvaluationSummary {
+  assessmentId: string;
+  assessmentTitle: string;
+  evaluatedCount: number;
+  pendingPublicationCount: number;
+  publishedCount: number;
+  averagePercentage: number;
+  results: EvaluationRow[];
+}
+
+export interface AssessmentMonitor {
+  assessmentId: string;
+  assessmentTitle: string;
+  generatedAt: string;
+  totalAttempts: number;
+  inProgress: number;
+  submitted: number;
+  autoSubmitted: number;
+  attempts: Array<{
+    attemptId: string;
+    studentUserId: string;
+    studentName: string;
+    attemptStatus: "IN_PROGRESS" | "SUBMITTED" | "AUTO_SUBMITTED";
+    publicationStatus: "PENDING_PUBLICATION" | "PUBLISHED";
+    startedAt: string;
+    expiresAt: string;
+    submittedAt?: string;
+    answered: number;
+    questionCount: number;
+    progressPercentage: number;
+    secondsRemaining: number;
+  }>;
 }
 
 export interface FacultyPerformance {

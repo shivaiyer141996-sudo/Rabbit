@@ -11,8 +11,9 @@ import {
   mapQuestion,
   type AcademicCatalog,
   type ApiQuestion,
+  type MeProfile,
 } from "@/lib/live-types";
-import type { Question } from "@/lib/types";
+import type { Question, UserRole } from "@/lib/types";
 
 function csvCell(value: unknown) {
   return `"${String(value ?? "").replaceAll('"', '""')}"`;
@@ -20,6 +21,7 @@ function csvCell(value: unknown) {
 
 export function LiveQuestionBank() {
   const [questions, setQuestions] = useState<Question[]>([]);
+  const [role, setRole] = useState<UserRole | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -27,11 +29,13 @@ export function LiveQuestionBank() {
     setLoading(true);
     setError("");
     try {
-      const [rows, catalog] = await Promise.all([
+      const [rows, catalog, profile] = await Promise.all([
         apiFetch<ApiQuestion[]>("/questions"),
         apiFetch<AcademicCatalog>("/academic-catalog"),
+        apiFetch<MeProfile>("/auth/me"),
       ]);
       setQuestions(rows.map((question) => mapQuestion(question, catalog)));
+      setRole(profile.role);
     } catch (requestError) {
       setQuestions([]);
       setError(apiErrorMessage(requestError, "Question Bank could not be loaded."));
@@ -81,6 +85,8 @@ export function LiveQuestionBank() {
     URL.revokeObjectURL(link.href);
   }
 
+  const canAuthor = role !== null && role !== "REVIEWER";
+
   return (
     <div className="page">
       <PageHeader
@@ -97,17 +103,21 @@ export function LiveQuestionBank() {
             >
               <Download size={15} /> Export
             </button>
-            <button
-              className="button button-secondary"
-              disabled
-              title="Bulk imports remain off until the pilot template and data-governance controls are approved."
-              type="button"
-            >
-              <Upload size={15} /> Bulk import
-            </button>
-            <Link className="button button-primary" href="/question-bank/new">
-              <Plus size={15} /> New question
-            </Link>
+            {canAuthor && (
+              <button
+                className="button button-secondary"
+                disabled
+                title="Bulk imports remain off until the pilot template and data-governance controls are approved."
+                type="button"
+              >
+                <Upload size={15} /> Bulk import
+              </button>
+            )}
+            {canAuthor && (
+              <Link className="button button-primary" href="/question-bank/new">
+                <Plus size={15} /> New question
+              </Link>
+            )}
           </>
         }
       />

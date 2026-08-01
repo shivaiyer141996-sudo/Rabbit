@@ -12,18 +12,16 @@ import { useCallback, useEffect, useState } from "react";
 import { ErrorState, LoadingState } from "@/components/data-state";
 import { PageHeader } from "@/components/page-header";
 import { apiErrorMessage, apiFetch } from "@/lib/api";
-import type { AssessmentReport } from "@/lib/types";
-
-interface EvaluationSummary {
-  assessmentId: string;
-  evaluatedCount: number;
-  pendingPublicationCount: number;
-  publishedCount: number;
-}
+import type {
+  AssessmentEvaluationSummary,
+  AssessmentReport,
+} from "@/lib/types";
 
 export function AssessmentReportDetail({ assessmentId }: { assessmentId: string }) {
   const [report, setReport] = useState<AssessmentReport | null>(null);
-  const [evaluation, setEvaluation] = useState<EvaluationSummary | null>(null);
+  const [evaluation, setEvaluation] = useState<AssessmentEvaluationSummary | null>(null);
+  const [reEvaluationAttemptId, setReEvaluationAttemptId] = useState("");
+  const [reEvaluationReason, setReEvaluationReason] = useState("");
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -35,7 +33,7 @@ export function AssessmentReportDetail({ assessmentId }: { assessmentId: string 
     try {
       const [nextReport, nextEvaluation] = await Promise.all([
         apiFetch<AssessmentReport>(`/reports/assessments/${assessmentId}`),
-        apiFetch<EvaluationSummary>(
+        apiFetch<AssessmentEvaluationSummary>(
           `/evaluation/assessments/${assessmentId}/results`,
         ),
       ]);
@@ -67,6 +65,35 @@ export function AssessmentReportDetail({ assessmentId }: { assessmentId: string 
       await load();
     } catch (error) {
       setError(apiErrorMessage(error, "Results could not be published."));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function reEvaluate() {
+    if (reEvaluationReason.trim().length < 10) {
+      setError("Provide a re-evaluation reason of at least 10 characters.");
+      return;
+    }
+    setBusy(true);
+    setMessage("");
+    setError("");
+    try {
+      await apiFetch(
+        `/evaluation/attempts/${reEvaluationAttemptId}/re-evaluate`,
+        {
+          method: "POST",
+          body: JSON.stringify({ reason: reEvaluationReason.trim() }),
+        },
+      );
+      setMessage(
+        "Attempt re-evaluated. The new version is awaiting publication before the student can see it.",
+      );
+      setReEvaluationAttemptId("");
+      setReEvaluationReason("");
+      await load();
+    } catch (requestError) {
+      setError(apiErrorMessage(requestError, "The attempt could not be re-evaluated."));
     } finally {
       setBusy(false);
     }
@@ -145,6 +172,99 @@ export function AssessmentReportDetail({ assessmentId }: { assessmentId: string 
           <span><strong>{evaluation.pendingPublicationCount}</strong> awaiting publication</span>
           <span><strong>{evaluation.evaluatedCount}</strong> evaluated</span>
         </div>
+      )}
+
+      {evaluation && (
+        <section className="panel report-table-panel">
+          <div className="panel-header">
+            <div>
+              <h2>Evaluation controls</h2>
+              <p>Re-evaluation is versioned, audited, and returns the result to pending publication.</p>
+            </div>
+          </div>
+          {!evaluation.results.length ? (
+            <div className="empty-state">No completed attempts are available for evaluation.</div>
+          ) : (
+            <div className="data-table-wrap">
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th>Student</th>
+                    <th>Attempt</th>
+                    <th>Score</th>
+                    <th>Publication</th>
+                    <th>Version</th>
+                    <th aria-label="Action" />
+                  </tr>
+                </thead>
+                <tbody>
+                  {evaluation.results.map((row) => (
+                    <tr key={row.attemptId}>
+                      <td><strong>{row.studentName}</strong><span className="table-subtitle">{row.attemptId.slice(0, 8)}</span></td>
+                      <td><span className="badge badge-neutral">{row.attemptStatus.replaceAll("_", " ")}</span></td>
+                      <td>{row.score} / {row.maxScore} · {row.percentage}%</td>
+                      <td><span className={`badge ${row.publicationStatus === "PUBLISHED" ? "badge-success" : "badge-info"}`}>{row.publicationStatus.replaceAll("_", " ")}</span></td>
+                      <td>v{row.evaluationVersion}</td>
+                      <td>
+                        <button
+                          className="button button-ghost"
+                          disabled={busy}
+                          onClick={() => {
+                            setReEvaluationAttemptId(row.attemptId);
+                            setReEvaluationReason("");
+                            setError("");
+                          }}
+                          type="button"
+                        >
+                          <RefreshCw size={14} /> Re-evaluate
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+          {reEvaluationAttemptId && (
+            <div className="re-evaluation-form">
+              <div>
+                <strong>Reason for governed re-evaluation</strong>
+                <span>Attempt {reEvaluationAttemptId.slice(0, 8)} · minimum 10 characters</span>
+              </div>
+              <textarea
+                aria-label="Re-evaluation reason"
+                maxLength={500}
+                onChange={(event) => setReEvaluationReason(event.target.value)}
+                placeholder="Explain why this completed attempt must be scored again."
+                rows={3}
+                value={reEvaluationReason}
+              />
+              <div className="header-actions">
+                <span className="muted">{reEvaluationReason.trim().length}/500</span>
+                <button
+                  className="button button-secondary"
+                  disabled={busy}
+                  onClick={() => {
+                    setReEvaluationAttemptId("");
+                    setReEvaluationReason("");
+                  }}
+                  type="button"
+                >
+                  Cancel
+                </button>
+                <button
+                  className="button button-primary"
+                  disabled={busy || reEvaluationReason.trim().length < 10}
+                  onClick={() => void reEvaluate()}
+                  type="button"
+                >
+                  {busy ? <RefreshCw className="spin" size={15} /> : <RefreshCw size={15} />}
+                  Confirm re-evaluation
+                </button>
+              </div>
+            </div>
+          )}
+        </section>
       )}
 
       <section className="panel report-table-panel">

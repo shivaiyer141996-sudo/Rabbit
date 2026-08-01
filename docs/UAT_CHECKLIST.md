@@ -8,10 +8,11 @@ a defect ID or explanatory notes. The application prevents final sign-off until 
 mandatory rows pass and locks the evidence register after authorisation.
 
 CI also runs `infra/pilot/smoke.sh` against the complete Docker stack. It verifies
-readiness, authenticated staff pages and APIs, the academic catalog, pilot register,
-student assessment discovery, attempt creation, response persistence, submission,
-admin publication, and the student's published result. This automated smoke is
-supporting evidence; it does not replace institution UAT.
+readiness, role-specific dashboards, the academic catalog, pilot register, student
+instructions, stable attempt resume, response persistence, live monitoring,
+server-enforced timeout submission, result confidentiality, reason-gated
+re-evaluation, publication, attempt history, and filtered student reports. This
+automated smoke is supporting evidence; it does not replace institution UAT.
 
 | Area | Acceptance check | Expected result |
 | --- | --- | --- |
@@ -19,9 +20,10 @@ supporting evidence; it does not replace institution UAT.
 | Tenant isolation | Attempt cross-tenant URL and relationship access | Request and database contract reject it |
 | Question governance | Author, validate, review, return, approve, version | Only approved questions enter assessments |
 | Assessment governance | Draft, review, approve, publish, schedule | Creator/reviewer separation remains enforced |
-| Delivery | Start, save, refresh, resume, timeout, submit | No accepted answer is lost or duplicated |
-| Evaluation | Score both MCQ types, re-evaluate, publish | Students see only explicitly published results |
-| Reports and exports | Open dashboards and drill-downs; download CSV, PDF, and XLSX | Published-tenant metrics and exported files match |
+| Delivery | Read instructions; start, save, refresh, resume, close at timeout, submit | Order remains stable; no accepted answer is lost or duplicated; the server submits an expired closed-browser attempt |
+| Evaluation | Score both MCQ types, re-evaluate with a reason, republish | Version increments and students see only explicitly published results |
+| Reports and exports | Filter student reports; compare departments/sections; open drill-downs; download CSV, PDF, and XLSX | Published-tenant metrics, comparisons, and exported files match |
+| Role workspace | Open every dashboard and navigation item as Admin, Academic Head, Faculty, Reviewer, and Student | Metrics, actions, and links are authorised and useful for that role |
 | Operations | Review dependencies, traffic, backlog, capacity | Readiness state and warnings match evidence |
 | Feature flags | Change rollout and disable an export | Audit event exists and behaviour changes safely |
 | Accessibility | Keyboard-only, focus order, labels, zoom 200%, reduced motion | Core journey remains understandable and operable |

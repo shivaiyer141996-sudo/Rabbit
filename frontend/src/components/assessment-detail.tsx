@@ -3,6 +3,7 @@
 import Link from "next/link";
 import {
   ArrowLeft,
+  Activity,
   CalendarClock,
   CheckCircle2,
   Send,
@@ -134,6 +135,11 @@ export function AssessmentDetail({ assessmentId }: { assessmentId: string }) {
         description={`${assessment.type.replaceAll("_", " ")} · ${subjectName(catalog, assessment.subjectId)}`}
         actions={
           <>
+            {assessment.startAt && (
+              <Link className="button button-secondary" href={`/assessments/${assessment.id}/monitor`}>
+                <Activity size={15} /> Monitor attempts
+              </Link>
+            )}
             {assessment.status === "DRAFT" && (
               <button
                 className="button button-primary"

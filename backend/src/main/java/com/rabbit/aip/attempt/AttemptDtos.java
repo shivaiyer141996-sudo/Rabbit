@@ -28,6 +28,47 @@ public final class AttemptDtos {
     ) {
     }
 
+    public record StudentAssessmentInstructions(
+            UUID id,
+            String title,
+            String code,
+            AssessmentType type,
+            int durationMinutes,
+            int questionCount,
+            BigDecimal totalMarks,
+            Instant startAt,
+            Instant endAt,
+            Instant serverNow,
+            int attemptsAllowed,
+            long attemptsUsed,
+            boolean shuffleQuestions,
+            boolean shuffleOptions,
+            boolean partialMarking,
+            UUID inProgressAttemptId,
+            Instant inProgressExpiresAt
+    ) {
+    }
+
+    public record AttemptHistoryItem(
+            UUID attemptId,
+            UUID assessmentId,
+            String assessmentTitle,
+            AssessmentType assessmentType,
+            AttemptStatus status,
+            ResultPublicationStatus publicationStatus,
+            Instant startedAt,
+            Instant expiresAt,
+            Instant submittedAt,
+            int answered,
+            int questionCount,
+            BigDecimal score,
+            BigDecimal maxScore,
+            BigDecimal percentage,
+            String grade,
+            int evaluationVersion
+    ) {
+    }
+
     public record PlayerOption(UUID id, String label, String text) {
     }
 

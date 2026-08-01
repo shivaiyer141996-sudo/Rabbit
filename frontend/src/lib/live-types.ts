@@ -152,6 +152,36 @@ export interface StudentAssessmentSummary {
   endAt: string;
 }
 
+export interface StudentAssessmentInstructions extends StudentAssessmentSummary {
+  serverNow: string;
+  attemptsAllowed: number;
+  attemptsUsed: number;
+  shuffleQuestions: boolean;
+  shuffleOptions: boolean;
+  partialMarking: boolean;
+  inProgressAttemptId?: string;
+  inProgressExpiresAt?: string;
+}
+
+export interface AttemptHistoryItem {
+  attemptId: string;
+  assessmentId: string;
+  assessmentTitle: string;
+  assessmentType: ApiAssessment["type"];
+  status: "IN_PROGRESS" | "SUBMITTED" | "AUTO_SUBMITTED";
+  publicationStatus: "PENDING_PUBLICATION" | "PUBLISHED";
+  startedAt: string;
+  expiresAt: string;
+  submittedAt?: string;
+  answered: number;
+  questionCount: number;
+  score?: number;
+  maxScore?: number;
+  percentage?: number;
+  grade?: string;
+  evaluationVersion: number;
+}
+
 export interface AttemptView {
   attemptId: string;
   assessmentId: string;

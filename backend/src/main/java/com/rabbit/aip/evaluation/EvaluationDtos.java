@@ -55,4 +55,32 @@ public final class EvaluationDtos {
             Instant publishedAt
     ) {
     }
+
+    public record MonitoringRow(
+            UUID attemptId,
+            UUID studentUserId,
+            String studentName,
+            AttemptStatus attemptStatus,
+            ResultPublicationStatus publicationStatus,
+            Instant startedAt,
+            Instant expiresAt,
+            Instant submittedAt,
+            int answered,
+            int questionCount,
+            long progressPercentage,
+            long secondsRemaining
+    ) {
+    }
+
+    public record AssessmentMonitor(
+            UUID assessmentId,
+            String assessmentTitle,
+            Instant generatedAt,
+            long totalAttempts,
+            long inProgress,
+            long submitted,
+            long autoSubmitted,
+            List<MonitoringRow> attempts
+    ) {
+    }
 }

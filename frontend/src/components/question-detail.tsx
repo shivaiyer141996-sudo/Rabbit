@@ -11,11 +11,13 @@ import {
   mapQuestion,
   type AcademicCatalog,
   type ApiQuestion,
+  type MeProfile,
 } from "@/lib/live-types";
-import type { Question } from "@/lib/types";
+import type { Question, UserRole } from "@/lib/types";
 
 export function QuestionDetail({ questionId }: { questionId: string }) {
   const [question, setQuestion] = useState<Question | null>(null);
+  const [role, setRole] = useState<UserRole | null>(null);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
@@ -25,11 +27,13 @@ export function QuestionDetail({ questionId }: { questionId: string }) {
     setLoading(true);
     setError("");
     try {
-      const [row, catalog] = await Promise.all([
+      const [row, catalog, profile] = await Promise.all([
         apiFetch<ApiQuestion>(`/questions/${questionId}`),
         apiFetch<AcademicCatalog>("/academic-catalog"),
+        apiFetch<MeProfile>("/auth/me"),
       ]);
       setQuestion(mapQuestion(row, catalog));
+      setRole(profile.role);
     } catch (requestError) {
       setQuestion(null);
       setError(apiErrorMessage(requestError, "Question details could not be loaded."));
@@ -78,6 +82,8 @@ export function QuestionDetail({ questionId }: { questionId: string }) {
     );
   }
 
+  const canAuthor = role !== null && role !== "REVIEWER";
+
   return (
     <div className="page">
       <Link className="button button-ghost" href="/question-bank">
@@ -89,7 +95,7 @@ export function QuestionDetail({ questionId }: { questionId: string }) {
         description={`Version ${question.version} · ${question.author}`}
         actions={
           <>
-            {question.status === "DRAFT" && (
+            {canAuthor && question.status === "DRAFT" && (
               <Link
                 className="button button-secondary"
                 href={`/question-bank/${question.id}/edit`}
@@ -97,7 +103,7 @@ export function QuestionDetail({ questionId }: { questionId: string }) {
                 <Pencil size={15} /> Edit draft
               </Link>
             )}
-            {question.status === "DRAFT" && (
+            {canAuthor && question.status === "DRAFT" && (
               <button
                 className="button button-primary"
                 disabled={busy}

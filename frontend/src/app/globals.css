@@ -3313,6 +3313,220 @@ textarea:focus-visible {
   margin-top: 30px;
 }
 
+/* Milestone 4.2 — functional and UI completion */
+
+.report-stack {
+  display: grid;
+  gap: 20px;
+}
+
+.report-filter-panel {
+  padding: 20px;
+}
+
+.report-filter-grid {
+  align-items: end;
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.report-filter-grid .field {
+  margin: 0;
+}
+
+.report-search-field {
+  grid-column: span 2;
+}
+
+.report-search-field .search-wrap {
+  min-width: 0;
+}
+
+.report-search-field .search-wrap input {
+  padding-left: 40px;
+}
+
+.report-filter-actions {
+  display: flex;
+  gap: 10px;
+  grid-column: span 2;
+}
+
+.comparison-grid {
+  display: grid;
+  gap: 18px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.comparison-grid .report-table-panel {
+  margin: 0;
+}
+
+.student-detail-panel {
+  scroll-margin-top: 90px;
+}
+
+.re-evaluation-form {
+  background: #faf9fc;
+  border-top: 1px solid var(--line);
+  display: grid;
+  gap: 12px;
+  padding: 18px 20px;
+}
+
+.re-evaluation-form > div:first-child {
+  display: grid;
+  gap: 4px;
+}
+
+.re-evaluation-form > div:first-child span {
+  color: var(--muted);
+  font-size: 10px;
+}
+
+.re-evaluation-form textarea {
+  background: white;
+  border: 1px solid #dcd8e6;
+  border-radius: 11px;
+  color: var(--ink);
+  line-height: 1.6;
+  min-height: 96px;
+  padding: 11px 13px;
+  resize: vertical;
+  width: 100%;
+}
+
+.re-evaluation-form textarea:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(89, 54, 200, 0.1);
+  outline: none;
+}
+
+.instructions-main {
+  max-width: 1180px;
+}
+
+.instructions-hero {
+  align-items: flex-start;
+  display: flex;
+  gap: 24px;
+  justify-content: space-between;
+}
+
+.instructions-hero p {
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.instructions-grid {
+  align-items: start;
+  display: grid;
+  gap: 20px;
+  grid-template-columns: minmax(0, 1.25fr) minmax(320px, 0.75fr);
+}
+
+.instruction-list {
+  display: grid;
+  gap: 13px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.instruction-list li {
+  align-items: flex-start;
+  background: #faf9fc;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  display: flex;
+  font-size: 12px;
+  gap: 11px;
+  line-height: 1.55;
+  padding: 13px;
+}
+
+.instruction-list svg {
+  color: var(--success);
+  flex: 0 0 auto;
+  margin-top: 1px;
+}
+
+.readiness-card {
+  position: sticky;
+  top: 20px;
+}
+
+.readiness-acknowledgement {
+  align-items: flex-start;
+  background: var(--primary-soft);
+  border-radius: 11px;
+  color: var(--primary-dark);
+  font-size: 11px;
+  line-height: 1.5;
+  margin: 16px 0;
+  padding: 12px;
+}
+
+.history-grid {
+  display: grid;
+  gap: 18px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.history-card {
+  display: flex;
+  flex-direction: column;
+}
+
+.history-card h2 {
+  font-size: 17px;
+  margin: 18px 0 5px;
+}
+
+.history-card > p {
+  color: var(--muted);
+  font-size: 11px;
+  margin: 0 0 14px;
+}
+
+.history-card .button-full {
+  margin-top: auto;
+}
+
+.monitor-progress {
+  align-items: center;
+  display: flex;
+  gap: 9px;
+  min-width: 150px;
+}
+
+.monitor-progress-track {
+  background: #e9e6ef;
+  border-radius: 99px;
+  height: 8px;
+  overflow: hidden;
+  width: 92px;
+}
+
+.monitor-progress-track span {
+  background: linear-gradient(90deg, var(--primary), #8c72df);
+  display: block;
+  height: 100%;
+}
+
+.monitor-progress strong {
+  font-size: 10px;
+  white-space: nowrap;
+}
+
+.timer.compact {
+  display: inline-flex;
+  font-size: 11px;
+  padding: 7px 9px;
+  white-space: nowrap;
+}
+
 @media (max-width: 1100px) {
   .intelligence-grid,
   .approval-layout,
@@ -3342,6 +3556,19 @@ textarea:focus-visible {
 
   .settings-savebar {
     grid-column: 1;
+  }
+
+  .report-filter-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .comparison-grid,
+  .instructions-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .readiness-card {
+    position: static;
   }
 }
 
@@ -3414,6 +3641,29 @@ textarea:focus-visible {
     align-items: stretch;
     flex-direction: column;
   }
+
+  .report-filter-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .report-search-field,
+  .report-filter-actions {
+    grid-column: 1;
+  }
+
+  .report-filter-actions,
+  .re-evaluation-form .header-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .history-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .instructions-hero {
+    flex-direction: column;
+  }
 }
 
 @media (max-width: 520px) {
@@ -3461,6 +3711,7 @@ textarea:focus-visible {
 
   .student-home-header {
     align-items: flex-start;
+    flex-wrap: wrap;
     gap: 14px;
   }
 
@@ -3470,6 +3721,16 @@ textarea:focus-visible {
 
   .pilot-check-fields {
     grid-template-columns: 1fr;
+  }
+
+  .report-filter-actions .button,
+  .re-evaluation-form .button {
+    width: 100%;
+  }
+
+  .instructions-main,
+  .history-page .student-home-main {
+    padding-inline: 16px;
   }
 }
 

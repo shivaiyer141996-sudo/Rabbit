@@ -75,6 +75,32 @@ public class AuditService {
         ));
     }
 
+    public void recordSystem(
+            UUID organisationId,
+            UUID relatedUserId,
+            String module,
+            String action,
+            String entityType,
+            UUID entityId,
+            String beforeValue,
+            String afterValue
+    ) {
+        events.save(new AuditEvent(
+                organisationId,
+                relatedUserId,
+                module,
+                action,
+                entityType,
+                entityId,
+                beforeValue,
+                afterValue,
+                "system@rabbit.local",
+                "SYSTEM",
+                "server",
+                null
+        ));
+    }
+
     public List<AuditEventResponse> search(
             String module,
             String action,

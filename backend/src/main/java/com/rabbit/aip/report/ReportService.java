@@ -2,6 +2,7 @@ package com.rabbit.aip.report;
 
 import com.rabbit.aip.assessment.Assessment;
 import com.rabbit.aip.assessment.AssessmentRepository;
+import com.rabbit.aip.assessment.AssessmentType;
 import com.rabbit.aip.attempt.AssessmentAttempt;
 import com.rabbit.aip.attempt.AssessmentAttemptRepository;
 import com.rabbit.aip.attempt.AttemptResponse;
@@ -19,6 +20,9 @@ import com.rabbit.aip.report.ReportDtos.IntelligenceOverview;
 import com.rabbit.aip.report.ReportDtos.LabelValue;
 import com.rabbit.aip.report.ReportDtos.QuestionPerformance;
 import com.rabbit.aip.report.ReportDtos.StudentPerformanceReport;
+import com.rabbit.aip.report.ReportDtos.StudentGroupComparison;
+import com.rabbit.aip.report.ReportDtos.StudentReport;
+import com.rabbit.aip.report.ReportDtos.StudentReportRow;
 import com.rabbit.aip.report.ReportDtos.StudentResultPoint;
 import com.rabbit.aip.security.CurrentSession;
 import com.rabbit.aip.settings.OrganisationSettings;
@@ -39,12 +43,15 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.jdbc.core.JdbcTemplate;
 
 @Service
 public class ReportService {
@@ -58,6 +65,7 @@ public class ReportService {
     private final OrganisationSettingsRepository settings;
     private final CurrentSession session;
     private final AuditService audit;
+    private final JdbcTemplate jdbc;
 
     public ReportService(
             AssessmentRepository assessments,
@@ -68,7 +76,8 @@ public class ReportService {
             OrganisationMembershipRepository memberships,
             OrganisationSettingsRepository settings,
             CurrentSession session,
-            AuditService audit
+            AuditService audit,
+            JdbcTemplate jdbc
     ) {
         this.assessments = assessments;
         this.attempts = attempts;
@@ -79,6 +88,7 @@ public class ReportService {
         this.settings = settings;
         this.session = session;
         this.audit = audit;
+        this.jdbc = jdbc;
     }
 
     @Transactional(readOnly = true)
@@ -237,6 +247,105 @@ public class ReportService {
     }
 
     @Transactional(readOnly = true)
+    public StudentReport students(
+            String query,
+            UUID subjectId,
+            AssessmentType assessmentType,
+            UUID departmentId,
+            UUID sectionId,
+            Instant submittedFrom,
+            Instant submittedBefore
+    ) {
+        UUID organisationId = session.organisationId();
+        Map<UUID, SectionContext> sectionContexts = sectionContexts(organisationId);
+        Map<UUID, UserAccount> userMap = users.findAllById(
+                        memberships.findAllByOrganisationIdOrderByCreatedAtDesc(
+                                        organisationId
+                                ).stream()
+                                .map(OrganisationMembership::getUserId)
+                                .toList()
+                ).stream()
+                .collect(Collectors.toMap(UserAccount::getId, Function.identity()));
+        String normalizedQuery = query == null
+                ? ""
+                : query.trim().toLowerCase(Locale.ROOT);
+        List<OrganisationMembership> studentMemberships = memberships
+                .findAllByOrganisationIdOrderByCreatedAtDesc(organisationId)
+                .stream()
+                .filter(item -> item.getRole() == UserRole.STUDENT)
+                .filter(item -> item.getStatus() == AccountStatus.ACTIVE)
+                .filter(item -> sectionId == null || sectionId.equals(item.getSectionId()))
+                .filter(item -> departmentId == null || departmentId.equals(
+                        sectionContext(sectionContexts, item).departmentId()
+                ))
+                .filter(item -> matchesStudentQuery(
+                        userMap.get(item.getUserId()), normalizedQuery
+                ))
+                .toList();
+        Set<UUID> studentIds = studentMemberships.stream()
+                .map(OrganisationMembership::getUserId)
+                .collect(Collectors.toSet());
+        Map<UUID, Assessment> assessmentMap = organisationAssessments();
+        List<AssessmentAttempt> filteredAttempts = publishedAttempts().stream()
+                .filter(item -> studentIds.contains(item.getStudentUserId()))
+                .filter(item -> {
+                    Assessment assessment = assessmentMap.get(item.getAssessmentId());
+                    if (assessment == null) return false;
+                    if (subjectId != null && !subjectId.equals(assessment.getSubjectId())) {
+                        return false;
+                    }
+                    if (assessmentType != null && assessmentType != assessment.getType()) {
+                        return false;
+                    }
+                    if (submittedFrom != null
+                            && item.getSubmittedAt().isBefore(submittedFrom)) {
+                        return false;
+                    }
+                    return submittedBefore == null
+                            || item.getSubmittedAt().isBefore(submittedBefore);
+                })
+                .sorted(Comparator.comparing(AssessmentAttempt::getSubmittedAt))
+                .toList();
+        Map<UUID, List<AssessmentAttempt>> attemptsByStudent = filteredAttempts.stream()
+                .collect(Collectors.groupingBy(AssessmentAttempt::getStudentUserId));
+        BigDecimal atRiskThreshold = organisationSettings().getAtRiskThreshold();
+        List<StudentReportRow> rows = studentMemberships.stream()
+                .map(membership -> studentReportRow(
+                        membership,
+                        userMap.get(membership.getUserId()),
+                        sectionContext(sectionContexts, membership),
+                        attemptsByStudent.getOrDefault(membership.getUserId(), List.of()),
+                        atRiskThreshold
+                ))
+                .sorted(Comparator.comparing(StudentReportRow::studentName))
+                .toList();
+        List<BigDecimal> allPercentages = percentages(filteredAttempts);
+        BigDecimal passMark = organisationSettings().getPassPercentage();
+        return new StudentReport(
+                rows.size(),
+                rows.stream().filter(item -> item.publishedResults() > 0).count(),
+                filteredAttempts.size(),
+                ReportMath.average(allPercentages),
+                rows.stream().filter(StudentReportRow::atRisk).count(),
+                rows,
+                groupComparisons(
+                        studentMemberships,
+                        filteredAttempts,
+                        sectionContexts,
+                        passMark,
+                        true
+                ),
+                groupComparisons(
+                        studentMemberships,
+                        filteredAttempts,
+                        sectionContexts,
+                        passMark,
+                        false
+                )
+        );
+    }
+
+    @Transactional(readOnly = true)
     public List<QuestionPerformance> questionAnalytics() {
         List<AssessmentAttempt> published = publishedAttempts();
         Map<UUID, Assessment> assessmentMap = assessments
@@ -302,6 +411,150 @@ public class ReportService {
                     );
                 })
                 .toList();
+    }
+
+    private StudentReportRow studentReportRow(
+            OrganisationMembership membership,
+            UserAccount user,
+            SectionContext context,
+            List<AssessmentAttempt> history,
+            BigDecimal atRiskThreshold
+    ) {
+        List<BigDecimal> resultPercentages = percentages(history);
+        String name = user == null
+                ? "Unknown student"
+                : user.getFirstName() + " " + user.getLastName();
+        return new StudentReportRow(
+                membership.getUserId(),
+                name,
+                user == null ? "" : user.getEmail(),
+                context.departmentId(),
+                context.departmentName(),
+                context.sectionId(),
+                context.sectionName(),
+                history.size(),
+                ReportMath.average(resultPercentages),
+                resultPercentages.stream()
+                        .max(BigDecimal::compareTo)
+                        .orElse(BigDecimal.ZERO),
+                history.stream()
+                        .map(AssessmentAttempt::getSubmittedAt)
+                        .max(Instant::compareTo)
+                        .orElse(null),
+                ReportMath.trajectory(resultPercentages),
+                isAtRisk(resultPercentages, atRiskThreshold)
+        );
+    }
+
+    private List<StudentGroupComparison> groupComparisons(
+            List<OrganisationMembership> studentMemberships,
+            List<AssessmentAttempt> filteredAttempts,
+            Map<UUID, SectionContext> sectionContexts,
+            BigDecimal passMark,
+            boolean departments
+    ) {
+        Map<GroupKey, List<OrganisationMembership>> grouped = studentMemberships.stream()
+                .collect(Collectors.groupingBy(membership -> {
+                    SectionContext context = sectionContext(sectionContexts, membership);
+                    return departments
+                            ? new GroupKey(
+                                    context.departmentId(), context.departmentName()
+                            )
+                            : new GroupKey(
+                                    context.sectionId(),
+                                    context.departmentName() + " · " + context.sectionName()
+                            );
+                }));
+        return grouped.entrySet().stream()
+                .sorted(Map.Entry.comparingByKey(
+                        Comparator.comparing(GroupKey::label)
+                ))
+                .map(entry -> {
+                    Set<UUID> studentIds = entry.getValue().stream()
+                            .map(OrganisationMembership::getUserId)
+                            .collect(Collectors.toSet());
+                    List<AssessmentAttempt> groupAttempts = filteredAttempts.stream()
+                            .filter(item -> studentIds.contains(item.getStudentUserId()))
+                            .toList();
+                    List<BigDecimal> groupPercentages = percentages(groupAttempts);
+                    long passed = groupPercentages.stream()
+                            .filter(value -> value.compareTo(passMark) >= 0)
+                            .count();
+                    return new StudentGroupComparison(
+                            entry.getKey().id(),
+                            entry.getKey().label(),
+                            entry.getValue().size(),
+                            groupAttempts.size(),
+                            ReportMath.average(groupPercentages),
+                            ReportMath.percentage(passed, groupPercentages.size())
+                    );
+                })
+                .toList();
+    }
+
+    private boolean matchesStudentQuery(UserAccount user, String normalizedQuery) {
+        if (normalizedQuery.isBlank()) return true;
+        if (user == null) return false;
+        String searchable = (user.getFirstName() + " " + user.getLastName()
+                + " " + user.getEmail()).toLowerCase(Locale.ROOT);
+        return searchable.contains(normalizedQuery);
+    }
+
+    private boolean isAtRisk(
+            List<BigDecimal> resultPercentages,
+            BigDecimal threshold
+    ) {
+        if (resultPercentages.size() < 2) return false;
+        return resultPercentages
+                .subList(resultPercentages.size() - 2, resultPercentages.size())
+                .stream()
+                .allMatch(item -> item.compareTo(threshold) < 0);
+    }
+
+    private Map<UUID, Assessment> organisationAssessments() {
+        return assessments.findAllByOrganisationIdOrderByUpdatedAtDesc(
+                        session.organisationId()
+                ).stream()
+                .collect(Collectors.toMap(Assessment::getId, Function.identity()));
+    }
+
+    private Map<UUID, SectionContext> sectionContexts(UUID organisationId) {
+        return jdbc.query(
+                        """
+                        SELECT s.id AS section_id,
+                               s.name AS section_name,
+                               d.id AS department_id,
+                               coalesce(d.name, 'Unassigned') AS department_name
+                        FROM sections s
+                        LEFT JOIN departments d
+                          ON d.id = s.department_id
+                         AND d.organisation_id = s.organisation_id
+                        WHERE s.organisation_id = ?
+                        """,
+                        (result, row) -> new SectionContext(
+                                result.getObject("section_id", UUID.class),
+                                result.getString("section_name"),
+                                result.getObject("department_id", UUID.class),
+                                result.getString("department_name")
+                        ),
+                        organisationId
+                ).stream()
+                .collect(Collectors.toMap(SectionContext::sectionId, Function.identity()));
+    }
+
+    private SectionContext sectionContext(
+            Map<UUID, SectionContext> sectionContexts,
+            OrganisationMembership membership
+    ) {
+        if (membership.getSectionId() == null) {
+            return new SectionContext(null, "Unassigned", null, "Unassigned");
+        }
+        return sectionContexts.getOrDefault(
+                membership.getSectionId(),
+                new SectionContext(
+                        membership.getSectionId(), "Unknown section", null, "Unassigned"
+                )
+        );
     }
 
     @Transactional
@@ -505,5 +758,16 @@ public class ReportService {
     private String cell(Object value) {
         String text = value == null ? "" : String.valueOf(value);
         return "\"" + text.replace("\"", "\"\"") + "\"";
+    }
+
+    private record SectionContext(
+            UUID sectionId,
+            String sectionName,
+            UUID departmentId,
+            String departmentName
+    ) {
+    }
+
+    private record GroupKey(UUID id, String label) {
     }
 }

@@ -5,6 +5,8 @@ import com.rabbit.aip.attempt.AttemptDtos.ResultView;
 import com.rabbit.aip.attempt.AttemptDtos.SaveResponseRequest;
 import com.rabbit.aip.attempt.AttemptDtos.SavedResponse;
 import com.rabbit.aip.attempt.AttemptDtos.StudentAssessment;
+import com.rabbit.aip.attempt.AttemptDtos.StudentAssessmentInstructions;
+import com.rabbit.aip.attempt.AttemptDtos.AttemptHistoryItem;
 import jakarta.validation.Valid;
 import java.util.List;
 import java.util.UUID;
@@ -32,6 +34,16 @@ public class StudentAssessmentController {
     @GetMapping("/assessments")
     List<StudentAssessment> available() {
         return service.available();
+    }
+
+    @GetMapping("/assessments/{assessmentId}")
+    StudentAssessmentInstructions instructions(@PathVariable UUID assessmentId) {
+        return service.instructions(assessmentId);
+    }
+
+    @GetMapping("/attempts/history")
+    List<AttemptHistoryItem> history() {
+        return service.history();
     }
 
     @PostMapping("/assessments/{assessmentId}/attempts")

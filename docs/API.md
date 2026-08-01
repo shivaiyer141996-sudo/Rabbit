@@ -44,22 +44,30 @@ All tenant-owned endpoints derive the organisation from the signed access token.
 | POST | `/assessments/{id}/publish` | Publish an approved assessment |
 | POST | `/assessments/{id}/schedule` | Define window and eligible sections |
 | GET | `/student/assessments` | Eligible scheduled assessments |
+| GET | `/student/assessments/{id}` | Instructions, delivery settings, server time, and attempt readiness |
 | POST | `/student/assessments/{id}/attempts` | Start or resume an attempt |
 | PUT | `/student/attempts/{id}/responses` | Upsert one response |
 | POST | `/student/attempts/{id}/submit` | Submit and auto-evaluate |
+| GET | `/student/attempts/history` | Current student's in-progress, submitted, and published attempt history |
 | GET | `/student/results/{attemptId}` | Pending state or published detailed result |
+
+Question and option ordering is deterministic per attempt when shuffle is enabled, so
+refresh and resume preserve the same presentation. A server worker locks, evaluates,
+and auto-submits expired attempts independently of the browser.
 
 ## Evaluation and intelligence
 
 | Method | Path | Purpose |
 | --- | --- | --- |
 | GET | `/evaluation/assessments/{id}/results` | Evaluation and publication queue |
+| GET | `/evaluation/assessments/{id}/monitor` | Live persisted attempt progress, state, and remaining server time |
 | POST | `/evaluation/assessments/{id}/publish` | Publish all evaluated pending results |
 | POST | `/evaluation/attempts/{id}/re-evaluate` | Governed MCQ re-evaluation with reason |
 | GET | `/dashboard` | Role-specific metrics, trend, and attention data |
 | GET | `/reports/overview` | Organisation intelligence overview |
 | GET | `/reports/assessments/{id}` | Assessment/student/question report |
 | GET | `/reports/students/me` | Current student progress report |
+| GET | `/reports/students` | Consolidated students with subject, type, department, section, date, and text filters |
 | GET | `/reports/students/{id}` | Role-scoped student report |
 | GET | `/reports/questions` | Question quality analytics |
 | GET | `/reports/faculty` | Faculty contribution report |

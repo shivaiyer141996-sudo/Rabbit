@@ -14,6 +14,8 @@ import com.rabbit.aip.common.exception.DomainException;
 import com.rabbit.aip.evaluation.EvaluationDtos.AssessmentEvaluationSummary;
 import com.rabbit.aip.evaluation.EvaluationDtos.EvaluationRow;
 import com.rabbit.aip.evaluation.EvaluationDtos.PublicationResponse;
+import com.rabbit.aip.evaluation.EvaluationDtos.AssessmentMonitor;
+import com.rabbit.aip.evaluation.EvaluationDtos.MonitoringRow;
 import com.rabbit.aip.notification.NotificationService;
 import com.rabbit.aip.notification.NotificationType;
 import com.rabbit.aip.question.Question;
@@ -25,7 +27,10 @@ import com.rabbit.aip.user.UserAccountRepository;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Instant;
+import java.time.Duration;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -102,6 +107,92 @@ public class EvaluationService {
                         .count(),
                 average,
                 evaluated.stream().map(this::row).toList()
+        );
+    }
+
+    @Transactional(readOnly = true)
+    public AssessmentMonitor monitor(UUID assessmentId) {
+        Assessment assessment = findAssessment(assessmentId);
+        List<AssessmentAttempt> assessmentAttempts = attempts
+                .findAllByOrganisationIdAndAssessmentIdOrderBySubmittedAtAsc(
+                        session.organisationId(), assessmentId
+                );
+        Map<UUID, UserAccount> studentMap = users.findAllById(
+                        assessmentAttempts.stream()
+                                .map(AssessmentAttempt::getStudentUserId)
+                                .distinct()
+                                .toList()
+                ).stream()
+                .collect(java.util.stream.Collectors.toMap(
+                        UserAccount::getId,
+                        java.util.function.Function.identity()
+                ));
+        Map<UUID, Long> answeredByAttempt = assessmentAttempts.isEmpty()
+                ? Map.of()
+                : responses.findAllByAttemptIdIn(
+                                assessmentAttempts.stream()
+                                        .map(AssessmentAttempt::getId)
+                                        .toList()
+                        ).stream()
+                        .filter(item -> !item.getSelectedOptionIds().isEmpty())
+                        .collect(java.util.stream.Collectors.groupingBy(
+                                AttemptResponse::getAttemptId,
+                                java.util.stream.Collectors.counting()
+                        ));
+        Instant now = Instant.now();
+        List<MonitoringRow> rows = assessmentAttempts.stream()
+                .map(attempt -> {
+                    UserAccount student = studentMap.get(attempt.getStudentUserId());
+                    int answered = answeredByAttempt
+                            .getOrDefault(attempt.getId(), 0L)
+                            .intValue();
+                    long progress = assessment.getQuestionCount() == 0
+                            ? 0
+                            : Math.round(answered * 100.0 / assessment.getQuestionCount());
+                    long secondsRemaining = attempt.getStatus() == AttemptStatus.IN_PROGRESS
+                            ? Math.max(0, Duration.between(now, attempt.getExpiresAt()).toSeconds())
+                            : 0;
+                    return new MonitoringRow(
+                            attempt.getId(),
+                            attempt.getStudentUserId(),
+                            student == null
+                                    ? "Unknown student"
+                                    : student.getFirstName() + " " + student.getLastName(),
+                            attempt.getStatus(),
+                            attempt.getResultStatus(),
+                            attempt.getStartedAt(),
+                            attempt.getExpiresAt(),
+                            attempt.getSubmittedAt(),
+                            answered,
+                            assessment.getQuestionCount(),
+                            progress,
+                            secondsRemaining
+                    );
+                })
+                .sorted(Comparator
+                        .comparing((MonitoringRow row) ->
+                                row.attemptStatus() != AttemptStatus.IN_PROGRESS
+                        )
+                        .thenComparing(
+                                MonitoringRow::startedAt,
+                                Comparator.reverseOrder()
+                        ))
+                .toList();
+        return new AssessmentMonitor(
+                assessment.getId(),
+                assessment.getTitle(),
+                now,
+                rows.size(),
+                rows.stream().filter(item ->
+                        item.attemptStatus() == AttemptStatus.IN_PROGRESS
+                ).count(),
+                rows.stream().filter(item ->
+                        item.attemptStatus() == AttemptStatus.SUBMITTED
+                ).count(),
+                rows.stream().filter(item ->
+                        item.attemptStatus() == AttemptStatus.AUTO_SUBMITTED
+                ).count(),
+                rows
         );
     }
 

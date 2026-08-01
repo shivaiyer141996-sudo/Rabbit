@@ -190,8 +190,13 @@ public class SettingsService {
 
     @Transactional(readOnly = true)
     public String resolveGrade(BigDecimal percentage) {
+        return resolveGrade(session.organisationId(), percentage);
+    }
+
+    @Transactional(readOnly = true)
+    public String resolveGrade(UUID organisationId, BigDecimal percentage) {
         return gradeBands.findAllByOrganisationIdOrderBySortOrder(
-                        session.organisationId()
+                        organisationId
                 ).stream()
                 .filter(band -> band.contains(percentage))
                 .findFirst()

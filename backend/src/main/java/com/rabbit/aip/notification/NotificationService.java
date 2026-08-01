@@ -82,7 +82,22 @@ public class NotificationService {
             String actionUrl,
             boolean critical
     ) {
-        UUID organisationId = session.organisationId();
+        notifyUserForOrganisation(
+                session.organisationId(), recipientUserId, type, title,
+                message, actionUrl, critical
+        );
+    }
+
+    @Transactional
+    public void notifyUserForOrganisation(
+            UUID organisationId,
+            UUID recipientUserId,
+            NotificationType type,
+            String title,
+            String message,
+            String actionUrl,
+            boolean critical
+    ) {
         NotificationPreference preference = preferences
                 .findByOrganisationIdAndUserId(organisationId, recipientUserId)
                 .orElseGet(() -> preferences.save(new NotificationPreference(
@@ -109,11 +124,25 @@ public class NotificationService {
             String actionUrl,
             boolean critical
     ) {
-        memberships.findAllByOrganisationIdOrderByCreatedAtDesc(
-                        session.organisationId()
-                ).stream()
+        notifyRolesForOrganisation(
+                session.organisationId(), roles, type, title, message, actionUrl, critical
+        );
+    }
+
+    @Transactional
+    public void notifyRolesForOrganisation(
+            UUID organisationId,
+            Set<UserRole> roles,
+            NotificationType type,
+            String title,
+            String message,
+            String actionUrl,
+            boolean critical
+    ) {
+        memberships.findAllByOrganisationIdOrderByCreatedAtDesc(organisationId).stream()
                 .filter(membership -> roles.contains(membership.getRole()))
-                .forEach(membership -> notifyUser(
+                .forEach(membership -> notifyUserForOrganisation(
+                        organisationId,
                         membership.getUserId(),
                         type,
                         title,

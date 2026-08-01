@@ -47,7 +47,7 @@ export function LoginForm() {
         );
         router.push("/select-organisation");
       } else {
-        router.push(result.role === "STUDENT" ? "/student/assessments" : "/dashboard");
+        router.push("/dashboard");
       }
       router.refresh();
     } catch (requestError) {

@@ -14,20 +14,23 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { ErrorState, LoadingState } from "@/components/data-state";
 import { PageHeader } from "@/components/page-header";
 import { StatusBadge } from "@/components/status-badge";
+import { StudentReportsPanel } from "@/components/student-reports-panel";
 import { apiErrorMessage, apiFetch } from "@/lib/api";
+import type { MeProfile } from "@/lib/live-types";
 import type {
   FacultyPerformance,
   IntelligenceOverview,
   QuestionPerformance,
 } from "@/lib/types";
 
-type ReportTab = "overview" | "questions" | "faculty";
+type ReportTab = "overview" | "students" | "questions" | "faculty";
 
 export function ReportsDashboard() {
   const [tab, setTab] = useState<ReportTab>("overview");
   const [overview, setOverview] = useState<IntelligenceOverview | null>(null);
   const [questionRows, setQuestionRows] = useState<QuestionPerformance[]>([]);
   const [facultyRows, setFacultyRows] = useState<FacultyPerformance[]>([]);
+  const [role, setRole] = useState<MeProfile["role"] | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -35,11 +38,15 @@ export function ReportsDashboard() {
     setLoading(true);
     setError("");
     try {
+      const profile = await apiFetch<MeProfile>("/auth/me");
       const [nextOverview, nextQuestions, nextFaculty] = await Promise.all([
         apiFetch<IntelligenceOverview>("/reports/overview"),
         apiFetch<QuestionPerformance[]>("/reports/questions"),
-        apiFetch<FacultyPerformance[]>("/reports/faculty").catch(() => []),
+        ["SUPER_ADMIN", "ORG_ADMIN", "ACADEMIC_HEAD"].includes(profile.role)
+          ? apiFetch<FacultyPerformance[]>("/reports/faculty")
+          : Promise.resolve([]),
       ]);
+      setRole(profile.role);
       setOverview(nextOverview);
       setQuestionRows(nextQuestions);
       setFacultyRows(nextFaculty);
@@ -64,6 +71,17 @@ export function ReportsDashboard() {
       ),
     [overview],
   );
+  const tabs = useMemo(
+    () =>
+      (["overview", "students", "questions", "faculty"] as ReportTab[]).filter(
+        (item) =>
+          item !== "faculty"
+          || role === "SUPER_ADMIN"
+          || role === "ORG_ADMIN"
+          || role === "ACADEMIC_HEAD",
+      ),
+    [role],
+  );
 
   if (loading) {
     return <div className="page"><LoadingState label="Loading published report data…" /></div>;
@@ -86,7 +104,7 @@ export function ReportsDashboard() {
       />
 
       <div className="segmented-control" role="tablist" aria-label="Report category">
-        {(["overview", "questions", "faculty"] as ReportTab[]).map((item) => (
+        {tabs.map((item) => (
           <button
             aria-selected={tab === item}
             className={tab === item ? "active" : ""}
@@ -96,6 +114,8 @@ export function ReportsDashboard() {
           >
             {item === "overview"
               ? "Institution overview"
+              : item === "students"
+                ? "Student reports"
               : item === "questions"
                 ? "Question analytics"
                 : "Faculty contribution"}
@@ -217,6 +237,8 @@ export function ReportsDashboard() {
           </section>
         </>
       )}
+
+      {tab === "students" && <StudentReportsPanel />}
 
       {tab === "questions" && (
         <section className="panel report-table-panel">

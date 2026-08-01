@@ -55,7 +55,7 @@ export function OrganisationSelector() {
         throw new Error(body?.message ?? "The workspace could not be selected.");
       }
       sessionStorage.removeItem("rabbit_org_choices");
-      router.replace(body?.role === "STUDENT" ? "/student/assessments" : "/dashboard");
+      router.replace("/dashboard");
       router.refresh();
     } catch (requestError) {
       setError(

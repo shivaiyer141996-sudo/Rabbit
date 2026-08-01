@@ -77,10 +77,10 @@ export function StudentAssessmentList() {
               </div>
               <Link
                 className="button button-primary button-full"
-                href={`/student/assessments/${assessment.id}`}
+                href={`/student/assessments/${assessment.id}/instructions`}
                 style={{ marginTop: 16 }}
               >
-                <PlayCircle size={15} /> Start or resume
+                <PlayCircle size={15} /> Read instructions
               </Link>
               <span className="panel-note">
                 <Clock3 size={13} /> Timer is enforced by the server.

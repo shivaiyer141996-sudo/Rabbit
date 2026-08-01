@@ -6,15 +6,16 @@ import { usePathname, useRouter } from "next/navigation";
 import {
   Activity,
   BarChart3,
+  Bell,
   BookOpenCheck,
   Building2,
   ClipboardList,
   FileQuestion,
+  History,
   LayoutDashboard,
   LogOut,
   Menu,
   Rocket,
-  Search,
   ShieldCheck,
   Settings,
   Users,
@@ -37,6 +38,18 @@ interface NavigationItem {
 
 const navigation: NavigationItem[] = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard, roles: ["ALL"] },
+  {
+    href: "/student/assessments",
+    label: "Assessments",
+    icon: ClipboardList,
+    roles: ["STUDENT"],
+  },
+  {
+    href: "/student/history",
+    label: "Attempt History",
+    icon: History,
+    roles: ["STUDENT"],
+  },
   {
     href: "/question-bank",
     label: "Question Bank",
@@ -90,6 +103,12 @@ const navigation: NavigationItem[] = [
     label: "Pilot readiness",
     icon: Rocket,
     roles: ["SUPER_ADMIN", "ORG_ADMIN"],
+  },
+  {
+    href: "/notifications",
+    label: "Notifications",
+    icon: Bell,
+    roles: ["ALL"],
   },
 ];
 
@@ -242,9 +261,6 @@ export function AppShell({
           </div>
         </div>
         <div className="topbar-actions">
-          <button className="icon-button" aria-label="Search">
-            <Search size={18} />
-          </button>
           <NotificationPopover />
         </div>
       </header>
