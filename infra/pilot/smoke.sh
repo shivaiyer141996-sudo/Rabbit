@@ -337,7 +337,7 @@ curl --fail --silent --show-error \
     "${rabbit_base_url}/gateway/backend/student/attempts/history" \
     >"${rabbit_smoke_tmp}/history-pending.json"
 python3 -c \
-    'import json,sys; row=next(row for row in json.load(sys.stdin) if row["attemptId"] == sys.argv[1]); assert row["status"] in ("SUBMITTED", "AUTO_SUBMITTED"); assert row["publicationStatus"] == "PENDING_PUBLICATION"; assert row["score"] is None and row["percentage"] is None' \
+    'import json,sys; row=next(row for row in json.load(sys.stdin) if row["attemptId"] == sys.argv[1]); assert row["status"] in ("SUBMITTED", "AUTO_SUBMITTED"); assert row["publicationStatus"] == "PENDING_PUBLICATION"; assert "score" not in row and "percentage" not in row' \
     "${attempt_id}" <"${rabbit_smoke_tmp}/history-pending.json"
 
 curl --fail --silent --show-error \
@@ -393,7 +393,7 @@ curl --fail --silent --show-error \
     "${rabbit_base_url}/gateway/backend/student/attempts/history" \
     >"${rabbit_smoke_tmp}/history-after-re-evaluation.json"
 python3 -c \
-    'import json,sys; row=next(row for row in json.load(sys.stdin) if row["attemptId"] == sys.argv[1]); assert row["publicationStatus"] == "PENDING_PUBLICATION"; assert row["evaluationVersion"] == 2; assert row["score"] is None' \
+    'import json,sys; row=next(row for row in json.load(sys.stdin) if row["attemptId"] == sys.argv[1]); assert row["publicationStatus"] == "PENDING_PUBLICATION"; assert row["evaluationVersion"] == 2; assert "score" not in row' \
     "${attempt_id}" <"${rabbit_smoke_tmp}/history-after-re-evaluation.json"
 
 curl --fail --silent --show-error \
