@@ -11,11 +11,14 @@ and evidence milestone. It does not add product scope.
 - Blocking release evidence: human desktop and 360 px Android visual acceptance
 - Blocking pilot decisions: institution, named operating owners, final dates, and
   the designated local host/network/backup arrangement
+- Final database decision: local PostgreSQL on the designated computer; AWS and
+  managed cloud databases are rejected for Milestone 5
 
 Milestone 5 will use a local-only environment. Rabbit must not be deployed to AWS
 or another cloud service, made publicly reachable, or connected to a paid hosting
-account during this stage. Institution data may be loaded only after the relevant
-owner approves the decision register below.
+account. This is a final Milestone 5 constraint, not a pending approval item.
+Institution data may be loaded only after the relevant owner approves the remaining
+pilot decisions below.
 
 ## Release 1.0 scope freeze
 
@@ -42,8 +45,9 @@ release candidate during the pilot.
 | Academic content | 2 subjects, at least 4 topics, and at least 100 approved MCQs | Proposed with institution |
 | Assessments | One staff rehearsal plus one live student assessment covering the full question-to-report journey | Proposed |
 | Live assessment size | 30–45 questions, 45–60 minutes, maximum 30 concurrent students in the first live run | Proposed with institution |
-| Hosting | One designated local laptop or desktop running Rabbit through Docker Compose; 16 GB RAM recommended, 8 GB minimum for rehearsal, 4 CPU cores, and at least 30 GB free SSD space | **Local-only — Shiva confirmed** |
-| Storage | PostgreSQL, uploaded assets, Redis, and RabbitMQ data stored in Docker named volumes on the designated computer | **Local-only — Shiva confirmed** |
+| Hosting | One designated local laptop or desktop running Rabbit through Docker Compose; 16 GB RAM recommended, 8 GB minimum for rehearsal, 4 CPU cores, and at least 30 GB free SSD space | **Final — local only** |
+| Database | Local PostgreSQL 16 container using the persistent `postgres-data` Docker volume on the designated computer | **Final — Shiva decided** |
+| Supporting storage | Uploaded assets, Redis, and RabbitMQ data stored in local Docker named volumes on the designated computer | **Final — local only** |
 | Incremental hosting cost | ₹0 cloud cost; use the existing computer, power, and local network | **Approved direction** |
 | User access | `localhost` for individual review; the same trusted Wi-Fi/LAN for multi-user pilot access; no public URL, port forwarding, or public tunnel | Proposed with institution |
 | Backup | Daily checksum-verified backup to a separate local USB drive, external disk, or second approved computer; a copy on the same host disk is not sufficient | **TBD — device and owner required** |
@@ -67,7 +71,8 @@ institution data must continue to be handled by Rabbit's backend and PostgreSQL.
   are prohibited for this milestone.
 - A host-disk failure can remove both the application data and Docker volumes.
   Therefore, the latest backup must also exist on a separate approved local device.
-- Moving Rabbit to cloud hosting is deferred and requires a new explicit approval.
+- AWS, managed cloud databases, and other cloud hosting will not be proposed or
+  used during Milestone 5.
 
 ## Proposed dates
 
@@ -107,8 +112,8 @@ Exit criteria:
 - The Release 1.0 scope freeze is accepted in writing.
 - The local host computer, host owner, trusted LAN, access location, and backup
   device/path are approved.
-- No cloud account, hosting budget, domain, public IP, or certificate is required
-  during the local-only milestone.
+- No cloud account, hosting budget, domain, public IP, or certificate is required,
+  and none may be created for Milestone 5.
 - Every operating responsibility has a reachable primary owner and backup.
 - Email/SMS remains disabled unless a provider, credentials, consent wording,
   monitoring, and escalation owner are separately approved.
@@ -160,8 +165,7 @@ Exit criteria:
 - Actual recovery stays within the four-hour RTO and 24-hour RPO.
 - A rollback rehearsal identifies the exact owner, command, and communication path.
 - If the designated local host cannot meet the approved load target, reduce the
-  pilot cohort or stop for a separate hosting decision; do not move to cloud hosting
-  without Shiva's explicit approval.
+  pilot cohort or stop the pilot; do not move to cloud hosting.
 
 ## M5.4 — Run the institutional pilot
 
