@@ -4,6 +4,7 @@ import com.rabbit.aip.audit.AuditService;
 import com.rabbit.aip.feature.FeatureFlagKey;
 import com.rabbit.aip.feature.FeatureFlagService;
 import com.rabbit.aip.report.ReportDtos.AssessmentReport;
+import com.rabbit.aip.report.ReportDtos.TeacherAnalyticsReport;
 import java.util.Locale;
 import java.util.UUID;
 import org.springframework.stereotype.Service;
@@ -55,6 +56,38 @@ public class ReportExportService {
         );
         return new ExportedReport(
                 filename(report.title(), "xlsx"),
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                content
+        );
+    }
+
+    @Transactional
+    public ExportedReport teacherPdf(UUID teacherUserId) {
+        featureFlags.require(FeatureFlagKey.PDF_EXPORTS);
+        TeacherAnalyticsReport report = reports.teacherAnalytics(teacherUserId);
+        byte[] content = pdfWriter.write(report);
+        audit.record(
+                "RPT", "EXPORT_TEACHER_PDF", "UserAccount", report.teacherUserId(),
+                null, "Scope: " + report.teacherName() + "; Bytes: " + content.length
+        );
+        return new ExportedReport(
+                filename(report.teacherName() + " teacher analytics", "pdf"),
+                "application/pdf",
+                content
+        );
+    }
+
+    @Transactional
+    public ExportedReport teacherExcel(UUID teacherUserId) {
+        featureFlags.require(FeatureFlagKey.EXCEL_EXPORTS);
+        TeacherAnalyticsReport report = reports.teacherAnalytics(teacherUserId);
+        byte[] content = excelWriter.write(report);
+        audit.record(
+                "RPT", "EXPORT_TEACHER_XLSX", "UserAccount", report.teacherUserId(),
+                null, "Scope: " + report.teacherName() + "; Bytes: " + content.length
+        );
+        return new ExportedReport(
+                filename(report.teacherName() + " teacher analytics", "xlsx"),
                 "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                 content
         );

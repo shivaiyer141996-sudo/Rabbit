@@ -155,15 +155,15 @@ public class DashboardService {
         List<DashboardAttention> attention = List.of(
                 attention("Draft assessments", "Complete and submit your draft assessments for review.", authoredAssessments.stream().filter(item -> item.getStatus() == AssessmentStatus.DRAFT).count(), "WARNING", "/assessments"),
                 attention("Live assessments", "Monitor students currently inside an open delivery window.", activeDeliveries, "INFO", "/assessments"),
-                attention("Results awaiting publication", "Review evaluated submissions before students see them.", pendingPublication, "INFO", "/reports")
+                attention("Results awaiting publication", "Review evaluated submissions before students see them.", pendingPublication, "INFO", "/reports/teacher")
         );
         return response(
                 "Your question authoring, assessment delivery, and learner outcomes in one place.",
                 List.of(
                         metric("Questions authored", authoredQuestions.size(), "Your question bank", "PRIMARY", "/question-bank"),
                         metric("Assessments created", authoredAssessments.size(), "Your lifecycle queue", "INFO", "/assessments"),
-                        metric("Student submissions", published.size(), "Published evaluations", "SUCCESS", "/reports"),
-                        metric("Average score", average(published.stream().map(AssessmentAttempt::getPercentage).toList()) + "%", "Your assessments", "SUCCESS", "/reports")
+                        metric("Student submissions", published.size(), "Published evaluations", "SUCCESS", "/reports/teacher"),
+                        metric("Average score", average(published.stream().map(AssessmentAttempt::getPercentage).toList()) + "%", "Your assessments", "SUCCESS", "/reports/teacher")
                 ),
                 trend,
                 attention
@@ -246,16 +246,16 @@ public class DashboardService {
                     "Review your published history and speak with your faculty member.",
                     1,
                     "DANGER",
-                    "/student/history"
+                    "/student/reports"
             ));
         }
         return response(
                 "Your upcoming assessments, submitted attempts, and published progress.",
                 List.of(
                         metric("Available now", available, "Eligible open assessments", "PRIMARY", "/student/assessments"),
-                        metric("Average score", performance.averagePercentage() + "%", "Published results", "SUCCESS", "/student/history"),
-                        metric("Best score", performance.bestPercentage() + "%", "Personal best", "INFO", "/student/history"),
-                        metric("Progress", performance.trajectory(), performance.atRisk() ? "Support recommended" : "Recent published results", performance.atRisk() ? "DANGER" : "SUCCESS", "/student/history")
+                        metric("Average score", performance.averagePercentage() + "%", "Published results", "SUCCESS", "/student/reports"),
+                        metric("Best score", performance.bestPercentage() + "%", "Personal best", "INFO", "/student/reports"),
+                        metric("Progress", performance.trajectory(), performance.atRisk() ? "Support recommended" : "Recent published results", performance.atRisk() ? "DANGER" : "SUCCESS", "/student/reports")
                 ),
                 performance.results().stream()
                         .map(item -> new DashboardTrend(
@@ -273,9 +273,20 @@ public class DashboardService {
             List<DashboardAttention> attention
     ) {
         return new DashboardResponse(
-                session.role().name(), greeting(), description, metrics, trend,
+                session.role().name(), workspaceTitle(), greeting(), description,
+                metrics, trend,
                 attention, unread()
         );
+    }
+
+    private String workspaceTitle() {
+        return switch (session.role()) {
+            case SUPER_ADMIN, ORG_ADMIN -> "Admin Dashboard";
+            case ACADEMIC_HEAD -> "Academic Head Dashboard";
+            case FACULTY -> "Teacher Dashboard";
+            case REVIEWER -> "Reviewer Dashboard";
+            case STUDENT -> "Student Dashboard";
+        };
     }
 
     private DashboardCounts counts() {

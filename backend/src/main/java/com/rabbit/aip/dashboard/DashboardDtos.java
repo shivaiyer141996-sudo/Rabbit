@@ -31,6 +31,7 @@ public final class DashboardDtos {
 
     public record DashboardResponse(
             String role,
+            String workspaceTitle,
             String greeting,
             String description,
             List<DashboardMetric> metrics,

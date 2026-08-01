@@ -23,10 +23,10 @@ Status meanings:
 | QRV/ASM governed approval | Implemented | Checklist/history, creator-reviewer separation, review queues, 48-hour operations signal |
 | DEL eligibility, recovery, timer, submit | Implemented | Instructions, tenant/section/window checks, stable per-attempt shuffle, persisted recovery, row-locked saves, server expiry worker, idempotent submit, and attempt history |
 | DEL live monitoring | Implemented | Dedicated assessment monitor shows persisted answer progress, attempt state, and remaining server time |
-| EVL objective scoring and re-evaluation | Implemented | Both supported MCQ types, marking rules, grades, reason-gated re-evaluation UI, versioning, and publication reset |
+| EVL objective scoring and re-evaluation | Implemented | Both supported MCQ types, marking rules, grades, automatic recalculation, manual question-level score review, reason gate, versioning, publication reset, and attempt audit trail |
 | EVL result publication | Implemented | Pending/published states and explicit faculty/admin publication |
-| RPT institution/assessment/student/faculty/question reports | Implemented | Published-data-only APIs/UI, consolidated student filters, individual drill-down, and department/section comparison |
-| RPT CSV, PDF, and Excel | Implemented | Audited downloads; valid multi-page PDF and native three-sheet XLSX tests |
+| RPT institution/assessment/student/faculty/question reports | Implemented | Published-data-only APIs/UI, consolidated filters, subject/topic/difficulty/time/question student drill-down, teacher batch/student/weak-topic analytics, and department/section comparison |
+| RPT CSV, PDF, and Excel | Implemented | Audited downloads; assessment PDF/three-sheet XLSX and teacher PDF/four-sheet XLSX |
 | NTF in-app centre and retry state | Implemented | Inbox, preferences, critical override, worker state |
 | NTF email/SMS adapters | Provider gate | `EXTERNAL_DELIVERY` defaults off pending approved provider and monitoring |
 | ADM immutable audit | Implemented | Actor, role, IP, trace, before/after, filters, CSV, feature/export events |

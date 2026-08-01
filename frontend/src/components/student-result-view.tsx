@@ -85,9 +85,12 @@ export function StudentResultView({ attemptId }: { attemptId: string }) {
               <div className="result-stat"><strong>{minutes}m {seconds}s</strong><span>Time taken</span></div>
               <div className="result-stat"><strong>v{result.evaluationVersion}</strong><span>Evaluation</span></div>
             </div>
-            <Link className="button button-primary" href="/dashboard">
-              <ArrowLeft size={15} /> Return to dashboard
-            </Link>
+            <div className="header-actions">
+              <Link className="button button-secondary" href="/student/reports">Performance report</Link>
+              <Link className="button button-primary" href="/dashboard">
+                <ArrowLeft size={15} /> Return to dashboard
+              </Link>
+            </div>
           </section>
         </div>
       </div>
@@ -154,17 +157,23 @@ export function StudentResultView({ attemptId }: { attemptId: string }) {
               >
                 <div className="result-question-heading">
                   <span>Q{index + 1}</span>
-                  <strong>{question.stem}</strong>
+                  <div>
+                    <strong>{question.questionCode} · {question.stem}</strong>
+                    <span className="table-subtitle">{question.difficulty} · {question.timeSpentSeconds}s</span>
+                  </div>
                   <span>{question.awardedMarks}/{question.maxMarks}</span>
                 </div>
-                <div className="answer-comparison">
-                  <span>
-                    Your selection:{" "}
-                    {question.selectedOptionIds.length
-                      ? question.selectedOptionIds.length
-                      : "Not answered"}
-                  </span>
-                  <span>Correct option(s): {question.correctOptionIds.length}</span>
+                <div className="review-answer-grid">
+                  <div>
+                    <span>Your answer</span>
+                    {question.options.some((option) => option.selected)
+                      ? question.options.filter((option) => option.selected).map((option) => <strong key={option.optionId}>{option.label}. {option.text}</strong>)
+                      : <strong>Not answered</strong>}
+                  </div>
+                  <div>
+                    <span>Correct answer</span>
+                    {question.options.filter((option) => option.correct).map((option) => <strong key={option.optionId}>{option.label}. {option.text}</strong>)}
+                  </div>
                 </div>
                 {question.explanation && <p>{question.explanation}</p>}
               </article>
@@ -174,9 +183,12 @@ export function StudentResultView({ attemptId }: { attemptId: string }) {
 
         <div className="result-footer">
           <span><Clock3 size={14} /> Published evaluations are read-only.</span>
-          <Link className="button button-primary" href="/dashboard">
-            <ArrowLeft size={15} /> Return to dashboard
-          </Link>
+          <div className="header-actions">
+            <Link className="button button-secondary" href="/student/reports">Performance report</Link>
+            <Link className="button button-primary" href="/dashboard">
+              <ArrowLeft size={15} /> Return to dashboard
+            </Link>
+          </div>
         </div>
       </div>
     </div>

@@ -7,6 +7,10 @@ import com.rabbit.aip.report.ReportDtos.AssessmentReport;
 import com.rabbit.aip.report.ReportDtos.CountValue;
 import com.rabbit.aip.report.ReportDtos.QuestionPerformance;
 import com.rabbit.aip.report.ReportDtos.StudentResultPoint;
+import com.rabbit.aip.report.ReportDtos.TeacherAnalyticsReport;
+import com.rabbit.aip.report.ReportDtos.TeacherBatchAnalytics;
+import com.rabbit.aip.report.ReportDtos.TeacherStudentComparison;
+import com.rabbit.aip.report.ReportDtos.TeacherWeakTopic;
 import java.io.ByteArrayInputStream;
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
@@ -59,6 +63,36 @@ class ReportExportWriterTest {
         assertThat(workbook).contains("Student Results", "Question Analytics");
     }
 
+    @Test
+    void createsTeacherPdfAndFourSheetExcelWorkbook() throws Exception {
+        TeacherAnalyticsReport report = teacherReport();
+
+        String pdf = new String(
+                new PdfReportWriter().write(report), StandardCharsets.US_ASCII
+        );
+        assertThat(pdf)
+                .startsWith("%PDF-1.4")
+                .contains("TEACHER ANALYTICS REPORT")
+                .endsWith("%%EOF\n");
+
+        byte[] output = new ExcelReportWriter().write(report);
+        List<String> entries = new ArrayList<>();
+        String workbook = "";
+        try (ZipInputStream zip = new ZipInputStream(new ByteArrayInputStream(output))) {
+            ZipEntry entry;
+            while ((entry = zip.getNextEntry()) != null) {
+                entries.add(entry.getName());
+                if (entry.getName().equals("xl/workbook.xml")) {
+                    workbook = new String(zip.readAllBytes(), StandardCharsets.UTF_8);
+                }
+            }
+        }
+        assertThat(entries).contains("xl/worksheets/sheet4.xml");
+        assertThat(workbook).contains(
+                "Batch Analytics", "Student Comparison", "Weak Topics"
+        );
+    }
+
     private AssessmentReport report(int studentCount) {
         UUID assessmentId = UUID.fromString(
                 "77777777-7777-7777-7777-777777777703"
@@ -103,6 +137,58 @@ class ReportExportWriterTest {
                 List.of(question),
                 Instant.parse("2026-07-30T10:00:00Z"),
                 "admin@demo.rabbit.local"
+        );
+    }
+
+    private TeacherAnalyticsReport teacherReport() {
+        UUID teacherId = UUID.randomUUID();
+        UUID studentId = UUID.randomUUID();
+        UUID sectionId = UUID.randomUUID();
+        UUID subjectId = UUID.randomUUID();
+        UUID topicId = UUID.randomUUID();
+        return new TeacherAnalyticsReport(
+                teacherId,
+                "Demo Teacher",
+                2,
+                4,
+                BigDecimal.valueOf(74.5),
+                1,
+                List.of(new TeacherBatchAnalytics(
+                        sectionId,
+                        "Science · A",
+                        20,
+                        2,
+                        4,
+                        4,
+                        BigDecimal.valueOf(10),
+                        BigDecimal.valueOf(74.5),
+                        BigDecimal.valueOf(75)
+                )),
+                List.of(new TeacherStudentComparison(
+                        studentId,
+                        "Demo Student",
+                        "Science · A",
+                        2,
+                        BigDecimal.valueOf(74.5),
+                        BigDecimal.valueOf(80),
+                        BigDecimal.valueOf(100),
+                        1,
+                        "IMPROVING",
+                        false
+                )),
+                List.of(new TeacherWeakTopic(
+                        subjectId,
+                        "Physics",
+                        topicId,
+                        "Motion",
+                        3,
+                        4,
+                        BigDecimal.valueOf(45),
+                        BigDecimal.valueOf(50),
+                        42,
+                        true
+                )),
+                Instant.parse("2026-08-01T10:00:00Z")
         );
     }
 }

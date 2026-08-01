@@ -1,6 +1,6 @@
 # Milestone 4.2 — Functional and UI completion
 
-Status: **Implementation complete — branch verification pending**
+Status: **Functional completion implemented — branch verification pending**
 
 Milestone 4.2 closes the functional and interface gaps found after the Milestone 4.1
 release review. It does not add AI, subjective evaluation, proctoring, native mobile
@@ -31,11 +31,26 @@ applications, or external provider integrations.
   submission date range.
 - The report includes filtered totals plus department and section comparisons.
 - Staff can open an individual student's published performance history.
+- Students and authorised staff can inspect subject-wise, topic-wise,
+  difficulty-wise, time, and question-level analysis from published results.
 - Authorised staff can re-evaluate a completed attempt only after providing a reason of
   at least ten characters; the updated result returns to pending publication.
+- Manual review exposes persisted selections and bounded awarded-mark controls.
+- Every score change creates a new evaluation version, resets publication, and appears
+  in the attempt's immutable evaluation audit trail.
 - The UI shows the evaluation version and current publication state.
 
-## 4. Exam journey completion
+## 4. Teacher reports
+
+- Teachers see analytics only for assessments they created; Admin and Academic Head
+  can select one teacher or use institution-wide scope.
+- Batch analytics includes eligible students, assessments, submissions, completion,
+  average score, and pass rate.
+- Student comparison provides rank, average, best, pass rate, trajectory, and risk.
+- Weak-topic analysis combines marks, correct rate, and response time.
+- The selected teacher scope exports to governed PDF and native four-sheet Excel.
+
+## 5. Exam journey completion
 
 - Students see an instructions/readiness screen before starting a new assessment.
 - Students can see attempt history, including in-progress, submitted, auto-submitted,
@@ -45,7 +60,7 @@ applications, or external provider integrations.
 - Empty, loading, failure, narrow-screen, keyboard, and reduced-motion states are usable
   for every new journey.
 
-## 5. Release evidence
+## 6. Release evidence
 
 - Backend verification, frontend lint/type-check/tests/build, production dependency
   audit, PostgreSQL V1–V7 migration/tenant contract, Docker image builds, Trivy scans,

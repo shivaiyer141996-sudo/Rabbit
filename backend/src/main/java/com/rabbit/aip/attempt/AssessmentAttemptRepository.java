@@ -52,6 +52,18 @@ public interface AssessmentAttemptRepository
             UUID organisationId
     );
 
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("""
+            select attempt
+            from AssessmentAttempt attempt
+            where attempt.id = :id
+              and attempt.organisationId = :organisationId
+            """)
+    Optional<AssessmentAttempt> findByIdAndOrganisationIdForUpdate(
+            @Param("id") UUID id,
+            @Param("organisationId") UUID organisationId
+    );
+
     List<AssessmentAttempt> findAllByOrganisationIdAndAssessmentIdOrderBySubmittedAtAsc(
             UUID organisationId,
             UUID assessmentId

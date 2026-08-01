@@ -2,6 +2,7 @@ package com.rabbit.aip.attempt;
 
 import com.rabbit.aip.assessment.AssessmentType;
 import com.rabbit.aip.question.QuestionType;
+import com.rabbit.aip.question.Difficulty;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import java.math.BigDecimal;
@@ -133,14 +134,28 @@ public final class AttemptDtos {
 
     public record ResultQuestion(
             UUID questionId,
+            String questionCode,
             String stem,
+            UUID subjectId,
             UUID topicId,
+            Difficulty difficulty,
             Set<UUID> selectedOptionIds,
             Set<UUID> correctOptionIds,
+            List<ResultOption> options,
             BigDecimal awardedMarks,
             BigDecimal maxMarks,
             boolean correct,
+            int timeSpentSeconds,
             String explanation
+    ) {
+    }
+
+    public record ResultOption(
+            UUID optionId,
+            String label,
+            String text,
+            boolean selected,
+            boolean correct
     ) {
     }
 }

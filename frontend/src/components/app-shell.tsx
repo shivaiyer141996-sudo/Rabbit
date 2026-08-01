@@ -51,6 +51,12 @@ const navigation: NavigationItem[] = [
     roles: ["STUDENT"],
   },
   {
+    href: "/student/reports",
+    label: "Performance Report",
+    icon: BarChart3,
+    roles: ["STUDENT"],
+  },
+  {
     href: "/question-bank",
     label: "Question Bank",
     icon: FileQuestion,

@@ -96,6 +96,7 @@ export interface DashboardAttention {
 
 export interface DashboardResponse {
   role: UserRole;
+  workspaceTitle: string;
   greeting: string;
   description: string;
   metrics: DashboardMetric[];
@@ -201,6 +202,110 @@ export interface StudentReport {
   sections: StudentGroupComparison[];
 }
 
+export interface StudentAnalysisBreakdown {
+  key: string;
+  label: string;
+  questionCount: number;
+  answeredQuestions: number;
+  correctAnswers: number;
+  awardedMarks: number;
+  maxMarks: number;
+  percentage: number;
+  averageTimeSeconds: number;
+  weak: boolean;
+}
+
+export interface StudentQuestionReview {
+  attemptId: string;
+  assessmentId: string;
+  assessmentTitle: string;
+  submittedAt: string;
+  questionId: string;
+  questionCode: string;
+  stem: string;
+  subjectName: string;
+  topicName: string;
+  difficulty: Difficulty;
+  selectedOptions: Array<{ optionId: string; label: string; text: string }>;
+  correctOptions: Array<{ optionId: string; label: string; text: string }>;
+  awardedMarks: number;
+  maxMarks: number;
+  answered: boolean;
+  correct: boolean;
+  timeSpentSeconds: number;
+  explanation?: string;
+}
+
+export interface StudentAnalyticsReport {
+  studentUserId: string;
+  studentName: string;
+  publishedAttempts: number;
+  analysedQuestions: number;
+  averagePercentage: number;
+  totalTimeSeconds: number;
+  subjects: StudentAnalysisBreakdown[];
+  topics: StudentAnalysisBreakdown[];
+  difficulties: StudentAnalysisBreakdown[];
+  timeAnalysis: Array<{
+    attemptId: string;
+    assessmentId: string;
+    assessmentTitle: string;
+    submittedAt: string;
+    allowedSeconds: number;
+    timeTakenSeconds: number;
+    utilisationPercentage: number;
+    averageQuestionSeconds: number;
+    slowestQuestionSeconds: number;
+  }>;
+  questionReview: StudentQuestionReview[];
+  generatedAt: string;
+}
+
+export interface TeacherAnalyticsReport {
+  teacherUserId?: string;
+  teacherName: string;
+  assessmentCount: number;
+  publishedSubmissions: number;
+  averagePercentage: number;
+  weakTopicCount: number;
+  batches: Array<{
+    sectionId?: string;
+    batchName: string;
+    studentCount: number;
+    assessmentCount: number;
+    submissionCount: number;
+    studentsAttempted: number;
+    completionRate: number;
+    averagePercentage: number;
+    passRate: number;
+  }>;
+  students: Array<{
+    studentUserId: string;
+    studentName: string;
+    batchName: string;
+    publishedAttempts: number;
+    averagePercentage: number;
+    bestPercentage: number;
+    passRate: number;
+    rank: number;
+    trajectory: "IMPROVING" | "STABLE" | "DECLINING";
+    atRisk: boolean;
+  }>;
+  weakTopics: Array<{
+    subjectId: string;
+    subjectName: string;
+    topicId: string;
+    topicName: string;
+    questionCount: number;
+    responseCount: number;
+    averageMarksPercentage: number;
+    correctRate: number;
+    averageTimeSeconds: number;
+    weak: boolean;
+  }>;
+  generatedAt: string;
+}
+
 export interface AssessmentReport {
   assessmentId: string;
   title: string;
@@ -242,6 +347,53 @@ export interface AssessmentEvaluationSummary {
   publishedCount: number;
   averagePercentage: number;
   results: EvaluationRow[];
+}
+
+export interface ManualAttemptReview {
+  attemptId: string;
+  assessmentId: string;
+  assessmentTitle: string;
+  studentUserId: string;
+  studentName: string;
+  attemptStatus: "SUBMITTED" | "AUTO_SUBMITTED";
+  publicationStatus: "PENDING_PUBLICATION" | "PUBLISHED";
+  score: number;
+  maxScore: number;
+  percentage: number;
+  grade: string;
+  evaluationVersion: number;
+  evaluatedAt: string;
+  questions: Array<{
+    questionId: string;
+    code: string;
+    stem: string;
+    subjectName: string;
+    topicName: string;
+    difficulty: Difficulty;
+    awardedMarks: number;
+    minimumMarks: number;
+    maximumMarks: number;
+    answered: boolean;
+    correct: boolean;
+    timeSpentSeconds: number;
+    options: Array<{
+      optionId: string;
+      label: string;
+      text: string;
+      selected: boolean;
+      correct: boolean;
+    }>;
+    explanation?: string;
+  }>;
+  auditTrail: Array<{
+    eventId: string;
+    timestamp: string;
+    actorEmail?: string;
+    actorRole?: string;
+    action: string;
+    beforeValue?: string;
+    afterValue?: string;
+  }>;
 }
 
 export interface AssessmentMonitor {

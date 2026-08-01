@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import {
   AlertTriangle,
   BarChart3,
@@ -16,6 +17,7 @@ import { apiErrorMessage, apiFetch } from "@/lib/api";
 import type { AcademicCatalog } from "@/lib/live-types";
 import type {
   StudentPerformanceReport,
+  StudentAnalyticsReport,
   StudentReport,
   StudentReportRow,
 } from "@/lib/types";
@@ -50,6 +52,12 @@ const assessmentTypes = [
   "MOCK_TEST",
 ];
 
+function formatSeconds(seconds: number) {
+  const minutes = Math.floor(seconds / 60);
+  const remaining = seconds % 60;
+  return minutes ? `${minutes}m ${remaining}s` : `${remaining}s`;
+}
+
 function reportQuery(filters: StudentReportFilters) {
   const query = new URLSearchParams();
   if (filters.query.trim()) query.set("query", filters.query.trim());
@@ -77,6 +85,7 @@ export function StudentReportsPanel() {
   const [report, setReport] = useState<StudentReport | null>(null);
   const [selected, setSelected] = useState<StudentReportRow | null>(null);
   const [performance, setPerformance] = useState<StudentPerformanceReport | null>(null);
+  const [analytics, setAnalytics] = useState<StudentAnalyticsReport | null>(null);
   const [loading, setLoading] = useState(true);
   const [detailLoading, setDetailLoading] = useState(false);
   const [error, setError] = useState("");
@@ -125,12 +134,16 @@ export function StudentReportsPanel() {
   async function openStudent(row: StudentReportRow) {
     setSelected(row);
     setPerformance(null);
+    setAnalytics(null);
     setDetailLoading(true);
     setError("");
     try {
-      setPerformance(
-        await apiFetch<StudentPerformanceReport>(`/reports/students/${row.studentUserId}`),
-      );
+      const [nextPerformance, nextAnalytics] = await Promise.all([
+        apiFetch<StudentPerformanceReport>(`/reports/students/${row.studentUserId}`),
+        apiFetch<StudentAnalyticsReport>(`/reports/students/${row.studentUserId}/analytics`),
+      ]);
+      setPerformance(nextPerformance);
+      setAnalytics(nextAnalytics);
     } catch (requestError) {
       setError(apiErrorMessage(requestError, "The individual student report could not be loaded."));
     } finally {
@@ -153,6 +166,7 @@ export function StudentReportsPanel() {
     setFilters(initialFilters);
     setSelected(null);
     setPerformance(null);
+    setAnalytics(null);
     void loadReport(initialFilters);
   }
 
@@ -321,7 +335,7 @@ export function StudentReportsPanel() {
         <section className="panel student-detail-panel" aria-live="polite">
           <div className="panel-header">
             <div><h2>{selected.studentName}</h2><p>Individual published performance history</p></div>
-            <button className="icon-button" onClick={() => { setSelected(null); setPerformance(null); }} aria-label="Close individual student report" type="button"><X size={17} /></button>
+            <button className="icon-button" onClick={() => { setSelected(null); setPerformance(null); setAnalytics(null); }} aria-label="Close individual student report" type="button"><X size={17} /></button>
           </div>
           {detailLoading && <LoadingState label="Loading individual performance…" />}
           {!detailLoading && performance && (
@@ -349,6 +363,47 @@ export function StudentReportsPanel() {
                   </tbody>
                 </table>
               </div>
+              {analytics && (
+                <div className="student-drilldown-analytics">
+                  <div className="comparison-grid">
+                    {[
+                      ["Subject-wise analysis", analytics.subjects],
+                      ["Topic-wise analysis", analytics.topics],
+                    ].map(([title, rows]) => (
+                      <article className="panel report-table-panel" key={String(title)}>
+                        <div className="panel-header"><div><h3>{String(title)}</h3><p>Published question performance</p></div></div>
+                        <div className="data-table-wrap"><table className="data-table"><thead><tr><th>Area</th><th>Marks</th><th>Performance</th><th>Avg. time</th><th>Status</th></tr></thead><tbody>
+                          {(rows as StudentAnalyticsReport["subjects"]).map((row) => <tr key={row.key}><td><strong>{row.label}</strong></td><td>{row.awardedMarks}/{row.maxMarks}</td><td>{row.percentage}%</td><td>{formatSeconds(row.averageTimeSeconds)}</td><td><span className={`badge ${row.weak ? "badge-danger" : "badge-success"}`}>{row.weak ? "NEEDS FOCUS" : "ON TRACK"}</span></td></tr>)}
+                        </tbody></table></div>
+                      </article>
+                    ))}
+                  </div>
+
+                  <section className="panel report-table-panel">
+                    <div className="panel-header"><div><h3>Difficulty and time analysis</h3><p>Accuracy by level and time used per attempt.</p></div></div>
+                    <div className="student-analysis-summary-grid">
+                      <div className="data-table-wrap"><table className="data-table"><thead><tr><th>Difficulty</th><th>Questions</th><th>Correct</th><th>Performance</th></tr></thead><tbody>
+                        {analytics.difficulties.map((row) => <tr key={row.key}><td><strong>{row.label}</strong></td><td>{row.questionCount}</td><td>{row.correctAnswers}</td><td>{row.percentage}%</td></tr>)}
+                      </tbody></table></div>
+                      <div className="data-table-wrap"><table className="data-table"><thead><tr><th>Assessment</th><th>Time used</th><th>Utilisation</th><th>Slowest</th></tr></thead><tbody>
+                        {analytics.timeAnalysis.map((row) => <tr key={row.attemptId}><td><strong>{row.assessmentTitle}</strong></td><td>{formatSeconds(row.timeTakenSeconds)}</td><td>{row.utilisationPercentage}%</td><td>{formatSeconds(row.slowestQuestionSeconds)}</td></tr>)}
+                      </tbody></table></div>
+                    </div>
+                  </section>
+
+                  <section className="panel staff-question-review">
+                    <div className="panel-header"><div><h3>Question review</h3><p>Selections, answer keys, marks, and explanations from published results.</p></div></div>
+                    {analytics.questionReview.map((question, index) => (
+                      <article className={`result-question ${question.correct ? "correct" : "incorrect"}`} key={`${question.attemptId}-${question.questionId}`}>
+                        <div className="result-question-heading"><span>{index + 1}</span><div><strong>{question.questionCode} · {question.stem}</strong><span className="table-subtitle">{question.assessmentTitle} · {question.subjectName} · {question.topicName} · {question.difficulty}</span></div><span>{question.awardedMarks}/{question.maxMarks}</span></div>
+                        <div className="review-answer-grid"><div><span>Student answer</span>{question.selectedOptions.length ? question.selectedOptions.map((option) => <strong key={option.optionId}>{option.label}. {option.text}</strong>) : <strong>Not answered</strong>}</div><div><span>Correct answer</span>{question.correctOptions.map((option) => <strong key={option.optionId}>{option.label}. {option.text}</strong>)}</div></div>
+                        <div className="question-review-meta"><span className={`badge ${question.correct ? "badge-success" : "badge-danger"}`}>{question.correct ? "CORRECT" : question.answered ? "INCORRECT" : "UNANSWERED"}</span><span>{formatSeconds(question.timeSpentSeconds)}</span><Link href={`/reports/assessments/${question.assessmentId}`}>Open assessment report</Link></div>
+                        {question.explanation && <p>{question.explanation}</p>}
+                      </article>
+                    ))}
+                  </section>
+                </div>
+              )}
             </>
           )}
         </section>

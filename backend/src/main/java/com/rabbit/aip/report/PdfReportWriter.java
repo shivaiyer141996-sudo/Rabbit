@@ -3,6 +3,10 @@ package com.rabbit.aip.report;
 import com.rabbit.aip.report.ReportDtos.AssessmentReport;
 import com.rabbit.aip.report.ReportDtos.QuestionPerformance;
 import com.rabbit.aip.report.ReportDtos.StudentResultPoint;
+import com.rabbit.aip.report.ReportDtos.TeacherAnalyticsReport;
+import com.rabbit.aip.report.ReportDtos.TeacherBatchAnalytics;
+import com.rabbit.aip.report.ReportDtos.TeacherStudentComparison;
+import com.rabbit.aip.report.ReportDtos.TeacherWeakTopic;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -18,7 +22,14 @@ final class PdfReportWriter {
     private static final int LINE_WIDTH = 84;
 
     byte[] write(AssessmentReport report) {
-        List<String> lines = documentLines(report);
+        return document(documentLines(report));
+    }
+
+    byte[] write(TeacherAnalyticsReport report) {
+        return document(teacherDocumentLines(report));
+    }
+
+    private byte[] document(List<String> lines) {
         List<List<String>> pages = new ArrayList<>();
         for (int index = 0; index < lines.size(); index += LINES_PER_PAGE) {
             pages.add(lines.subList(
@@ -28,6 +39,75 @@ final class PdfReportWriter {
         }
         if (pages.isEmpty()) pages.add(List.of("Rabbit AiP assessment report"));
         return pdf(pages);
+    }
+
+    private List<String> teacherDocumentLines(TeacherAnalyticsReport report) {
+        List<String> source = new ArrayList<>();
+        source.add("RABBIT AiP - TEACHER ANALYTICS REPORT");
+        source.add(report.teacherName());
+        source.add("");
+        source.add("Generated: " + DateTimeFormatter.ISO_INSTANT.format(report.generatedAt()));
+        source.add(String.format(
+                Locale.ROOT,
+                "Assessments: %d   Published submissions: %d   Average: %s%%   Weak topics: %d",
+                report.assessmentCount(),
+                report.publishedSubmissions(),
+                report.averagePercentage(),
+                report.weakTopicCount()
+        ));
+        source.add("");
+        source.add("BATCH ANALYTICS");
+        source.add("Batch | Students | Assessments | Submissions | Completion | Average | Pass rate");
+        for (TeacherBatchAnalytics batch : report.batches()) {
+            source.add(String.format(
+                    Locale.ROOT,
+                    "%s | %d | %d | %d | %s%% | %s%% | %s%%",
+                    batch.batchName(),
+                    batch.studentCount(),
+                    batch.assessmentCount(),
+                    batch.submissionCount(),
+                    batch.completionRate(),
+                    batch.averagePercentage(),
+                    batch.passRate()
+            ));
+        }
+        source.add("");
+        source.add("STUDENT COMPARISON");
+        source.add("Rank | Student | Batch | Attempts | Average | Best | Pass rate | Progress");
+        for (TeacherStudentComparison student : report.students()) {
+            source.add(String.format(
+                    Locale.ROOT,
+                    "%d | %s | %s | %d | %s%% | %s%% | %s%% | %s",
+                    student.rank(),
+                    student.studentName(),
+                    student.batchName(),
+                    student.publishedAttempts(),
+                    student.averagePercentage(),
+                    student.bestPercentage(),
+                    student.passRate(),
+                    student.atRisk() ? "NEEDS SUPPORT" : student.trajectory()
+            ));
+        }
+        source.add("");
+        source.add("WEAK-TOPIC ANALYSIS");
+        source.add("Subject | Topic | Questions | Responses | Marks | Correct | Avg time | Status");
+        for (TeacherWeakTopic topic : report.weakTopics()) {
+            source.add(String.format(
+                    Locale.ROOT,
+                    "%s | %s | %d | %d | %s%% | %s%% | %ds | %s",
+                    topic.subjectName(),
+                    topic.topicName(),
+                    topic.questionCount(),
+                    topic.responseCount(),
+                    topic.averageMarksPercentage(),
+                    topic.correctRate(),
+                    topic.averageTimeSeconds(),
+                    topic.weak() ? "WEAK" : "ON TRACK"
+            ));
+        }
+        List<String> wrapped = new ArrayList<>();
+        source.forEach(line -> wrapped.addAll(wrap(ascii(line))));
+        return wrapped;
     }
 
     private List<String> documentLines(AssessmentReport report) {

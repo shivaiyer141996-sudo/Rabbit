@@ -63,17 +63,24 @@ and auto-submits expired attempts independently of the browser.
 | GET | `/evaluation/assessments/{id}/monitor` | Live persisted attempt progress, state, and remaining server time |
 | POST | `/evaluation/assessments/{id}/publish` | Publish all evaluated pending results |
 | POST | `/evaluation/attempts/{id}/re-evaluate` | Governed MCQ re-evaluation with reason |
+| GET | `/evaluation/attempts/{id}/review` | Manual answer, marks, and evaluation audit review |
+| POST | `/evaluation/attempts/{id}/score` | Reason-gated question-level score update and version reset |
 | GET | `/dashboard` | Role-specific metrics, trend, and attention data |
 | GET | `/reports/overview` | Organisation intelligence overview |
 | GET | `/reports/assessments/{id}` | Assessment/student/question report |
 | GET | `/reports/students/me` | Current student progress report |
+| GET | `/reports/students/me/analytics` | Current student's subject, topic, difficulty, time, and question analysis |
 | GET | `/reports/students` | Consolidated students with subject, type, department, section, date, and text filters |
 | GET | `/reports/students/{id}` | Role-scoped student report |
+| GET | `/reports/students/{id}/analytics` | Staff drill-down into published student analytics |
+| GET | `/reports/teacher` | Ownership-scoped batch, student-comparison, and weak-topic analytics |
 | GET | `/reports/questions` | Question quality analytics |
 | GET | `/reports/faculty` | Faculty contribution report |
 | GET | `/reports/assessments/{id}/export` | Assessment CSV snapshot |
 | GET | `/reports/assessments/{id}/export.pdf` | Styled governed PDF report |
 | GET | `/reports/assessments/{id}/export.xlsx` | Native Excel workbook with summary, students, and questions |
+| GET | `/reports/teacher/export.pdf` | Teacher analytics PDF for the authorised scope |
+| GET | `/reports/teacher/export.xlsx` | Four-sheet teacher analytics workbook |
 
 ## Notifications, audit, and settings
 

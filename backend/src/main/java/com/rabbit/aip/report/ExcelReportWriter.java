@@ -3,6 +3,10 @@ package com.rabbit.aip.report;
 import com.rabbit.aip.report.ReportDtos.AssessmentReport;
 import com.rabbit.aip.report.ReportDtos.QuestionPerformance;
 import com.rabbit.aip.report.ReportDtos.StudentResultPoint;
+import com.rabbit.aip.report.ReportDtos.TeacherAnalyticsReport;
+import com.rabbit.aip.report.ReportDtos.TeacherBatchAnalytics;
+import com.rabbit.aip.report.ReportDtos.TeacherStudentComparison;
+import com.rabbit.aip.report.ReportDtos.TeacherWeakTopic;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -74,6 +78,95 @@ final class ExcelReportWriter {
                 new Sheet("Summary", summary),
                 new Sheet("Student Results", students),
                 new Sheet("Question Analytics", questions)
+        ));
+    }
+
+    byte[] write(TeacherAnalyticsReport report) {
+        List<List<Cell>> summary = List.of(
+                row(header("Metric"), header("Value")),
+                row(text("Teacher scope"), text(report.teacherName())),
+                row(text("Generated at"), text(report.generatedAt().toString())),
+                row(text("Assessments"), number(report.assessmentCount())),
+                row(text("Published submissions"), number(report.publishedSubmissions())),
+                row(text("Average percentage"), number(report.averagePercentage())),
+                row(text("Weak topics"), number(report.weakTopicCount()))
+        );
+        List<List<Cell>> batches = new ArrayList<>();
+        batches.add(row(
+                header("Batch"),
+                header("Students"),
+                header("Assessments"),
+                header("Submissions"),
+                header("Students attempted"),
+                header("Completion rate"),
+                header("Average percentage"),
+                header("Pass rate")
+        ));
+        for (TeacherBatchAnalytics batch : report.batches()) {
+            batches.add(row(
+                    text(batch.batchName()),
+                    number(batch.studentCount()),
+                    number(batch.assessmentCount()),
+                    number(batch.submissionCount()),
+                    number(batch.studentsAttempted()),
+                    number(batch.completionRate()),
+                    number(batch.averagePercentage()),
+                    number(batch.passRate())
+            ));
+        }
+        List<List<Cell>> students = new ArrayList<>();
+        students.add(row(
+                header("Rank"),
+                header("Student"),
+                header("Batch"),
+                header("Published attempts"),
+                header("Average percentage"),
+                header("Best percentage"),
+                header("Pass rate"),
+                header("Progress"),
+                header("At risk")
+        ));
+        for (TeacherStudentComparison student : report.students()) {
+            students.add(row(
+                    number(student.rank()),
+                    text(student.studentName()),
+                    text(student.batchName()),
+                    number(student.publishedAttempts()),
+                    number(student.averagePercentage()),
+                    number(student.bestPercentage()),
+                    number(student.passRate()),
+                    text(student.trajectory()),
+                    text(student.atRisk() ? "YES" : "NO")
+            ));
+        }
+        List<List<Cell>> weakTopics = new ArrayList<>();
+        weakTopics.add(row(
+                header("Subject"),
+                header("Topic"),
+                header("Questions"),
+                header("Responses"),
+                header("Average marks percentage"),
+                header("Correct rate"),
+                header("Average time seconds"),
+                header("Status")
+        ));
+        for (TeacherWeakTopic topic : report.weakTopics()) {
+            weakTopics.add(row(
+                    text(topic.subjectName()),
+                    text(topic.topicName()),
+                    number(topic.questionCount()),
+                    number(topic.responseCount()),
+                    number(topic.averageMarksPercentage()),
+                    number(topic.correctRate()),
+                    number(topic.averageTimeSeconds()),
+                    text(topic.weak() ? "WEAK" : "ON TRACK")
+            ));
+        }
+        return workbook(List.of(
+                new Sheet("Summary", summary),
+                new Sheet("Batch Analytics", batches),
+                new Sheet("Student Comparison", students),
+                new Sheet("Weak Topics", weakTopics)
         ));
     }
 

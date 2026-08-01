@@ -79,7 +79,10 @@ Milestone 4.1 is release hardening only. It does not begin Milestone 5.
   role-appropriate navigation/actions
 - Consolidated student reporting with subject, assessment type, department, section,
   date, and text filters plus department/section comparisons
-- Reason-gated re-evaluation controls with version and publication-state visibility
+- Student subject/topic/difficulty/time analysis and published question review
+- Teacher batch analytics, student comparison, weak-topic analysis, and PDF/Excel exports
+- Manual answer review with bounded score updates, reason gate, versioning,
+  publication reset, and an in-screen audit trail
 - Student instructions and attempt history, plus live staff assessment monitoring
 - Expanded Docker smoke coverage for timeout, monitoring, confidentiality,
   re-evaluation, republishing, history, and filtered reporting

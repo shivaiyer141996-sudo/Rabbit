@@ -113,8 +113,12 @@ workflow review:
 - Make configured question/option shuffle effective and stable for an attempt
 - Auto-submit and evaluate expired attempts on the server independently of the browser
 - Provide distinct dashboards, actions, and navigation for every Release 1.0 role
-- Add consolidated filtered student reports and department/section comparisons
-- Expose reason-gated re-evaluation, evaluation version, and publication state in UI
+- Add consolidated filtered student reports, department/section comparisons, and
+  student subject/topic/difficulty/time/question analysis
+- Add ownership-scoped teacher batch analytics, student comparison, weak-topic
+  analysis, and dedicated PDF/Excel exports
+- Expose automatic recalculation plus reason-gated manual question review, bounded
+  score updates, evaluation version, publication state, and attempt audit history
 - Add student instructions/history and a dedicated live assessment monitor
 - Expand the full-stack smoke journey over the completed delivery/reporting workflow
 

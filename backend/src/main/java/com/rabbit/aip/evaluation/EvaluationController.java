@@ -5,6 +5,8 @@ import com.rabbit.aip.evaluation.EvaluationDtos.EvaluationRow;
 import com.rabbit.aip.evaluation.EvaluationDtos.PublicationResponse;
 import com.rabbit.aip.evaluation.EvaluationDtos.ReEvaluationRequest;
 import com.rabbit.aip.evaluation.EvaluationDtos.AssessmentMonitor;
+import com.rabbit.aip.evaluation.EvaluationDtos.ManualAttemptReview;
+import com.rabbit.aip.evaluation.EvaluationDtos.ManualScoreUpdateRequest;
 import jakarta.validation.Valid;
 import java.util.UUID;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -47,5 +49,18 @@ public class EvaluationController {
             @Valid @RequestBody ReEvaluationRequest request
     ) {
         return service.reEvaluate(attemptId, request.reason());
+    }
+
+    @GetMapping("/attempts/{attemptId}/review")
+    ManualAttemptReview manualReview(@PathVariable UUID attemptId) {
+        return service.manualReview(attemptId);
+    }
+
+    @PostMapping("/attempts/{attemptId}/score")
+    ManualAttemptReview updateScore(
+            @PathVariable UUID attemptId,
+            @Valid @RequestBody ManualScoreUpdateRequest request
+    ) {
+        return service.updateScore(attemptId, request);
     }
 }

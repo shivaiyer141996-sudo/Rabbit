@@ -128,6 +128,15 @@ public class AuditService {
                 .toList();
     }
 
+    public List<AuditEventResponse> entityHistory(String entityType, UUID entityId) {
+        return events
+                .findAllByOrganisationIdAndEntityTypeAndEntityIdOrderByCreatedAtDesc(
+                        session.organisationId(), entityType, entityId
+                ).stream()
+                .map(AuditEventResponse::from)
+                .toList();
+    }
+
     public String exportCsv(
             String module,
             String action,

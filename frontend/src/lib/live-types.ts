@@ -199,13 +199,24 @@ export interface AttemptView {
 
 export interface ResultQuestion {
   questionId: string;
+  questionCode: string;
   stem: string;
+  subjectId: string;
   topicId: string;
+  difficulty: Difficulty;
   selectedOptionIds: string[];
   correctOptionIds: string[];
+  options: Array<{
+    optionId: string;
+    label: string;
+    text: string;
+    selected: boolean;
+    correct: boolean;
+  }>;
   awardedMarks: number;
   maxMarks: number;
   correct: boolean;
+  timeSpentSeconds: number;
   explanation?: string;
 }
 

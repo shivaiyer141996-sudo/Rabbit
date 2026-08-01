@@ -104,6 +104,133 @@ public final class ReportDtos {
     ) {
     }
 
+    public record StudentAnalysisBreakdown(
+            String key,
+            String label,
+            long questionCount,
+            long answeredQuestions,
+            long correctAnswers,
+            BigDecimal awardedMarks,
+            BigDecimal maxMarks,
+            BigDecimal percentage,
+            long averageTimeSeconds,
+            boolean weak
+    ) {
+    }
+
+    public record StudentAttemptTimeAnalysis(
+            UUID attemptId,
+            UUID assessmentId,
+            String assessmentTitle,
+            Instant submittedAt,
+            long allowedSeconds,
+            long timeTakenSeconds,
+            BigDecimal utilisationPercentage,
+            long averageQuestionSeconds,
+            long slowestQuestionSeconds
+    ) {
+    }
+
+    public record ReviewOption(
+            UUID optionId,
+            String label,
+            String text
+    ) {
+    }
+
+    public record StudentQuestionReview(
+            UUID attemptId,
+            UUID assessmentId,
+            String assessmentTitle,
+            Instant submittedAt,
+            UUID questionId,
+            String questionCode,
+            String stem,
+            String subjectName,
+            String topicName,
+            Difficulty difficulty,
+            List<ReviewOption> selectedOptions,
+            List<ReviewOption> correctOptions,
+            BigDecimal awardedMarks,
+            BigDecimal maxMarks,
+            boolean answered,
+            boolean correct,
+            int timeSpentSeconds,
+            String explanation
+    ) {
+    }
+
+    public record StudentAnalyticsReport(
+            UUID studentUserId,
+            String studentName,
+            long publishedAttempts,
+            long analysedQuestions,
+            BigDecimal averagePercentage,
+            long totalTimeSeconds,
+            List<StudentAnalysisBreakdown> subjects,
+            List<StudentAnalysisBreakdown> topics,
+            List<StudentAnalysisBreakdown> difficulties,
+            List<StudentAttemptTimeAnalysis> timeAnalysis,
+            List<StudentQuestionReview> questionReview,
+            Instant generatedAt
+    ) {
+    }
+
+    public record TeacherBatchAnalytics(
+            UUID sectionId,
+            String batchName,
+            long studentCount,
+            long assessmentCount,
+            long submissionCount,
+            long studentsAttempted,
+            BigDecimal completionRate,
+            BigDecimal averagePercentage,
+            BigDecimal passRate
+    ) {
+    }
+
+    public record TeacherStudentComparison(
+            UUID studentUserId,
+            String studentName,
+            String batchName,
+            long publishedAttempts,
+            BigDecimal averagePercentage,
+            BigDecimal bestPercentage,
+            BigDecimal passRate,
+            int rank,
+            String trajectory,
+            boolean atRisk
+    ) {
+    }
+
+    public record TeacherWeakTopic(
+            UUID subjectId,
+            String subjectName,
+            UUID topicId,
+            String topicName,
+            long questionCount,
+            long responseCount,
+            BigDecimal averageMarksPercentage,
+            BigDecimal correctRate,
+            long averageTimeSeconds,
+            boolean weak
+    ) {
+    }
+
+    public record TeacherAnalyticsReport(
+            UUID teacherUserId,
+            String teacherName,
+            long assessmentCount,
+            long publishedSubmissions,
+            BigDecimal averagePercentage,
+            long weakTopicCount,
+            List<TeacherBatchAnalytics> batches,
+            List<TeacherStudentComparison> students,
+            List<TeacherWeakTopic> weakTopics,
+            Instant generatedAt
+    ) {
+    }
+
     public record QuestionPerformance(
             UUID questionId,
             String code,

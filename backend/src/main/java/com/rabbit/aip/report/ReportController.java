@@ -5,7 +5,9 @@ import com.rabbit.aip.report.ReportDtos.FacultyPerformance;
 import com.rabbit.aip.report.ReportDtos.IntelligenceOverview;
 import com.rabbit.aip.report.ReportDtos.QuestionPerformance;
 import com.rabbit.aip.report.ReportDtos.StudentPerformanceReport;
+import com.rabbit.aip.report.ReportDtos.StudentAnalyticsReport;
 import com.rabbit.aip.report.ReportDtos.StudentReport;
+import com.rabbit.aip.report.ReportDtos.TeacherAnalyticsReport;
 import com.rabbit.aip.assessment.AssessmentType;
 import com.rabbit.aip.report.ReportExportService.ExportedReport;
 import java.nio.charset.StandardCharsets;
@@ -54,6 +56,12 @@ public class ReportController {
         return service.myPerformance();
     }
 
+    @GetMapping("/students/me/analytics")
+    @PreAuthorize("hasRole('STUDENT')")
+    StudentAnalyticsReport myAnalytics() {
+        return service.myAnalytics();
+    }
+
     @GetMapping("/students")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN','ORG_ADMIN','ACADEMIC_HEAD','FACULTY')")
     StudentReport students(
@@ -80,6 +88,20 @@ public class ReportController {
     @PreAuthorize("hasAnyRole('SUPER_ADMIN','ORG_ADMIN','ACADEMIC_HEAD','FACULTY')")
     StudentPerformanceReport student(@PathVariable UUID studentId) {
         return service.student(studentId);
+    }
+
+    @GetMapping("/students/{studentId}/analytics")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ORG_ADMIN','ACADEMIC_HEAD','FACULTY')")
+    StudentAnalyticsReport studentAnalytics(@PathVariable UUID studentId) {
+        return service.studentAnalytics(studentId);
+    }
+
+    @GetMapping("/teacher")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ORG_ADMIN','ACADEMIC_HEAD','FACULTY')")
+    TeacherAnalyticsReport teacher(
+            @RequestParam(required = false) UUID teacherUserId
+    ) {
+        return service.teacherAnalytics(teacherUserId);
     }
 
     @GetMapping("/questions")
@@ -127,6 +149,28 @@ public class ReportController {
     @PreAuthorize("hasAnyRole('SUPER_ADMIN','ORG_ADMIN','ACADEMIC_HEAD','FACULTY')")
     ResponseEntity<byte[]> exportAssessmentExcel(@PathVariable UUID assessmentId) {
         return downloadable(exports.excel(assessmentId));
+    }
+
+    @GetMapping(
+            value = "/teacher/export.pdf",
+            produces = MediaType.APPLICATION_PDF_VALUE
+    )
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ORG_ADMIN','ACADEMIC_HEAD','FACULTY')")
+    ResponseEntity<byte[]> exportTeacherPdf(
+            @RequestParam(required = false) UUID teacherUserId
+    ) {
+        return downloadable(exports.teacherPdf(teacherUserId));
+    }
+
+    @GetMapping(
+            value = "/teacher/export.xlsx",
+            produces = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ORG_ADMIN','ACADEMIC_HEAD','FACULTY')")
+    ResponseEntity<byte[]> exportTeacherExcel(
+            @RequestParam(required = false) UUID teacherUserId
+    ) {
+        return downloadable(exports.teacherExcel(teacherUserId));
     }
 
     private ResponseEntity<byte[]> downloadable(ExportedReport report) {

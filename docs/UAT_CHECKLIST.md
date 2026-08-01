@@ -21,8 +21,9 @@ automated smoke is supporting evidence; it does not replace institution UAT.
 | Question governance | Author, validate, review, return, approve, version | Only approved questions enter assessments |
 | Assessment governance | Draft, review, approve, publish, schedule | Creator/reviewer separation remains enforced |
 | Delivery | Read instructions; start, save, refresh, resume, close at timeout, submit | Order remains stable; no accepted answer is lost or duplicated; the server submits an expired closed-browser attempt |
-| Evaluation | Score both MCQ types, re-evaluate with a reason, republish | Version increments and students see only explicitly published results |
-| Reports and exports | Filter student reports; compare departments/sections; open drill-downs; download CSV, PDF, and XLSX | Published-tenant metrics, comparisons, and exported files match |
+| Evaluation | Score both MCQ types; open manual review; adjust bounded question marks with a reason; inspect audit; republish | Version increments, audit captures before/after/reason, and students see only explicitly published results |
+| Student reports | Open subject, topic, difficulty, time, and question review as Student and authorised staff | Only published results appear and every breakdown reconciles to question-level marks |
+| Teacher reports and exports | Compare batches/students/weak topics; switch authorised teacher scope; download PDF and XLSX | Faculty scope contains only owned assessments; Admin/Academic Head scope and exports match the UI |
 | Role workspace | Open every dashboard and navigation item as Admin, Academic Head, Faculty, Reviewer, and Student | Metrics, actions, and links are authorised and useful for that role |
 | Operations | Review dependencies, traffic, backlog, capacity | Readiness state and warnings match evidence |
 | Feature flags | Change rollout and disable an export | Audit event exists and behaviour changes safely |

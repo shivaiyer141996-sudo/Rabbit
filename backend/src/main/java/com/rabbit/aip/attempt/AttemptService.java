@@ -8,6 +8,7 @@ import com.rabbit.aip.attempt.AttemptDtos.PlayerOption;
 import com.rabbit.aip.attempt.AttemptDtos.PlayerQuestion;
 import com.rabbit.aip.attempt.AttemptDtos.ResultView;
 import com.rabbit.aip.attempt.AttemptDtos.ResultQuestion;
+import com.rabbit.aip.attempt.AttemptDtos.ResultOption;
 import com.rabbit.aip.attempt.AttemptDtos.SaveResponseRequest;
 import com.rabbit.aip.attempt.AttemptDtos.SavedResponse;
 import com.rabbit.aip.attempt.AttemptDtos.StudentAssessment;
@@ -455,28 +456,73 @@ public class AttemptService {
                 .count();
         Map<UUID, AttemptResponse> byQuestion = new HashMap<>();
         attemptResponses.forEach(item -> byQuestion.put(item.getQuestionId(), item));
-        List<Question> resultQuestions = reveal
+        Map<UUID, Question> resultQuestionMap = reveal
                 ? questions.findAllByIdInAndOrganisationId(
                         assessment.getQuestionIds(), session.organisationId()
+                ).stream().collect(java.util.stream.Collectors.toMap(
+                        Question::getId,
+                        java.util.function.Function.identity()
+                ))
+                : Map.of();
+        List<Question> resultQuestions = reveal
+                ? AttemptPresentationOrder.order(
+                        attempt.getId(),
+                        "questions",
+                        assessment.getQuestionIds().stream()
+                                .map(resultQuestionMap::get)
+                                .filter(java.util.Objects::nonNull)
+                                .toList(),
+                        Question::getId,
+                        assessment.isShuffleQuestions()
                 )
                 : List.of();
         List<ResultQuestion> questionResults = resultQuestions.stream()
                 .map(question -> {
                     AttemptResponse response = byQuestion.get(question.getId());
+                    List<QuestionOption> sourceOptions = question.getOptions().stream()
+                            .sorted(Comparator.comparingInt(QuestionOption::getSortOrder))
+                            .toList();
+                    List<QuestionOption> orderedOptions = AttemptPresentationOrder.order(
+                            attempt.getId(),
+                            "options:" + question.getId(),
+                            sourceOptions,
+                            QuestionOption::getId,
+                            assessment.isShuffleOptions()
+                    );
                     return new ResultQuestion(
                             question.getId(),
+                            question.getCode(),
                             question.getStem(),
+                            question.getSubjectId(),
                             question.getTopicId(),
+                            question.getDifficulty(),
                             response == null ? Set.of() : response.getSelectedOptionIds(),
                             question.getOptions().stream()
                                     .filter(QuestionOption::isCorrect)
                                     .map(QuestionOption::getId)
                                     .collect(java.util.stream.Collectors.toSet()),
+                            IntStream.range(0, orderedOptions.size())
+                                    .mapToObj(index -> {
+                                        QuestionOption option = orderedOptions.get(index);
+                                        return new ResultOption(
+                                                option.getId(),
+                                                assessment.isShuffleOptions()
+                                                        ? displayLabel(index)
+                                                        : option.getLabel(),
+                                                option.getText(),
+                                                response != null && response
+                                                        .getSelectedOptionIds()
+                                                        .contains(option.getId()),
+                                                option.isCorrect()
+                                        );
+                                    })
+                                    .toList(),
                             response == null || response.getAwardedMarks() == null
                                     ? BigDecimal.ZERO
                                     : response.getAwardedMarks(),
                             question.getMarks(),
                             response != null && Boolean.TRUE.equals(response.getCorrect()),
+                            response == null ? 0 : response.getTimeSpentSeconds(),
                             question.getExplanation()
                     );
                 })

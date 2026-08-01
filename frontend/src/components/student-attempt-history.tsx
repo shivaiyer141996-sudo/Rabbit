@@ -45,7 +45,10 @@ export function StudentAttemptHistory() {
           <Image src="/rabbit-mark.svg" width={42} height={42} alt="" />
           <div className="player-title"><strong>Rabbit AiP</strong><span>Student attempt history</span></div>
         </Link>
-        <Link className="button button-secondary" href="/dashboard"><ArrowLeft size={15} /> Dashboard</Link>
+        <div className="header-actions">
+          <Link className="button button-secondary" href="/student/reports">Performance report</Link>
+          <Link className="button button-secondary" href="/dashboard"><ArrowLeft size={15} /> Dashboard</Link>
+        </div>
       </header>
       <main className="student-home-main">
         <div><span className="visual-eyebrow">Persisted attempt record</span><h1>Attempt history</h1><p>Track in-progress attempts, publication status, and every released result.</p></div>
@@ -88,7 +91,7 @@ export function StudentAttemptHistory() {
             })}
           </section>
         )}
-        <div className="result-footer"><span><History size={14} /> Unpublished scores are never shown in history.</span><Link className="button button-secondary" href="/student/assessments">Available assessments</Link></div>
+        <div className="result-footer"><span><History size={14} /> Unpublished scores are never shown in history.</span><div className="header-actions"><Link className="button button-secondary" href="/student/reports">Performance report</Link><Link className="button button-secondary" href="/student/assessments">Available assessments</Link></div></div>
       </main>
     </div>
   );

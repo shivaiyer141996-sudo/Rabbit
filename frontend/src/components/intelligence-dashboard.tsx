@@ -82,7 +82,7 @@ function roleContent(role: DashboardResponse["role"]) {
       ],
     },
     FACULTY: {
-      primary: { href: "/assessments", label: "Open assessments", title: "Manage assessments", description: "Create, schedule, monitor, and review results.", icon: ClipboardList },
+      primary: { href: "/reports/teacher", label: "Open teacher reports", title: "Review learner performance", description: "Compare batches, students, and weak topics.", icon: BarChart3 },
       trendTitle: "Your assessment performance",
       trendDescription: "Average published score by authored assessment",
       trendSuffix: "%",
@@ -91,7 +91,7 @@ function roleContent(role: DashboardResponse["role"]) {
       quickActions: [
         { href: "/assessments/new", label: "Create assessment", title: "Create an assessment", description: "Build an MCQ assessment from approved questions.", icon: ClipboardList },
         { href: "/question-bank/new", label: "Author question", title: "Author a question", description: "Add a governed Single or Multiple Correct MCQ.", icon: FileQuestion },
-        { href: "/reports", label: "Open reports", title: "Review submissions", description: "Publish results and inspect learner performance.", icon: BarChart3 },
+        { href: "/reports/teacher", label: "Open reports", title: "Review learner outcomes", description: "Compare batches, students, and weak topics.", icon: BarChart3 },
       ],
     },
     REVIEWER: {
@@ -117,6 +117,7 @@ function roleContent(role: DashboardResponse["role"]) {
       quickActions: [
         { href: "/student/assessments", label: "View assessments", title: "Take an assessment", description: "See eligible windows and read instructions first.", icon: ClipboardList },
         { href: "/student/history", label: "Attempt history", title: "Review attempt history", description: "Track active, submitted, and published attempts.", icon: History },
+        { href: "/student/reports", label: "Performance report", title: "Understand your progress", description: "See subject, topic, difficulty, time, and question analysis.", icon: BarChart3 },
         { href: "/notifications", label: "Notifications", title: "Check notifications", description: "See result publication and assessment updates.", icon: Bell },
       ],
     },
@@ -161,7 +162,7 @@ export function IntelligenceDashboard() {
   return (
     <div className="page">
       <PageHeader
-        eyebrow="Academic intelligence · Live"
+        eyebrow={`${dashboard.workspaceTitle} · Live`}
         title={dashboard.greeting}
         description={dashboard.description}
         actions={

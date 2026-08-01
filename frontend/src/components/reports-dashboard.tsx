@@ -97,9 +97,14 @@ export function ReportsDashboard() {
         title="Turn results into action"
         description="Every insight is calculated from published MCQ evaluations within your organisation."
         actions={
-          <button className="button button-secondary" onClick={() => window.print()}>
-            <Download size={15} /> Print view
-          </button>
+          <>
+            <Link className="button button-primary" href="/reports/teacher">
+              <UsersRound size={15} /> Teacher reports
+            </Link>
+            <button className="button button-secondary" onClick={() => window.print()}>
+              <Download size={15} /> Print view
+            </button>
+          </>
         }
       />
 
