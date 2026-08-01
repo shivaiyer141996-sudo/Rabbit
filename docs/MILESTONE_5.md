@@ -10,10 +10,12 @@ and evidence milestone. It does not add product scope.
 - `main`: remains at `2aaa056`
 - Blocking release evidence: human desktop and 360 px Android visual acceptance
 - Blocking pilot decisions: institution, named operating owners, final dates, and
-  approved infrastructure budget
+  the designated local host/network/backup arrangement
 
-No production account, paid service, DNS record, certificate, or institution data
-may be created until the relevant owner approves the decision register below.
+Milestone 5 will use a local-only environment. Rabbit must not be deployed to AWS
+or another cloud service, made publicly reachable, or connected to a paid hosting
+account during this stage. Institution data may be loaded only after the relevant
+owner approves the decision register below.
 
 ## Release 1.0 scope freeze
 
@@ -40,17 +42,32 @@ release candidate during the pilot.
 | Academic content | 2 subjects, at least 4 topics, and at least 100 approved MCQs | Proposed with institution |
 | Assessments | One staff rehearsal plus one live student assessment covering the full question-to-report journey | Proposed |
 | Live assessment size | 30–45 questions, 45–60 minutes, maximum 30 concurrent students in the first live run | Proposed with institution |
-| Hosting | AWS Lightsail Linux instance in Mumbai; begin with 4 GB RAM, 2 vCPU, 80 GB SSD, then move to 8 GB only if the pilot load gate fails | Proposed |
-| Monthly infrastructure ceiling | ₹3,500 for the 4 GB pilot baseline; contingency ceiling ₹5,500 if 8 GB is required, including backup allowance and taxes/FX variance | **TBD — Shiva to approve** |
-| Public access | Institution-approved subdomain, HTTPS only, secure cookies, no direct database/object-store/admin-console exposure | Proposed |
+| Hosting | One designated local laptop or desktop running Rabbit through Docker Compose; 16 GB RAM recommended, 8 GB minimum for rehearsal, 4 CPU cores, and at least 30 GB free SSD space | **Local-only — Shiva confirmed** |
+| Storage | PostgreSQL, uploaded assets, Redis, and RabbitMQ data stored in Docker named volumes on the designated computer | **Local-only — Shiva confirmed** |
+| Incremental hosting cost | ₹0 cloud cost; use the existing computer, power, and local network | **Approved direction** |
+| User access | `localhost` for individual review; the same trusted Wi-Fi/LAN for multi-user pilot access; no public URL, port forwarding, or public tunnel | Proposed with institution |
+| Backup | Daily checksum-verified backup to a separate local USB drive, external disk, or second approved computer; a copy on the same host disk is not sufficient | **TBD — device and owner required** |
 | Notifications | In-app notifications enabled; provider-backed email and SMS disabled; activation URLs shared manually through an institution-approved channel | Recommended default |
 | Data | Synthetic/rehearsal data first; minimum necessary real student data for the live assessment; no sensitive documents | Proposed with institution |
 | Support window | Named technical and institution contacts available from 30 minutes before until 60 minutes after the live assessment | **TBD — owners required** |
 
-The 4 GB Lightsail bundle is currently listed at USD 20 per month. At the
-1 August 2026 reference rate of approximately ₹95.4/USD, compute is roughly
-₹1,910 before tax, snapshots, off-host backup storage, domain, and FX charges.
-Pricing and regional availability must be rechecked immediately before purchase.
+"Local storage" means server-side data on the designated Rabbit computer. It does
+not mean browser `localStorage`; assessment responses, scores, credentials, and
+institution data must continue to be handled by Rabbit's backend and PostgreSQL.
+
+## Local-only operating boundary
+
+- The designated computer must remain powered on, awake, and connected throughout
+  a rehearsal or live assessment.
+- Students and staff must be on the same trusted local network unless they are
+  using the application directly on that computer.
+- Only Rabbit's web entry point may be reachable on the LAN. PostgreSQL, Redis,
+  RabbitMQ, and MinIO ports must remain host-only or Docker-internal.
+- Router port forwarding, public tunnels, dynamic DNS, and public Internet exposure
+  are prohibited for this milestone.
+- A host-disk failure can remove both the application data and Docker volumes.
+  Therefore, the latest backup must also exist on a separate approved local device.
+- Moving Rabbit to cloud hosting is deferred and requires a new explicit approval.
 
 ## Proposed dates
 
@@ -60,7 +77,7 @@ and owners confirm availability.
 | Phase | Proposed window | Exit result |
 | --- | --- | --- |
 | M5.0 — Finalise plan | 6–7 August 2026 | Decisions, owners, scope, cohort, and dates approved; M4.2 visual acceptance recorded |
-| M5.1 — Pilot environment | 10–12 August 2026 | Secure online environment, backup, monitoring, and rollback ready |
+| M5.1 — Pilot environment | 10–12 August 2026 | Local Docker environment, LAN controls, backup, monitoring, and rollback ready |
 | M5.2 — Journey/UI validation | 13–17 August 2026 | Critical role journeys pass on desktop and Android; accessibility evidence recorded |
 | M5.3 — Performance/security/recovery | 18–20 August 2026 | Pilot load, security review, backup and restore evidence pass |
 | M5.4 — Institutional pilot | 21–28 August 2026 | Rehearsal and one complete live assessment executed |
@@ -88,7 +105,10 @@ Exit criteria:
 - The institution and authorised sponsor are named.
 - User counts, subjects, assessment format, and live date are confirmed.
 - The Release 1.0 scope freeze is accepted in writing.
-- Hosting platform, budget ceiling, payer, domain, and data region are approved.
+- The local host computer, host owner, trusted LAN, access location, and backup
+  device/path are approved.
+- No cloud account, hosting budget, domain, public IP, or certificate is required
+  during the local-only milestone.
 - Every operating responsibility has a reachable primary owner and backup.
 - Email/SMS remains disabled unless a provider, credentials, consent wording,
   monitoring, and escalation owner are separately approved.
@@ -99,13 +119,19 @@ Exit criteria:
 Required evidence:
 
 - Immutable release commit/image references and deployment record
-- HTTPS certificate and external security-header verification
-- Secrets stored outside Git; demo passwords replaced or demo accounts removed
-- Firewall permits only required public ports; data services remain private
-- Database and object backups written to a separate failure domain with checksums
-- Monitoring/alert destinations and retention agreed by named owners
+- Local host inventory, available RAM/CPU/disk, Docker Engine/Desktop version, and
+  Docker Compose version
+- Secrets stored outside Git; local default/demo passwords replaced or demo
+  accounts removed before institution data is loaded
+- Host firewall permits Rabbit access only from the approved trusted LAN; database,
+  queue, cache, object-store, and admin-console ports remain host-only/private
+- PostgreSQL and MinIO data persist in named local Docker volumes
+- Database and object backups written to a separate approved local device with
+  checksums; one restore is proven before the live assessment
+- Local health checks, operations-dashboard review, disk-space checks, and support
+  contacts agreed by named owners
 - Documented rollback to the last verified release and a maintenance-message owner
-- Environment inventory, access register, and cost tracker
+- Environment inventory and access register; no cloud cost tracker is required
 
 ## M5.2 — Validate screens and user journeys
 
@@ -133,6 +159,9 @@ Exit criteria:
 - Restored login, assets, assessment, result, export, and audit data reconcile.
 - Actual recovery stays within the four-hour RTO and 24-hour RPO.
 - A rollback rehearsal identifies the exact owner, command, and communication path.
+- If the designated local host cannot meet the approved load target, reduce the
+  pilot cohort or stop for a separate hosting decision; do not move to cloud hosting
+  without Shiva's explicit approval.
 
 ## M5.4 — Run the institutional pilot
 
@@ -153,7 +182,8 @@ The pilot is **Go** only when:
 - The institution signs the locked acceptance record.
 - Known Severity 3/4 issues have owners, workarounds, and target dates.
 - Support, monitoring, backup, restore, incident, and rollback ownership is accepted.
-- Actual monthly cost is within the approved ceiling.
+- Pilot data and backups remain only on approved local media, and no cloud hosting
+  or public exposure was introduced.
 
 Any failed mandatory condition produces a **No-Go** or a time-boxed conditional
 retest. A successful pilot is not permission to add post–Release 1.0 scope.
@@ -175,13 +205,9 @@ eligible for release-candidate changes.
 
 1. Institution name and authorised sponsor
 2. Final cohort and subject/assessment details
-3. AWS Lightsail and ₹3,500 monthly baseline approval or alternate platform/budget
-4. Domain/subdomain and payer/account owner
-5. Named technical, support, rollback, UAT, and data/privacy owners
-6. Confirmed dates and live assessment time
-7. Explicit confirmation that email/SMS stays disabled
-
-## Reference pricing
-
-- [AWS Lightsail pricing](https://aws.amazon.com/lightsail/pricing/)
-- [AWS Lightsail billing guidance](https://docs.aws.amazon.com/lightsail/latest/userguide/amazon-lightsail-frequently-asked-questions-faq-billing-and-account-management.html)
+3. Designated local computer, operating system, RAM, CPU, free disk, and host owner
+4. Access mode: same computer only or trusted institution Wi-Fi/LAN
+5. Separate local backup device/path and backup/restore owner
+6. Named technical, support, rollback, UAT, and data/privacy owners
+7. Confirmed dates and live assessment time
+8. Explicit confirmation that email/SMS stays disabled
