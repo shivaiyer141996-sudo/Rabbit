@@ -148,6 +148,7 @@ for failed_attempt in $(seq 1 5); do
         echo "Failed login ${failed_attempt} returned HTTP ${login_status}; expected ${expected_status}." >&2
         exit 1
     fi
+    sleep 6
 done
 grep --quiet '"code":"ACCOUNT_LOCKED"' \
     "${rabbit_smoke_tmp}/failed-login-5.json"
