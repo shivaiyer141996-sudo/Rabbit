@@ -87,8 +87,16 @@ Milestone 4.1 is release hardening only. It does not begin Milestone 5.
 - Expanded Docker smoke coverage for timeout, monitoring, confidentiality,
   re-evaluation, republishing, history, and filtered reporting
 
-Milestone 4.2 remains un-published while branch CI and manual desktop/Android Docker
-acceptance are pending. It does not begin Milestone 5 or expand the frozen MCQ scope.
+Milestone 4.2 exact commit `b6f6715` has passed branch CI. It remains unpublished to
+`main` while manual desktop/Android Docker acceptance is pending.
+
+## Milestone 5 institutional pilot preparation
+
+M5.0 preparation has started on an isolated branch with a proposed pilot cohort,
+hosting and budget baseline, timeline, owner register, scope freeze, and Go/No-Go
+criteria. No production deployment or live institutional activity starts until the
+Milestone 4.2 visual gate and the named institution decisions are approved. See
+[docs/MILESTONE_5.md](docs/MILESTONE_5.md).
 
 ## Run with Docker
 

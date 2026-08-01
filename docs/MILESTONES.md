@@ -105,7 +105,7 @@ Delivery boundary:
   receives the one-time activation URL and shares it through an approved channel.
 - Institution-owned pilot evidence and production operating approval remain required.
 
-## Milestone 4.2 — Functional and UI completion (verification pending)
+## Milestone 4.2 — Functional and UI completion (automated verification passed)
 
 Milestone 4.2 closes the functional gaps identified by the post–Milestone 4.1 UI and
 workflow review:
@@ -124,12 +124,30 @@ workflow review:
 
 Delivery boundary:
 
-- The implementation branch must pass backend, frontend, PostgreSQL V1–V7, security,
-  image, live-stack, and authenticated smoke gates on one exact commit.
+- Exact commit `b6f6715` passed backend, frontend, PostgreSQL V1–V7, security,
+  image, live-stack, and authenticated journey gates in CI run `30699322752`.
 - Manual desktop and 360 px Android Docker acceptance remains institution-owned and is
   required before the milestone is published to `main`.
 - AI, subjective assessment, proctoring, native apps, and external integrations remain
   outside Release 1.0.
+
+## Milestone 5 — Institutional pilot and release acceptance (preparation in progress)
+
+- Finalise the named institution, cohort, scope, hosting, budget, dates, and owners
+- Deploy the approved release candidate to a secure production-like environment
+- Validate every role journey on desktop and Android with accessibility evidence
+- Prove target performance, environment security, backup restore, and rollback
+- Run a staff rehearsal and at least one complete institutional assessment
+- Record written acceptance, known issues, support ownership, and a Go/No-Go decision
+
+Delivery boundary:
+
+- Milestone 5 is an environment, people, and evidence milestone; it does not add
+  product features or expand the frozen Release 1.0 MCQ scope.
+- M5.0 preparation may continue while Milestone 4.2 visual acceptance is pending,
+  but no production deployment or live pilot may start before that gate passes.
+- Institution decisions and human operating ownership cannot be inferred or replaced
+  by repository automation. See [MILESTONE_5.md](MILESTONE_5.md).
 
 ## Post–Release 1.0
 
