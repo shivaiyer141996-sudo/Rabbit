@@ -432,7 +432,7 @@ curl --fail --silent --show-error \
     "${rabbit_base_url}/gateway/backend/student/assessments/${assessment_id}" \
     >"${rabbit_smoke_tmp}/instructions-after-attempt.json"
 python3 -c \
-    'import json,sys; row=json.load(sys.stdin); assert row["attemptsUsed"] >= 1; assert row["inProgressAttemptId"] is None' \
+    'import json,sys; row=json.load(sys.stdin); assert row["attemptsUsed"] >= 1; assert "inProgressAttemptId" not in row' \
     <"${rabbit_smoke_tmp}/instructions-after-attempt.json"
 
 curl --fail --silent --show-error \
