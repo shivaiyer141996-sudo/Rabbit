@@ -1,5 +1,6 @@
 # Environment and secrets
 .env
+.env.pilot-ui
 .env.local
 .env.production
 infra/deploy/production.env

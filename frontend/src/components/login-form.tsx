@@ -19,8 +19,8 @@ interface LoginResponse {
 
 export function LoginForm() {
   const router = useRouter();
-  const [email, setEmail] = useState("admin@demo.rabbit.local");
-  const [password, setPassword] = useState("Rabbit@123");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
@@ -98,10 +98,7 @@ export function LoginForm() {
           </button>
         </div>
       </div>
-      <div className="auth-meta">
-        <label className="check-row">
-          <input type="checkbox" /> Keep me signed in
-        </label>
+      <div className="auth-meta auth-meta-login">
         <Link className="text-link" href="/forgot-password">
           Forgot password?
         </Link>
@@ -114,10 +111,6 @@ export function LoginForm() {
         {submitting && <LoaderCircle size={17} className="spin" />}
         {submitting ? "Signing in…" : "Sign in"}
       </button>
-      <div className="demo-note">
-        Demo: use any account listed in the repository README with password{" "}
-        <strong>Rabbit@123</strong>.
-      </div>
     </form>
   );
 }

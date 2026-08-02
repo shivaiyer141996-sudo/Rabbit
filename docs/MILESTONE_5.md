@@ -182,6 +182,20 @@ Required evidence:
 
 ## M5.2 — Validate screens and user journeys
 
+Repository implementation now provides a local-only, read-only Playwright
+evidence runner for all five role workspaces, 360 px Android layout, a 200% zoom
+layout equivalent, reduced motion, serious/critical axe findings, page errors,
+overflow, and screenshots. It intentionally remains outside GitHub Actions and
+targets only loopback or an explicit private-LAN address. See
+[M5.2 local UI validation](M5_2_UI_VALIDATION.md).
+
+The pilot sign-in screen also starts with empty credentials and contains no
+seeded demo password or non-functional persistence control. Development demo
+accounts remain documented in the README but must be retired before pilot data.
+
+The evidence runner does not pass M5.2 by itself. The following interactions and
+the physical-browser/device checks remain institution-owned human evidence.
+
 Test each role using real browser interactions, not API calls alone:
 
 - Admin: organisation, users, masters, dashboards, reports, operations, pilot register

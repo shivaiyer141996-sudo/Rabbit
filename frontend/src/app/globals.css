@@ -422,6 +422,10 @@ textarea:focus-visible {
   margin: 4px 0 24px;
 }
 
+.auth-meta-login {
+  justify-content: flex-end;
+}
+
 .check-row {
   align-items: center;
   color: var(--muted);

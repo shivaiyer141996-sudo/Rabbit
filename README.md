@@ -2,7 +2,12 @@
 
 Rabbit is a **Student Progress & Academic Intelligence Platform**. Assessments are the mechanism; student success is the outcome.
 
-This repository contains the Milestone 1 Foundation, Milestone 2 Intelligence, Milestone 3 GA-readiness, and Milestone 4 controlled-pilot implementation for Rabbit AiP Release 1.0. Release 1.0 is deliberately limited to web-based **Single Correct MCQ** and **Multiple Correct MCQ** workflows. AI, parent access, subjective evaluation, native mobile apps, proctoring, and LMS/ERP/SIS integrations are excluded.
+This repository contains the Milestone 1 Foundation, Milestone 2 Intelligence,
+Milestone 3 GA-readiness, Milestone 4 controlled-pilot implementation, and local
+Milestone 5 pilot-readiness tooling for Rabbit AiP Release 1.0. Release 1.0 is
+deliberately limited to web-based **Single Correct MCQ** and **Multiple Correct
+MCQ** workflows. AI, parent access, subjective evaluation, native mobile apps,
+proctoring, and LMS/ERP/SIS integrations are excluded.
 
 ## Milestone 1 delivered
 
@@ -99,6 +104,11 @@ managed database, public tunnel, or paid runtime is used. Actual M5.1 acceptance
 still requires the designated computer, private LAN, separate backup device, and
 named human owners. See [docs/MILESTONE_5.md](docs/MILESTONE_5.md) and the binding
 [local infrastructure policy](docs/LOCAL_INFRASTRUCTURE_POLICY.md).
+
+M5.2 adds a local, read-only browser evidence runner for role routes,
+accessibility, responsive overflow, reduced motion, and screenshots. It does not
+replace signed state-changing journey checks or physical Android/Edge review. See
+[docs/M5_2_UI_VALIDATION.md](docs/M5_2_UI_VALIDATION.md).
 
 ## Run with Docker
 

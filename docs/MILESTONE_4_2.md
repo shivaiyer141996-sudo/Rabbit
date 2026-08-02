@@ -1,6 +1,6 @@
 # Milestone 4.2 — Functional and UI completion
 
-Status: **Functional completion implemented — branch verification pending**
+Status: **Functional completion verified — manual desktop/Android acceptance pending**
 
 Milestone 4.2 closes the functional and interface gaps found after the Milestone 4.1
 release review. It does not add AI, subjective evaluation, proctoring, native mobile

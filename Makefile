@@ -1,6 +1,7 @@
 .PHONY: up down logs test frontend-test backend-test architecture-check \
 	pilot-env pilot-config pilot-up pilot-down pilot-logs pilot-preflight \
-	pilot-backup pilot-restore-drill pilot-retire-demo-users
+	pilot-backup pilot-restore-drill pilot-retire-demo-users \
+	pilot-ui-install pilot-ui-evidence
 
 PILOT_COMPOSE = docker compose --env-file .env -f docker-compose.yml -f infra/pilot/compose.local-pilot.yml
 
@@ -53,3 +54,9 @@ pilot-retire-demo-users:
 	@test -n "$(PILOT_REPLACEMENT_ADMIN_EMAIL)" || (echo "Set PILOT_REPLACEMENT_ADMIN_EMAIL to an activated non-demo ORG_ADMIN." >&2; exit 2)
 	@test "$(CONFIRM_RETIRE_DEMO_USERS)" = "yes" || (echo "Set CONFIRM_RETIRE_DEMO_USERS=yes after verifying the replacement administrator login." >&2; exit 2)
 	./infra/pilot/retire-demo-users.sh "$(PILOT_REPLACEMENT_ADMIN_EMAIL)" --confirm-retire-demo-users
+
+pilot-ui-install:
+	cd frontend && npm ci && npx playwright install chromium
+
+pilot-ui-evidence:
+	./infra/pilot/ui-evidence.sh
