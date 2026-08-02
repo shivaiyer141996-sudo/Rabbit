@@ -131,7 +131,7 @@ Delivery boundary:
 - AI, subjective assessment, proctoring, native apps, and external integrations remain
   outside Release 1.0.
 
-## Milestone 5 — Institutional pilot and release acceptance (M5.1–M5.4 tooling ready)
+## Milestone 5 — Institutional pilot and release acceptance (M5.1–M5.5 tooling ready)
 
 - Finalise the named institution, cohort, scope, hosting, budget, dates, and owners
 - Deploy the approved release candidate to a secure production-like environment
@@ -165,6 +165,11 @@ Delivery boundary:
   attendance, attempts, evaluation, publication, exports, audit, and incident
   closure. It does not pass until the institution runs and accepts both events.
   See [M5_4_PILOT_EXECUTION.md](M5_4_PILOT_EXECUTION.md).
+- Local M5.5 tooling prepares and finalizes checksummed approval/handover
+  evidence, while Rabbit records immutable Go, Conditional Retest, or No-Go
+  decisions with database and audit enforcement. Only a named institution can
+  sign and record the outcome. See
+  [M5_5_APPROVAL_HANDOVER.md](M5_5_APPROVAL_HANDOVER.md).
 
 ## Post–Release 1.0
 

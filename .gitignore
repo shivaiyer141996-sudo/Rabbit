@@ -3,6 +3,7 @@
 .env.pilot-ui
 .env.pilot-m5-3
 .env.pilot-m5-4
+.env.pilot-m5-5
 .env.local
 .env.production
 infra/deploy/production.env
@@ -10,6 +11,8 @@ infra/database/external-postgres.env
 infra/pilot/local-pilot.env
 .pilot-m5-4-roster.csv
 .pilot-m5-4-incidents.csv
+.pilot-m5-5-known-issues.csv
+.pilot-m5-5-signed-acceptance.pdf
 *.pem
 *.key
 

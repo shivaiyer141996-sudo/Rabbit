@@ -1,11 +1,14 @@
 "use client";
 
 import {
+  AlertTriangle,
   Ban,
   CheckCircle2,
   CircleDashed,
   ExternalLink,
   FileCheck2,
+  History,
+  LockKeyhole,
   Save,
   ShieldCheck,
   XCircle,
@@ -16,6 +19,7 @@ import { PageHeader } from "@/components/page-header";
 import { apiErrorMessage, apiFetch } from "@/lib/api";
 import type {
   PilotCheckStatus,
+  PilotDecisionOutcome,
   PilotReadiness,
 } from "@/lib/live-types";
 
@@ -25,6 +29,34 @@ interface CheckDraft {
   evidenceUrl: string;
   defectId: string;
   notes: string;
+}
+
+interface DecisionDraft {
+  outcome: PilotDecisionOutcome | "";
+  releaseVersion: string;
+  releaseCommit: string;
+  institutionName: string;
+  authorisedBy: string;
+  authoriserTitle: string;
+  uatLead: string;
+  technicalOwner: string;
+  supportContact: string;
+  monitoringOwner: string;
+  backupRestoreOwner: string;
+  incidentOwner: string;
+  rollbackOwner: string;
+  dataPrivacyOwner: string;
+  handoverRecipient: string;
+  evidenceReference: string;
+  evidenceSha256: string;
+  knownIssueCount: string;
+  knownIssuesReference: string;
+  decisionReason: string;
+  retestBy: string;
+  localDataConfirmed: boolean;
+  localOnlyConfirmed: boolean;
+  ownershipAccepted: boolean;
+  scopeFreezeAccepted: boolean;
 }
 
 const statusIcon = {
@@ -41,13 +73,33 @@ export function PilotReadinessConsole() {
   const [busy, setBusy] = useState("");
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
-  const [signOff, setSignOff] = useState({
+  const [decisionConfirmed, setDecisionConfirmed] = useState(false);
+  const [decision, setDecision] = useState<DecisionDraft>({
+    outcome: "",
     releaseVersion: "1.0.0",
+    releaseCommit: "",
+    institutionName: "",
     authorisedBy: "",
     authoriserTitle: "",
+    uatLead: "",
+    technicalOwner: "",
     supportContact: "",
+    monitoringOwner: "",
+    backupRestoreOwner: "",
+    incidentOwner: "",
     rollbackOwner: "",
-    notes: "",
+    dataPrivacyOwner: "",
+    handoverRecipient: "",
+    evidenceReference: "",
+    evidenceSha256: "",
+    knownIssueCount: "0",
+    knownIssuesReference: "",
+    decisionReason: "",
+    retestBy: "",
+    localDataConfirmed: false,
+    localOnlyConfirmed: false,
+    ownershipAccepted: false,
+    scopeFreezeAccepted: false,
   });
 
   const hydrate = useCallback((value: PilotReadiness) => {
@@ -126,20 +178,39 @@ export function PilotReadinessConsole() {
     }
   }
 
-  async function submitSignOff(event: FormEvent) {
+  function updateDecision(update: Partial<DecisionDraft>) {
+    setDecision((current) => ({ ...current, ...update }));
+  }
+
+  async function submitDecision(event: FormEvent) {
     event.preventDefault();
-    setBusy("sign-off");
+    if (!decision.outcome || !decisionConfirmed) {
+      setError("Select and explicitly confirm the institutional decision.");
+      return;
+    }
+    setBusy("decision");
     setError("");
     setMessage("");
     try {
-      const value = await apiFetch<PilotReadiness>("/pilot-readiness/sign-off", {
+      const value = await apiFetch<PilotReadiness>("/pilot-readiness/decisions", {
         method: "POST",
-        body: JSON.stringify(signOff),
+        body: JSON.stringify({
+          ...decision,
+          knownIssueCount: Number(decision.knownIssueCount),
+          retestBy: decision.outcome === "CONDITIONAL_RETEST" && decision.retestBy
+            ? new Date(decision.retestBy).toISOString()
+            : null,
+        }),
       });
       hydrate(value);
-      setMessage("Institutional pilot sign-off has been locked and audited.");
+      setDecisionConfirmed(false);
+      setMessage(
+        decision.outcome === "GO"
+          ? "Go decision recorded. The evidence register is now locked."
+          : `${decision.outcome.replaceAll("_", " ")} decision recorded; the register remains open for governed follow-up.`,
+      );
     } catch (requestError) {
-      setError(apiErrorMessage(requestError, "Pilot could not be signed off."));
+      setError(apiErrorMessage(requestError, "The pilot decision could not be recorded."));
     } finally {
       setBusy("");
     }
@@ -180,15 +251,23 @@ export function PilotReadinessConsole() {
         <div>
           <strong>
             {readiness.signedOff
-              ? "Institutional sign-off complete"
+              ? "Go decision locked"
+              : readiness.latestDecision?.outcome === "CONDITIONAL_RETEST"
+                ? "Conditional retest recorded"
+                : readiness.latestDecision?.outcome === "NO_GO"
+                  ? "No-Go recorded"
               : readiness.mandatoryChecksPassed
-                ? "Mandatory evidence complete"
+                ? "Ready for final institutional decision"
                 : "Pilot evidence is incomplete"}
           </strong>
           <span>
             {readiness.signedOff
-              ? `Release ${readiness.signOff?.releaseVersion} authorised by ${readiness.signOff?.authorisedBy}.`
-              : "Production expansion remains blocked until every mandatory row passes."}
+              ? `Release ${readiness.latestDecision?.releaseVersion} authorised by ${readiness.latestDecision?.authorisedBy}.`
+              : readiness.latestDecision?.outcome === "CONDITIONAL_RETEST"
+                ? `Retest due ${new Date(readiness.latestDecision.retestBy ?? "").toLocaleString()}. Expansion remains blocked.`
+                : readiness.latestDecision?.outcome === "NO_GO"
+                  ? "Release expansion is blocked. Read the immutable decision record below."
+                  : "Release expansion remains blocked until a named institution records a Go decision."}
           </span>
         </div>
       </div>
@@ -322,86 +401,206 @@ export function PilotReadinessConsole() {
         </section>
       ))}
 
-      {!readiness.signedOff && readiness.mandatoryChecksPassed && (
-        <form className="form-section pilot-signoff" onSubmit={submitSignOff}>
+      {readiness.decisions.length > 0 && (
+        <section className="form-section pilot-decision-history">
           <div className="panel-header">
             <div>
-              <h2>Institutional sign-off</h2>
-              <p>This final action locks the evidence register and writes an immutable audit event.</p>
+              <h2>Immutable decision history</h2>
+              <p>Conditional Retest and No-Go preserve the evidence state without locking follow-up work. Go is final.</p>
             </div>
-            <FileCheck2 size={22} />
+            <History size={22} />
+          </div>
+          <div className="pilot-decision-list">
+            {readiness.decisions.map((item) => (
+              <article className={`pilot-decision outcome-${item.outcome.toLowerCase().replaceAll("_", "-")}`} key={item.id}>
+                <div className="pilot-decision-heading">
+                  <strong>{item.outcome.replaceAll("_", " ")}</strong>
+                  <span>{new Date(item.decidedAt).toLocaleString()}</span>
+                </div>
+                <p>{item.decisionReason}</p>
+                <dl className="pilot-decision-facts">
+                  <div><dt>Release</dt><dd>{item.releaseVersion} · {item.releaseCommit.slice(0, 12)}</dd></div>
+                  <div><dt>Institution</dt><dd>{item.institutionName}</dd></div>
+                  <div><dt>Authorised by</dt><dd>{item.authorisedBy}, {item.authoriserTitle}</dd></div>
+                  <div><dt>Known issues</dt><dd>{item.knownIssueCount}</dd></div>
+                  {item.retestBy && <div><dt>Retest by</dt><dd>{new Date(item.retestBy).toLocaleString()}</dd></div>}
+                </dl>
+                <span className="pilot-local-reference" title={item.evidenceReference}>
+                  <FileCheck2 size={14} /> Local evidence · SHA-256 {item.evidenceSha256.slice(0, 12)}…
+                </span>
+              </article>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {!readiness.signedOff && (
+        <form className="form-section pilot-signoff" onSubmit={submitDecision}>
+          <div className="panel-header">
+            <div>
+              <h2>Final approval and handover</h2>
+              <p>Prepare the checksummed M5.5 bundle first. This action creates an immutable institutional decision; only Go locks the register.</p>
+            </div>
+            <LockKeyhole size={22} />
           </div>
           <div className="field-row">
+            <div className="field">
+              <label htmlFor="decision-outcome">Decision</label>
+              <select
+                id="decision-outcome"
+                onChange={(event) => {
+                  const outcome = event.target.value as PilotDecisionOutcome | "";
+                  updateDecision({ outcome, retestBy: outcome === "CONDITIONAL_RETEST" ? decision.retestBy : "" });
+                }}
+                required
+                value={decision.outcome}
+              >
+                <option value="">Select decision</option>
+                <option disabled={!readiness.mandatoryChecksPassed} value="GO">Go</option>
+                <option value="CONDITIONAL_RETEST">Conditional Retest</option>
+                <option value="NO_GO">No-Go</option>
+              </select>
+            </div>
             <div className="field">
               <label htmlFor="release-version">Release version</label>
               <input
                 id="release-version"
-                onChange={(event) =>
-                  setSignOff((current) => ({ ...current, releaseVersion: event.target.value }))
-                }
+                onChange={(event) => updateDecision({ releaseVersion: event.target.value })}
                 required
-                value={signOff.releaseVersion}
+                value={decision.releaseVersion}
               />
             </div>
+          </div>
+          <div className="field-row">
+            <div className="field">
+              <label htmlFor="release-commit">Exact release commit</label>
+              <input
+                id="release-commit"
+                minLength={7}
+                onChange={(event) => updateDecision({ releaseCommit: event.target.value })}
+                pattern="[0-9a-fA-F]{7,40}"
+                placeholder="Git commit from the local release"
+                required
+                value={decision.releaseCommit}
+              />
+            </div>
+            <div className="field">
+              <label htmlFor="institution-name">Institution name</label>
+              <input
+                id="institution-name"
+                onChange={(event) => updateDecision({ institutionName: event.target.value })}
+                required
+                value={decision.institutionName}
+              />
+            </div>
+          </div>
+          <div className="field-row">
             <div className="field">
               <label htmlFor="authorised-by">Authorised by</label>
               <input
                 id="authorised-by"
-                onChange={(event) =>
-                  setSignOff((current) => ({ ...current, authorisedBy: event.target.value }))
-                }
+                onChange={(event) => updateDecision({ authorisedBy: event.target.value })}
                 required
-                value={signOff.authorisedBy}
+                value={decision.authorisedBy}
               />
             </div>
             <div className="field">
               <label htmlFor="authoriser-title">Authoriser title</label>
               <input
                 id="authoriser-title"
-                onChange={(event) =>
-                  setSignOff((current) => ({ ...current, authoriserTitle: event.target.value }))
-                }
+                onChange={(event) => updateDecision({ authoriserTitle: event.target.value })}
                 required
-                value={signOff.authoriserTitle}
+                value={decision.authoriserTitle}
               />
             </div>
           </div>
           <div className="field-row">
             <div className="field">
-              <label htmlFor="support-contact">Pilot support contact</label>
+              <label htmlFor="uat-lead">Institution UAT lead</label>
               <input
-                id="support-contact"
-                onChange={(event) =>
-                  setSignOff((current) => ({ ...current, supportContact: event.target.value }))
-                }
+                id="uat-lead"
+                onChange={(event) => updateDecision({ uatLead: event.target.value })}
                 required
-                value={signOff.supportContact}
+                value={decision.uatLead}
               />
             </div>
             <div className="field">
-              <label htmlFor="rollback-owner">Rollback owner</label>
+              <label htmlFor="handover-recipient">Handover recipient</label>
               <input
-                id="rollback-owner"
-                onChange={(event) =>
-                  setSignOff((current) => ({ ...current, rollbackOwner: event.target.value }))
-                }
+                id="handover-recipient"
+                onChange={(event) => updateDecision({ handoverRecipient: event.target.value })}
                 required
-                value={signOff.rollbackOwner}
+                value={decision.handoverRecipient}
               />
             </div>
           </div>
+
+          <div className="panel-header pilot-subsection-heading">
+            <div><h3>Accepted operating ownership</h3><p>Use named people, not teams or automated agents.</p></div>
+          </div>
+          <div className="field-row">
+            <div className="field"><label htmlFor="technical-owner">Technical/release owner</label><input id="technical-owner" onChange={(event) => updateDecision({ technicalOwner: event.target.value })} required value={decision.technicalOwner} /></div>
+            <div className="field"><label htmlFor="support-contact">Support contact/channel</label><input id="support-contact" onChange={(event) => updateDecision({ supportContact: event.target.value })} required value={decision.supportContact} /></div>
+            <div className="field"><label htmlFor="monitoring-owner">Monitoring owner</label><input id="monitoring-owner" onChange={(event) => updateDecision({ monitoringOwner: event.target.value })} required value={decision.monitoringOwner} /></div>
+            <div className="field"><label htmlFor="backup-owner">Backup/restore owner</label><input id="backup-owner" onChange={(event) => updateDecision({ backupRestoreOwner: event.target.value })} required value={decision.backupRestoreOwner} /></div>
+            <div className="field"><label htmlFor="incident-owner">Incident owner</label><input id="incident-owner" onChange={(event) => updateDecision({ incidentOwner: event.target.value })} required value={decision.incidentOwner} /></div>
+            <div className="field"><label htmlFor="rollback-owner">Rollback owner</label><input id="rollback-owner" onChange={(event) => updateDecision({ rollbackOwner: event.target.value })} required value={decision.rollbackOwner} /></div>
+            <div className="field"><label htmlFor="privacy-owner">Data/privacy owner</label><input id="privacy-owner" onChange={(event) => updateDecision({ dataPrivacyOwner: event.target.value })} required value={decision.dataPrivacyOwner} /></div>
+          </div>
+
+          <div className="panel-header pilot-subsection-heading">
+            <div><h3>Local evidence and known issues</h3><p>References must come from the protected, checksummed M5.5 bundle on approved local media.</p></div>
+          </div>
+          <div className="field-row">
+            <div className="field">
+              <label htmlFor="handover-evidence">Handover evidence reference</label>
+              <input id="handover-evidence" onChange={(event) => updateDecision({ evidenceReference: event.target.value })} placeholder="urn:rabbit-evidence:m5-5:…" required value={decision.evidenceReference} />
+            </div>
+            <div className="field">
+              <label htmlFor="handover-sha">Evidence SHA-256</label>
+              <input id="handover-sha" maxLength={64} minLength={64} onChange={(event) => updateDecision({ evidenceSha256: event.target.value })} pattern="[0-9a-fA-F]{64}" required value={decision.evidenceSha256} />
+            </div>
+            <div className="field">
+              <label htmlFor="known-issue-count">Known S3/S4 issues</label>
+              <input id="known-issue-count" min={0} onChange={(event) => updateDecision({ knownIssueCount: event.target.value })} required type="number" value={decision.knownIssueCount} />
+            </div>
+            <div className="field">
+              <label htmlFor="known-issues-reference">Known-issue evidence reference</label>
+              <input id="known-issues-reference" onChange={(event) => updateDecision({ knownIssuesReference: event.target.value })} placeholder="Required when count is above zero" required={Number(decision.knownIssueCount) > 0} value={decision.knownIssuesReference} />
+            </div>
+          </div>
+          {decision.outcome === "CONDITIONAL_RETEST" && (
+            <div className="field">
+              <label htmlFor="retest-by">Retest deadline</label>
+              <input id="retest-by" onChange={(event) => updateDecision({ retestBy: event.target.value })} required type="datetime-local" value={decision.retestBy} />
+            </div>
+          )}
           <div className="field">
-            <label htmlFor="signoff-notes">Authorisation notes</label>
+            <label htmlFor="decision-reason">Decision reason and restrictions</label>
             <textarea
-              id="signoff-notes"
-              onChange={(event) =>
-                setSignOff((current) => ({ ...current, notes: event.target.value }))
-              }
-              value={signOff.notes}
+              id="decision-reason"
+              onChange={(event) => updateDecision({ decisionReason: event.target.value })}
+              required
+              value={decision.decisionReason}
             />
           </div>
-          <button className="button button-primary" disabled={busy === "sign-off"} type="submit">
-            <FileCheck2 size={15} /> {busy === "sign-off" ? "Signing off…" : "Authorise controlled pilot"}
+
+          <div className="pilot-attestations">
+            <label className="switch-row"><span><strong>Approved local media only</strong><small>PostgreSQL, MinIO, evidence, and backups remain on approved local devices.</small></span><input checked={decision.localDataConfirmed} onChange={(event) => updateDecision({ localDataConfirmed: event.target.checked })} type="checkbox" /></label>
+            <label className="switch-row"><span><strong>Zero-cost local infrastructure</strong><small>No cloud hosting, managed service, public endpoint, or public tunnel was introduced.</small></span><input checked={decision.localOnlyConfirmed} onChange={(event) => updateDecision({ localOnlyConfirmed: event.target.checked })} type="checkbox" /></label>
+            <label className="switch-row"><span><strong>Operating ownership accepted</strong><small>Support, monitoring, backup/restore, incident, rollback, and privacy owners accepted handover.</small></span><input checked={decision.ownershipAccepted} onChange={(event) => updateDecision({ ownershipAccepted: event.target.checked })} type="checkbox" /></label>
+            <label className="switch-row"><span><strong>Release 1.0 scope remains frozen</strong><small>This decision does not approve new features or production-scale expansion.</small></span><input checked={decision.scopeFreezeAccepted} onChange={(event) => updateDecision({ scopeFreezeAccepted: event.target.checked })} type="checkbox" /></label>
+          </div>
+
+          <label className="pilot-final-confirmation">
+            <input checked={decisionConfirmed} onChange={(event) => setDecisionConfirmed(event.target.checked)} required type="checkbox" />
+            <span><strong>I am recording the institution&apos;s deliberate decision.</strong><small>The record is immutable. Go also permanently locks this evidence register.</small></span>
+          </label>
+          {decision.outcome === "GO" && !readiness.mandatoryChecksPassed && (
+            <div className="form-error" role="alert"><AlertTriangle size={16} /> Go is unavailable until every mandatory check passes.</div>
+          )}
+          <button className="button button-primary" disabled={busy === "decision" || !decision.outcome || !decisionConfirmed} type="submit">
+            <FileCheck2 size={15} /> {busy === "decision" ? "Recording…" : "Record immutable decision"}
           </button>
         </form>
       )}

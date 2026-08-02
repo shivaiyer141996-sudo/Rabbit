@@ -101,13 +101,18 @@ and auto-submits expired attempts independently of the browser.
 | GET | `/operations/readiness` | Admin-only dependency, traffic, capacity, workflow, and GA gate snapshot |
 | GET | `/feature-flags` | Admin-only tenant feature rollout state |
 | PATCH | `/feature-flags/{key}` | Audit and update enabled state and rollout percentage |
-| GET | `/pilot-readiness` | Tenant UAT evidence, summary, and institutional sign-off |
+| GET | `/pilot-readiness` | Tenant UAT evidence, summary, immutable decision history, and institutional Go sign-off |
 | PUT | `/pilot-readiness/checks/{key}` | Record a pilot result, tester, evidence, defect, and notes |
-| POST | `/pilot-readiness/sign-off` | Lock and audit sign-off after every mandatory check passes |
+| POST | `/pilot-readiness/decisions` | Record an immutable Go, Conditional Retest, or No-Go decision; only an eligible Go locks the register |
+| POST | `/pilot-readiness/sign-off` | Compatibility alias using the same complete M5.5 decision payload and validation |
 
 Passing pilot rows accept either an absolute HTTP/HTTPS evidence URL or a
 checksummed local `urn:rabbit-evidence:...` reference. The local reference is the
 default for Milestone 5 so no cloud evidence host or public endpoint is needed.
+Final M5.5 decisions accept only a checksummed local `urn:rabbit-evidence:...`
+reference and its 64-character SHA-256. Conditional Retest requires a future
+deadline. Go additionally requires every mandatory row, accepted operating
+ownership, local-only data/media confirmation, and the Release 1.0 scope freeze.
 
 All API responses include `X-Trace-Id`. Rate-limited responses use status `429`,
 include `Retry-After` and `X-RateLimit-*` headers, and retain the standard error

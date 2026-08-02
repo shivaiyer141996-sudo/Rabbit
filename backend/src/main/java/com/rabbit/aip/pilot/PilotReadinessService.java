@@ -3,8 +3,9 @@ package com.rabbit.aip.pilot;
 import com.rabbit.aip.audit.AuditService;
 import com.rabbit.aip.common.exception.DomainException;
 import com.rabbit.aip.pilot.PilotDtos.PilotCheckResponse;
+import com.rabbit.aip.pilot.PilotDtos.PilotDecisionRequest;
+import com.rabbit.aip.pilot.PilotDtos.PilotDecisionResponse;
 import com.rabbit.aip.pilot.PilotDtos.PilotReadinessResponse;
-import com.rabbit.aip.pilot.PilotDtos.PilotSignOffRequest;
 import com.rabbit.aip.pilot.PilotDtos.PilotSignOffResponse;
 import com.rabbit.aip.pilot.PilotDtos.UpdatePilotCheckRequest;
 import com.rabbit.aip.security.CurrentSession;
@@ -22,20 +23,27 @@ public class PilotReadinessService {
     private static final Pattern LOCAL_EVIDENCE_REFERENCE = Pattern.compile(
             "rabbit-evidence:[A-Za-z0-9][A-Za-z0-9._:-]{7,900}"
     );
+    private static final Pattern RELEASE_COMMIT = Pattern.compile(
+            "(?i)^[0-9a-f]{7,40}$"
+    );
+    private static final Pattern SHA256 = Pattern.compile("(?i)^[0-9a-f]{64}$");
 
     private final PilotCheckResultRepository checks;
     private final PilotSignOffRepository signOffs;
+    private final PilotReleaseDecisionRepository decisions;
     private final CurrentSession session;
     private final AuditService audit;
 
     public PilotReadinessService(
             PilotCheckResultRepository checks,
             PilotSignOffRepository signOffs,
+            PilotReleaseDecisionRepository decisions,
             CurrentSession session,
             AuditService audit
     ) {
         this.checks = checks;
         this.signOffs = signOffs;
+        this.decisions = decisions;
         this.session = session;
         this.audit = audit;
     }
@@ -87,43 +95,156 @@ public class PilotReadinessService {
     }
 
     @Transactional
-    public PilotReadinessResponse signOff(PilotSignOffRequest request) {
+    public PilotReadinessResponse recordDecision(PilotDecisionRequest request) {
         ensureDefaults();
         if (signOffs.findByOrganisationId(session.organisationId()).isPresent()) {
             throw DomainException.badRequest(
                     "PILOT_ALREADY_SIGNED_OFF",
-                    "This pilot has already been signed off."
+                    "A Go decision has already locked this pilot."
             );
         }
         List<PilotCheckResult> current = currentChecks();
         boolean mandatoryPassed = current.stream()
                 .filter(item -> item.getKey().mandatory())
                 .allMatch(item -> item.getStatus() == PilotCheckStatus.PASS);
-        if (!mandatoryPassed) {
-            throw DomainException.badRequest(
-                    "PILOT_CHECKS_INCOMPLETE",
-                    "Every mandatory pilot check must pass before sign-off."
-            );
-        }
-        PilotSignOff saved = signOffs.save(new PilotSignOff(
+        Instant decidedAt = Instant.now();
+        validateDecision(request, mandatoryPassed, decidedAt);
+        int passed = Math.toIntExact(count(current, PilotCheckStatus.PASS));
+        int failed = Math.toIntExact(count(current, PilotCheckStatus.FAIL));
+        int blocked = Math.toIntExact(count(current, PilotCheckStatus.BLOCKED));
+        int notRun = Math.toIntExact(count(current, PilotCheckStatus.NOT_RUN));
+        PilotReleaseDecision decision = decisions.save(new PilotReleaseDecision(
                 session.organisationId(),
-                request.releaseVersion(),
-                request.authorisedBy(),
-                request.authoriserTitle(),
-                request.supportContact(),
-                request.rollbackOwner(),
-                request.notes(),
+                request,
+                mandatoryPassed,
+                passed,
+                failed,
+                blocked,
+                notRun,
+                decidedAt,
                 session.userId()
         ));
         audit.record(
                 "OPS",
-                "PILOT_SIGN_OFF",
-                "PilotSignOff",
-                saved.getId(),
+                "PILOT_RELEASE_DECISION",
+                "PilotReleaseDecision",
+                decision.getId(),
                 null,
-                saved.getReleaseVersion() + ":" + saved.getAuthorisedBy()
+                decision.getOutcome() + ":" + decision.getReleaseVersion()
         );
+        if (request.outcome() == PilotDecisionOutcome.GO) {
+            PilotSignOff saved = signOffs.save(new PilotSignOff(
+                    session.organisationId(),
+                    request.releaseVersion(),
+                    request.authorisedBy(),
+                    request.authoriserTitle(),
+                    request.supportContact(),
+                    request.rollbackOwner(),
+                    request.decisionReason(),
+                    session.userId()
+            ));
+            audit.record(
+                    "OPS",
+                    "PILOT_SIGN_OFF",
+                    "PilotSignOff",
+                    saved.getId(),
+                    null,
+                    saved.getReleaseVersion() + ":" + saved.getAuthorisedBy()
+            );
+        }
         return response();
+    }
+
+    static void validateDecision(
+            PilotDecisionRequest request,
+            boolean mandatoryPassed,
+            Instant now
+    ) {
+        if (request.outcome() == null) {
+            throw DomainException.badRequest(
+                    "PILOT_DECISION_REQUIRED",
+                    "Select Go, Conditional Retest, or No-Go."
+            );
+        }
+        if (blank(request.decisionReason())) {
+            throw DomainException.badRequest(
+                    "PILOT_DECISION_REASON_REQUIRED",
+                    "Every final pilot decision requires a reason."
+            );
+        }
+        if (blank(request.releaseCommit())
+                || !RELEASE_COMMIT.matcher(request.releaseCommit().trim()).matches()) {
+            throw DomainException.badRequest(
+                    "PILOT_RELEASE_COMMIT_INVALID",
+                    "Record the exact 7-40 character Git release commit."
+            );
+        }
+        if (blank(request.evidenceSha256())
+                || !SHA256.matcher(request.evidenceSha256().trim()).matches()) {
+            throw DomainException.badRequest(
+                    "PILOT_EVIDENCE_SHA_INVALID",
+                    "Record the 64-character SHA-256 of the local handover evidence."
+            );
+        }
+        requireLocalEvidenceReference(
+                request.evidenceReference(),
+                "PILOT_HANDOVER_EVIDENCE_INVALID",
+                "The decision must reference a local Rabbit M5.5 evidence bundle."
+        );
+        if (request.knownIssueCount() > 0 && blank(request.knownIssuesReference())) {
+            throw DomainException.badRequest(
+                    "PILOT_KNOWN_ISSUES_EVIDENCE_REQUIRED",
+                    "Known Severity 3/4 issues require a local evidence reference."
+            );
+        }
+        if (!blank(request.knownIssuesReference())) {
+            requireLocalEvidenceReference(
+                    request.knownIssuesReference(),
+                    "PILOT_KNOWN_ISSUES_EVIDENCE_INVALID",
+                    "Known issues must reference local Rabbit evidence."
+            );
+        }
+        if (!request.localDataConfirmed() || !request.localOnlyConfirmed()) {
+            throw DomainException.badRequest(
+                    "PILOT_LOCAL_DATA_CONFIRMATION_REQUIRED",
+                    "Every decision must confirm local-only infrastructure and data media."
+            );
+        }
+        if (request.outcome() == PilotDecisionOutcome.GO) {
+            if (!mandatoryPassed) {
+                throw DomainException.badRequest(
+                        "PILOT_CHECKS_INCOMPLETE",
+                        "Every mandatory pilot check must pass before a Go decision."
+                );
+            }
+            if (!request.ownershipAccepted() || !request.scopeFreezeAccepted()) {
+                throw DomainException.badRequest(
+                        "PILOT_GO_ATTESTATION_REQUIRED",
+                        "Go requires accepted operating ownership and Release 1.0 scope freeze."
+                );
+            }
+            if (request.retestBy() != null) {
+                throw DomainException.badRequest(
+                        "PILOT_RETEST_NOT_APPLICABLE",
+                        "A Go decision cannot include a retest deadline."
+                );
+            }
+        }
+        if (request.outcome() == PilotDecisionOutcome.CONDITIONAL_RETEST) {
+            if (request.retestBy() == null || !request.retestBy().isAfter(now)) {
+                throw DomainException.badRequest(
+                        "PILOT_RETEST_DEADLINE_REQUIRED",
+                        "Conditional Retest requires a future retest deadline."
+                );
+            }
+        }
+        if (request.outcome() == PilotDecisionOutcome.NO_GO
+                && request.retestBy() != null) {
+            throw DomainException.badRequest(
+                    "PILOT_RETEST_NOT_APPLICABLE",
+                    "No-Go does not carry an automatic retest deadline."
+            );
+        }
     }
 
     static void validateCheck(UpdatePilotCheckRequest request) {
@@ -181,6 +302,25 @@ public class PilotReadinessService {
         }
     }
 
+    private static void requireLocalEvidenceReference(
+            String value,
+            String code,
+            String message
+    ) {
+        try {
+            URI uri = URI.create(value == null ? "" : value.trim());
+            if (!"urn".equalsIgnoreCase(uri.getScheme())
+                    || uri.getSchemeSpecificPart() == null
+                    || !LOCAL_EVIDENCE_REFERENCE.matcher(
+                            uri.getSchemeSpecificPart()
+                    ).matches()) {
+                throw DomainException.badRequest(code, message);
+            }
+        } catch (IllegalArgumentException exception) {
+            throw DomainException.badRequest(code, message);
+        }
+    }
+
     private void ensureDefaults() {
         Arrays.stream(PilotCheckKey.values()).forEach(key ->
                 checks.findByOrganisationIdAndKey(session.organisationId(), key)
@@ -207,6 +347,11 @@ public class PilotReadinessService {
                 .findByOrganisationId(session.organisationId())
                 .map(PilotSignOffResponse::from)
                 .orElse(null);
+        List<PilotDecisionResponse> decisionHistory = decisions
+                .findAllByOrganisationIdOrderByDecidedAtDesc(session.organisationId())
+                .stream()
+                .map(PilotDecisionResponse::from)
+                .toList();
         return new PilotReadinessResponse(
                 current.size(),
                 Math.toIntExact(passed),
@@ -216,7 +361,9 @@ public class PilotReadinessService {
                 mandatoryPassed,
                 signOff != null,
                 current.stream().map(PilotCheckResponse::from).toList(),
-                signOff
+                signOff,
+                decisionHistory.isEmpty() ? null : decisionHistory.get(0),
+                decisionHistory
         );
     }
 

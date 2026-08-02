@@ -3317,6 +3317,123 @@ textarea:focus-visible {
   margin-top: 30px;
 }
 
+.pilot-decision-history {
+  margin-top: 30px;
+}
+
+.pilot-decision-list {
+  display: grid;
+  gap: 14px;
+}
+
+.pilot-decision {
+  background: var(--canvas);
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--muted);
+  border-radius: 14px;
+  padding: 18px;
+}
+
+.pilot-decision.outcome-go {
+  border-left-color: var(--success);
+}
+
+.pilot-decision.outcome-conditional-retest {
+  border-left-color: var(--warning);
+}
+
+.pilot-decision.outcome-no-go {
+  border-left-color: var(--danger);
+}
+
+.pilot-decision-heading {
+  align-items: center;
+  display: flex;
+  gap: 14px;
+  justify-content: space-between;
+}
+
+.pilot-decision-heading span,
+.pilot-decision p,
+.pilot-local-reference {
+  color: var(--muted);
+}
+
+.pilot-decision-facts {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin: 16px 0;
+}
+
+.pilot-decision-facts div {
+  min-width: 0;
+}
+
+.pilot-decision-facts dt {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.pilot-decision-facts dd {
+  font-size: 13px;
+  font-weight: 700;
+  margin: 4px 0 0;
+  overflow-wrap: anywhere;
+}
+
+.pilot-local-reference {
+  align-items: center;
+  display: inline-flex;
+  font-size: 12px;
+  gap: 6px;
+}
+
+.pilot-subsection-heading {
+  border-top: 1px solid var(--line);
+  margin-top: 12px;
+  padding-top: 22px;
+}
+
+.pilot-subsection-heading h3 {
+  margin: 0;
+}
+
+.pilot-attestations {
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 20px;
+}
+
+.pilot-final-confirmation {
+  align-items: center;
+  background: var(--canvas);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  display: grid;
+  gap: 12px;
+  grid-template-columns: auto 1fr;
+  margin-bottom: 18px;
+  padding: 14px;
+}
+
+.pilot-final-confirmation input {
+  accent-color: var(--primary);
+  height: 18px;
+  width: 18px;
+}
+
+.pilot-final-confirmation span strong,
+.pilot-final-confirmation span small {
+  display: block;
+}
+
+.pilot-final-confirmation span small {
+  color: var(--muted);
+  margin-top: 4px;
+}
+
 /* Milestone 4.2 — functional and UI completion */
 
 .report-stack {
@@ -3906,6 +4023,10 @@ textarea:focus-visible {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  .pilot-decision-facts {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .settings-savebar {
     grid-column: 1;
   }
@@ -4052,6 +4173,16 @@ textarea:focus-visible {
 }
 
 @media (max-width: 520px) {
+  .pilot-decision-facts {
+    grid-template-columns: 1fr;
+  }
+
+  .pilot-decision-heading {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 4px;
+  }
+
   .faculty-grid,
   .result-breakdown {
     grid-template-columns: 1fr;

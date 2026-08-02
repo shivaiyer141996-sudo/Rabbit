@@ -121,6 +121,14 @@ exact cohort, content, release, attendance, attempts, publication, exports,
 audit, and incident closure without mutating the event or using a cloud evidence
 link. See [docs/M5_4_PILOT_EXECUTION.md](docs/M5_4_PILOT_EXECUTION.md).
 
+M5.5 adds an immutable Go, Conditional Retest, or No-Go decision plus a local
+prepare/finalize handover workflow. It binds the signed institutional acceptance,
+exact release, readiness snapshot, current backup, incidents, owned S3/S4 issues,
+named operating owners, local media, audit event, and no-cloud attestations into
+checksummed local evidence. Only Go locks the register; automation never chooses
+or records the institution's decision. See
+[docs/M5_5_APPROVAL_HANDOVER.md](docs/M5_5_APPROVAL_HANDOVER.md).
+
 ## Run with Docker
 
 For ordinary loopback-only development:

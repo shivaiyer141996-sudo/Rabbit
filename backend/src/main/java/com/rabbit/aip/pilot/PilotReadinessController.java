@@ -1,7 +1,7 @@
 package com.rabbit.aip.pilot;
 
 import com.rabbit.aip.pilot.PilotDtos.PilotReadinessResponse;
-import com.rabbit.aip.pilot.PilotDtos.PilotSignOffRequest;
+import com.rabbit.aip.pilot.PilotDtos.PilotDecisionRequest;
 import com.rabbit.aip.pilot.PilotDtos.UpdatePilotCheckRequest;
 import jakarta.validation.Valid;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -37,10 +37,10 @@ public class PilotReadinessController {
         return service.update(key, request);
     }
 
-    @PostMapping("/sign-off")
-    PilotReadinessResponse signOff(
-            @Valid @RequestBody PilotSignOffRequest request
+    @PostMapping({"/decisions", "/sign-off"})
+    PilotReadinessResponse decision(
+            @Valid @RequestBody PilotDecisionRequest request
     ) {
-        return service.signOff(request);
+        return service.recordDecision(request);
     }
 }

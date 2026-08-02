@@ -4,8 +4,9 @@ Record the tester, date, environment, tenant, evidence link, result, and defect 
 
 The Organisation Admin records these rows in **Pilot readiness** (`/pilot-readiness`).
 A passing row requires a tester and evidence link. A failed or blocked row requires
-a defect ID or explanatory notes. The application prevents final sign-off until all
-mandatory rows pass and locks the evidence register after authorisation.
+a defect ID or explanatory notes. The application permits an immutable Conditional
+Retest or No-Go at any evidence state, but prevents Go until all mandatory rows pass
+and locks the evidence register only after Go authorisation.
 
 CI also runs `infra/pilot/smoke.sh` against the complete Docker stack. It verifies
 readiness, role-specific dashboards, the academic catalog, pilot register, student
@@ -44,7 +45,11 @@ automated smoke is supporting evidence; it does not replace institution UAT.
 - All identity, isolation, delivery, evaluation, publication, export, backup, and accessibility rows pass.
 - Any warning in the operations console has a named owner and due date.
 - The institution authorises pilot expansion in writing.
-- The authorised person, title, support contact, rollback owner, and release version
-  are recorded in the locked pilot sign-off.
+- The M5.5 signed local acceptance PDF, exact release commit/version, institution,
+  UAT lead, all operating owners, handover recipient, known issues, evidence
+  reference/SHA-256, decision reason, and architecture/data/scope attestations
+  match the immutable Rabbit decision.
 - Both M5.4 event bundles pass, use unchanged freeze manifests, and are referenced
   in the four mandatory Pilot execution rows.
+- M5.5 prepare and finalize bundles pass on the designated computer. Release
+  expansion requires Go; Conditional Retest and No-Go remain blocked outcomes.

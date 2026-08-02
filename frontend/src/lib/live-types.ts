@@ -243,6 +243,43 @@ export interface ResultView {
 }
 
 export type PilotCheckStatus = "NOT_RUN" | "PASS" | "FAIL" | "BLOCKED";
+export type PilotDecisionOutcome = "GO" | "CONDITIONAL_RETEST" | "NO_GO";
+
+export interface PilotDecision {
+  id: string;
+  outcome: PilotDecisionOutcome;
+  releaseVersion: string;
+  releaseCommit: string;
+  institutionName: string;
+  authorisedBy: string;
+  authoriserTitle: string;
+  uatLead: string;
+  technicalOwner: string;
+  supportContact: string;
+  monitoringOwner: string;
+  backupRestoreOwner: string;
+  incidentOwner: string;
+  rollbackOwner: string;
+  dataPrivacyOwner: string;
+  handoverRecipient: string;
+  evidenceReference: string;
+  evidenceSha256: string;
+  knownIssueCount: number;
+  knownIssuesReference?: string;
+  decisionReason: string;
+  retestBy?: string;
+  localDataConfirmed: boolean;
+  localOnlyConfirmed: boolean;
+  ownershipAccepted: boolean;
+  scopeFreezeAccepted: boolean;
+  mandatoryChecksPassed: boolean;
+  passedChecks: number;
+  failedChecks: number;
+  blockedChecks: number;
+  notRunChecks: number;
+  decidedAt: string;
+  decidedByUserId: string;
+}
 
 export interface PilotReadiness {
   totalChecks: number;
@@ -277,6 +314,8 @@ export interface PilotReadiness {
     signedAt: string;
     signedByUserId: string;
   };
+  latestDecision?: PilotDecision;
+  decisions: PilotDecision[];
 }
 
 export function subjectName(catalog: AcademicCatalog, subjectId: string) {

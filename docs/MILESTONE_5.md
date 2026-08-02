@@ -2,7 +2,7 @@
 
 ## Status
 
-**M5.1 through M5.4 repository tooling is implemented; execution and human
+**M5.1 through M5.5 repository tooling is implemented; execution and human
 evidence remain pending on the designated host.** Milestone 5 is an environment,
 people, and evidence milestone. It does not add product scope.
 
@@ -291,6 +291,30 @@ events and review the checksummed bundles on the designated computer.
 
 ## M5.5 — Final approval and handover
 
+Repository implementation now provides:
+
+- immutable, tenant-scoped Go, Conditional Retest, and No-Go decision history;
+- a future-deadline requirement for Conditional Retest and mandatory-gate plus
+  ownership/local-data/scope attestations for Go;
+- database-enforced append-only decision records and audit events, with only Go
+  creating the existing institutional sign-off lock;
+- a signed local acceptance PDF, named owner/handover, owned S3/S4 register,
+  incident, live-reconciliation, current-backup, and local-media evidence gate;
+- a read-only prepare→human decision→finalize workflow that reconciles the exact
+  API decision and audit event into checksummed local evidence.
+
+Prepare the protected inputs and run:
+
+```bash
+make pilot-m5-5-prepare
+# Review the bundle, then a named institution records the exact decision in
+# Rabbit's Pilot readiness screen.
+make pilot-m5-5-finalize \
+  PILOT_M5_5_PREPARED_MANIFEST=<passed-prepare-manifest.json>
+```
+
+See [M5.5 final approval and local handover](M5_5_APPROVAL_HANDOVER.md).
+
 The pilot is **Go** only when:
 
 - Every mandatory row in `/pilot-readiness` is passed with genuine evidence.
@@ -303,6 +327,11 @@ The pilot is **Go** only when:
 
 Any failed mandatory condition produces a **No-Go** or a time-boxed conditional
 retest. A successful pilot is not permission to add post–Release 1.0 scope.
+
+Tooling availability does not pass M5.5. The institution must sign the local
+acceptance PDF, choose the outcome, record it through an authenticated Admin,
+accept the named handover, and review the checksummed final bundle. Conditional
+Retest and No-Go are valid records but do not authorise release expansion.
 
 ## Severity and change policy
 
@@ -317,7 +346,7 @@ Every release-candidate change must identify the defect, affected journey, focus
 retest, regression evidence, and exact deployed commit. Feature requests are not
 eligible for release-candidate changes.
 
-## Decision record to complete next
+## Institution inputs still required for execution
 
 1. Institution name and authorised sponsor
 2. Final cohort and subject/assessment details
