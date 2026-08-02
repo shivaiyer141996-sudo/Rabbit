@@ -163,6 +163,12 @@ wait_healthy minio 60
       SELECT '\''responses='\'' || COUNT(*) FROM attempt_responses;
       SELECT '\''selected_options='\'' || COUNT(*) FROM response_selected_options;
       SELECT '\''audit_events='\'' || COUNT(*) FROM audit_events;
+      SELECT '\''commercial_subscriptions='\'' || COUNT(*) FROM organisation_subscriptions;
+      SELECT '\''commercial_subscription_events='\'' || COUNT(*) FROM commercial_subscription_events;
+      SELECT '\''commercial_invoices='\'' || COUNT(*) FROM commercial_invoices;
+      SELECT '\''commercial_payments='\'' || COUNT(*) FROM commercial_payments;
+      SELECT '\''commercial_receipts='\'' || COUNT(*) FROM commercial_receipts;
+      SELECT '\''commercial_support_cases='\'' || COUNT(*) FROM commercial_support_cases;
     "' >"${run_dir}/restored-reconciliation.txt"
 restored_minio_files="$(docker run --rm --network none --volumes-from "${minio_container}" \
   alpine:3.22 sh -euc 'find /data -type f | wc -l' | tr -d '[:space:]')"

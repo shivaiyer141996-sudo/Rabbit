@@ -235,6 +235,20 @@ different database engine requires vendor-specific migrations and tenant-safety
 validation. The dormant external-PostgreSQL environment and Compose override are
 not loaded by the normal local startup command.
 
+## Milestone 6 commercial controls
+
+Basic, Pro, and Legend entitlements, the one-time 20-day Legend trial, organisation
+onboarding, manual invoices/payments/receipts, and local support cases are implemented
+in the repository. They remain disabled by default until the real M5.6 release closure
+passes. No payment gateway or paid/cloud service is connected.
+
+```bash
+make m6-contract
+```
+
+See [Milestone 6 commercial readiness](docs/MILESTONE_6.md) for pricing, lifecycle,
+activation, and designated-host acceptance gates.
+
 ## Repository map
 
 ```text

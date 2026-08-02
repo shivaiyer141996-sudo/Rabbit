@@ -3,6 +3,8 @@ package com.rabbit.aip.user;
 import com.rabbit.aip.audit.AuditService;
 import com.rabbit.aip.auth.InvitationService;
 import com.rabbit.aip.common.exception.DomainException;
+import com.rabbit.aip.commercial.CommercialService;
+import com.rabbit.aip.commercial.CommercialTypes.Entitlement;
 import com.rabbit.aip.security.CurrentSession;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
@@ -31,19 +33,22 @@ public class UserController {
     private final CurrentSession session;
     private final InvitationService invitations;
     private final AuditService audit;
+    private final CommercialService commercial;
 
     public UserController(
             UserAccountRepository users,
             OrganisationMembershipRepository memberships,
             CurrentSession session,
             InvitationService invitations,
-            AuditService audit
+            AuditService audit,
+            CommercialService commercial
     ) {
         this.users = users;
         this.memberships = memberships;
         this.session = session;
         this.invitations = invitations;
         this.audit = audit;
+        this.commercial = commercial;
     }
 
     @GetMapping
@@ -61,6 +66,8 @@ public class UserController {
 
     @PostMapping
     InvitationResponse create(@Valid @RequestBody CreateUserRequest request) {
+        commercial.requireEntitlement(Entitlement.ASSESSMENT_DELIVERY);
+        commercial.requireStudentCapacity(request.role());
         InvitationService.IssuedInvitation issued = invitations.create(
                 session.organisationId(),
                 session.userId(),
@@ -75,6 +82,7 @@ public class UserController {
 
     @PostMapping("/{membershipId}/invitation")
     InvitationResponse reissueInvitation(@PathVariable UUID membershipId) {
+        commercial.requireEntitlement(Entitlement.ASSESSMENT_DELIVERY);
         return InvitationResponse.from(invitations.reissue(
                 session.organisationId(),
                 session.userId(),
@@ -101,6 +109,11 @@ public class UserController {
                     "INVITATION_ACTIVATION_REQUIRED",
                     "Invited users must activate their account using a valid invitation."
             );
+        }
+        if (membership.getRole() == UserRole.STUDENT
+                && before != AccountStatus.ACTIVE
+                && request.status() == AccountStatus.ACTIVE) {
+            commercial.requireStudentCapacity(UserRole.STUDENT);
         }
         membership.setStatus(request.status());
         UserAccount user = users.findById(membership.getUserId()).orElseThrow();

@@ -111,7 +111,8 @@ public class InvitationService {
                 membership.getId(),
                 createdByUserId
         );
-        audit.record(
+        audit.recordForOrganisation(
+                organisationId,
                 "USR",
                 "INVITE",
                 "UserAccount",
@@ -142,7 +143,8 @@ public class InvitationService {
                 membership.getId(),
                 createdByUserId
         );
-        audit.record(
+        audit.recordForOrganisation(
+                organisationId,
                 "USR",
                 "INVITATION_REISSUE",
                 "OrganisationMembership",

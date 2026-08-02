@@ -1,5 +1,7 @@
 package com.rabbit.aip.report;
 
+import com.rabbit.aip.commercial.CommercialService;
+import com.rabbit.aip.commercial.CommercialTypes.Entitlement;
 import com.rabbit.aip.report.ReportDtos.AssessmentReport;
 import com.rabbit.aip.report.ReportDtos.FacultyPerformance;
 import com.rabbit.aip.report.ReportDtos.IntelligenceOverview;
@@ -32,33 +34,43 @@ public class ReportController {
 
     private final ReportService service;
     private final ReportExportService exports;
+    private final CommercialService commercial;
 
-    public ReportController(ReportService service, ReportExportService exports) {
+    public ReportController(
+            ReportService service,
+            ReportExportService exports,
+            CommercialService commercial
+    ) {
         this.service = service;
         this.exports = exports;
+        this.commercial = commercial;
     }
 
     @GetMapping("/overview")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN','ORG_ADMIN','ACADEMIC_HEAD','FACULTY')")
     IntelligenceOverview overview() {
+        commercial.requireEntitlement(Entitlement.INSTITUTION_ANALYTICS);
         return service.overview();
     }
 
     @GetMapping("/assessments/{assessmentId}")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN','ORG_ADMIN','ACADEMIC_HEAD','FACULTY')")
     AssessmentReport assessment(@PathVariable UUID assessmentId) {
+        commercial.requireEntitlement(Entitlement.INSTITUTION_ANALYTICS);
         return service.assessment(assessmentId);
     }
 
     @GetMapping("/students/me")
     @PreAuthorize("hasRole('STUDENT')")
     StudentPerformanceReport me() {
+        commercial.requireEntitlement(Entitlement.STUDENT_EVALUATION);
         return service.myPerformance();
     }
 
     @GetMapping("/students/me/analytics")
     @PreAuthorize("hasRole('STUDENT')")
     StudentAnalyticsReport myAnalytics() {
+        commercial.requireEntitlement(Entitlement.STUDENT_EVALUATION);
         return service.myAnalytics();
     }
 
@@ -73,6 +85,7 @@ public class ReportController {
             @RequestParam(required = false) Instant submittedFrom,
             @RequestParam(required = false) Instant submittedBefore
     ) {
+        commercial.requireEntitlement(Entitlement.STUDENT_EVALUATION);
         return service.students(
                 query,
                 subjectId,
@@ -87,12 +100,14 @@ public class ReportController {
     @GetMapping("/students/{studentId}")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN','ORG_ADMIN','ACADEMIC_HEAD','FACULTY')")
     StudentPerformanceReport student(@PathVariable UUID studentId) {
+        commercial.requireEntitlement(Entitlement.STUDENT_EVALUATION);
         return service.student(studentId);
     }
 
     @GetMapping("/students/{studentId}/analytics")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN','ORG_ADMIN','ACADEMIC_HEAD','FACULTY')")
     StudentAnalyticsReport studentAnalytics(@PathVariable UUID studentId) {
+        commercial.requireEntitlement(Entitlement.STUDENT_EVALUATION);
         return service.studentAnalytics(studentId);
     }
 
@@ -101,24 +116,28 @@ public class ReportController {
     TeacherAnalyticsReport teacher(
             @RequestParam(required = false) UUID teacherUserId
     ) {
+        commercial.requireEntitlement(Entitlement.TEACHER_ANALYTICS);
         return service.teacherAnalytics(teacherUserId);
     }
 
     @GetMapping("/questions")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN','ORG_ADMIN','ACADEMIC_HEAD','FACULTY','REVIEWER')")
     List<QuestionPerformance> questions() {
+        commercial.requireEntitlement(Entitlement.INSTITUTION_ANALYTICS);
         return service.questionAnalytics();
     }
 
     @GetMapping("/faculty")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN','ORG_ADMIN','ACADEMIC_HEAD')")
     List<FacultyPerformance> faculty() {
+        commercial.requireEntitlement(Entitlement.TEACHER_ANALYTICS);
         return service.facultyPerformance();
     }
 
     @GetMapping(value = "/assessments/{assessmentId}/export", produces = "text/csv")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN','ORG_ADMIN','ACADEMIC_HEAD','FACULTY')")
     ResponseEntity<byte[]> exportAssessment(@PathVariable UUID assessmentId) {
+        commercial.requireEntitlement(Entitlement.REPORT_EXPORTS);
         byte[] data = service.assessmentCsv(assessmentId)
                 .getBytes(StandardCharsets.UTF_8);
         return ResponseEntity.ok()
@@ -139,6 +158,7 @@ public class ReportController {
     )
     @PreAuthorize("hasAnyRole('SUPER_ADMIN','ORG_ADMIN','ACADEMIC_HEAD','FACULTY')")
     ResponseEntity<byte[]> exportAssessmentPdf(@PathVariable UUID assessmentId) {
+        commercial.requireEntitlement(Entitlement.REPORT_EXPORTS);
         return downloadable(exports.pdf(assessmentId));
     }
 
@@ -148,6 +168,7 @@ public class ReportController {
     )
     @PreAuthorize("hasAnyRole('SUPER_ADMIN','ORG_ADMIN','ACADEMIC_HEAD','FACULTY')")
     ResponseEntity<byte[]> exportAssessmentExcel(@PathVariable UUID assessmentId) {
+        commercial.requireEntitlement(Entitlement.REPORT_EXPORTS);
         return downloadable(exports.excel(assessmentId));
     }
 
@@ -159,6 +180,7 @@ public class ReportController {
     ResponseEntity<byte[]> exportTeacherPdf(
             @RequestParam(required = false) UUID teacherUserId
     ) {
+        commercial.requireEntitlement(Entitlement.REPORT_EXPORTS);
         return downloadable(exports.teacherPdf(teacherUserId));
     }
 
@@ -170,6 +192,7 @@ public class ReportController {
     ResponseEntity<byte[]> exportTeacherExcel(
             @RequestParam(required = false) UUID teacherUserId
     ) {
+        commercial.requireEntitlement(Entitlement.REPORT_EXPORTS);
         return downloadable(exports.teacherExcel(teacherUserId));
     }
 

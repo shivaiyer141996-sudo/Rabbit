@@ -114,6 +114,31 @@ reference and its 64-character SHA-256. Conditional Retest requires a future
 deadline. Go additionally requires every mandatory row, accepted operating
 ownership, local-only data/media confirmation, and the Release 1.0 scope freeze.
 
+## Commercial readiness and local support
+
+Commercial controls default off and require the final M5.6 local evidence reference
+plus the exact release commit before activation.
+
+| Method | Path | Purpose |
+| --- | --- | --- |
+| GET | `/commercial-access` | Role-safe effective plan/status/entitlements for navigation and API clients |
+| GET | `/commercial/catalog` | Approved Basic/Pro/Legend prices and entitlements |
+| GET | `/commercial/overview` | Admin subscription, usage, event, invoice, payment, receipt, and support snapshot |
+| POST | `/commercial/trial` | Start the one-time 20-day Legend trial for the current organisation |
+| POST | `/commercial/onboarding` | Super Admin atomic tenant/admin/defaults/trial onboarding |
+| POST | `/commercial/invoices` | Super Admin issue one approved monthly manual invoice |
+| POST | `/commercial/invoices/{id}/void` | Void an unpaid issued invoice with a reason |
+| POST | `/commercial/payments` | Record an exact verified offline payment and create its receipt/subscription transition |
+| POST | `/commercial/subscription/suspend` | Super Admin suspend current access with a required reason |
+| POST | `/commercial/subscription/restore` | Super Admin restore access only inside the original paid/trial window |
+| POST | `/commercial/support-cases` | Create a tenant-local support case |
+| PATCH | `/commercial/support-cases/{id}` | Assign, progress, resolve, or close a support case |
+
+Non-entitled paid actions use status `402`. Expired organisations retain core-record,
+result-history, billing, and support access; plan-specific analytics remain gated.
+Response saving and submission for an already-started attempt are deliberately not
+interrupted.
+
 All API responses include `X-Trace-Id`. Rate-limited responses use status `429`,
 include `Retry-After` and `X-RateLimit-*` headers, and retain the standard error
 envelope. Failed credentials persist in an independent transaction; the default

@@ -58,3 +58,24 @@ automated smoke is supporting evidence; it does not replace institution UAT.
 - The exact branch and verification-only tag runs pass; `main`, `origin/main`,
   and the annotated `v1.0.0` tag resolve to the same Go-approved commit; M5.6
   finalization passes without a registry, cloud runtime, or public endpoint.
+
+## Milestone 6 commercial activation UAT
+
+Run this section only after every M5.6 exit criterion above passes.
+
+| Area | Acceptance check | Expected result |
+| --- | --- | --- |
+| Activation guard | Try enabling M6 without final evidence, with a wrong commit, and with the exact final inputs | Both invalid starts fail closed; exact local evidence starts successfully |
+| Catalogue | Compare all nine UI/API/Java/PostgreSQL price points | ₹599–₹2,499 matrix agrees exactly; client cannot override it |
+| Trial | Start once, test day 19/day 20, and attempt a second trial | Legend works for exactly 20 days; second trial is rejected |
+| Capacity | Invite Students at 50, 150, and 500 limits | Boundary invite succeeds; next invite returns the plan-capacity error |
+| Entitlements | Exercise Basic, Pro, Legend, expired, and suspended states | API and navigation match the documented plan matrix |
+| Live attempt protection | Expire access while a Student has an in-progress attempt | New start is blocked; existing response saves and submit still work |
+| Invoice | Try a wrong price, invalid capacity, non-monthly period, duplicate number, and valid invoice | Invalid records are rejected; valid subtotal is server-derived |
+| Payment/receipt | Try partial, excess, duplicate-reference, and exact payments | Only exact verified payment commits invoice, receipt, plan event, and audit together |
+| Upgrade/downgrade | Apply immediate upgrade and paid next-period downgrade | Upgrade is immediate; downgrade preserves current access until period end |
+| Suspension | Suspend with a reason; restore before and after the original end | Before-end restore succeeds; no action extends or revives the access window |
+| Onboarding | Create one tenant and activate the invited Organisation Admin | Defaults, memberships, trial, audit, and tenant isolation are correct |
+| Support | Create S1–S4 cases; assign, resolve, and close | Targets derive from severity; resolution text is mandatory |
+| Recovery | Back up and restore all V9 tables in isolation | Subscription, billing, receipt, support, events, and audit reconcile |
+| Responsive UI | Complete `/commercial` at desktop, 200% zoom, and physical Android width | No unavailable action is hidden incorrectly and no horizontal blocker appears |

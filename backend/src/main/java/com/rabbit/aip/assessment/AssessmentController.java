@@ -1,5 +1,7 @@
 package com.rabbit.aip.assessment;
 
+import com.rabbit.aip.commercial.CommercialService;
+import com.rabbit.aip.commercial.CommercialTypes.Entitlement;
 import com.rabbit.aip.assessment.AssessmentDtos.AssessmentRequest;
 import com.rabbit.aip.assessment.AssessmentDtos.AssessmentResponse;
 import com.rabbit.aip.assessment.AssessmentDtos.AssessmentReviewRequest;
@@ -24,9 +26,11 @@ import org.springframework.web.bind.annotation.RestController;
 public class AssessmentController {
 
     private final AssessmentService service;
+    private final CommercialService commercial;
 
-    public AssessmentController(AssessmentService service) {
+    public AssessmentController(AssessmentService service, CommercialService commercial) {
         this.service = service;
+        this.commercial = commercial;
     }
 
     @GetMapping
@@ -43,12 +47,14 @@ public class AssessmentController {
     @ResponseStatus(HttpStatus.CREATED)
     @PreAuthorize("hasAnyRole('SUPER_ADMIN','ORG_ADMIN','ACADEMIC_HEAD','FACULTY')")
     AssessmentResponse create(@Valid @RequestBody AssessmentRequest request) {
+        commercial.requireEntitlement(Entitlement.ASSESSMENT_DELIVERY);
         return service.create(request);
     }
 
     @PostMapping("/{id}/publish")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN','ORG_ADMIN','ACADEMIC_HEAD','FACULTY')")
     AssessmentResponse publish(@PathVariable UUID id) {
+        commercial.requireEntitlement(Entitlement.ASSESSMENT_DELIVERY);
         return service.publish(id);
     }
 
@@ -58,6 +64,7 @@ public class AssessmentController {
             @PathVariable UUID id,
             @Valid @RequestBody ScheduleRequest request
     ) {
+        commercial.requireEntitlement(Entitlement.ASSESSMENT_DELIVERY);
         return service.schedule(
                 id,
                 request.startAt(),
@@ -80,6 +87,7 @@ public class AssessmentController {
     @PostMapping("/{id}/submit")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN','ORG_ADMIN','ACADEMIC_HEAD','FACULTY')")
     AssessmentResponse submit(@PathVariable UUID id) {
+        commercial.requireEntitlement(Entitlement.ASSESSMENT_DELIVERY);
         return service.submit(id);
     }
 
@@ -89,6 +97,7 @@ public class AssessmentController {
             @PathVariable UUID id,
             @Valid @RequestBody AssessmentReviewRequest request
     ) {
+        commercial.requireEntitlement(Entitlement.ASSESSMENT_DELIVERY);
         return service.review(id, request.decision(), request.reason());
     }
 }

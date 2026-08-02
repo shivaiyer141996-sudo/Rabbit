@@ -50,6 +50,31 @@ public class AuditService {
         ));
     }
 
+    public void recordForOrganisation(
+            UUID organisationId,
+            String module,
+            String action,
+            String entityType,
+            UUID entityId,
+            String beforeValue,
+            String afterValue
+    ) {
+        events.save(new AuditEvent(
+                organisationId,
+                session.userId(),
+                module,
+                action,
+                entityType,
+                entityId,
+                beforeValue,
+                afterValue,
+                session.email(),
+                session.role().name(),
+                requestMetadata.ipAddress(),
+                requestMetadata.traceId()
+        ));
+    }
+
     public void recordAuthentication(
             UUID organisationId,
             UUID actorUserId,

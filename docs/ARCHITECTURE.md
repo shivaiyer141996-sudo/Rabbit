@@ -77,6 +77,15 @@ to loopback unless the pilot operator selects one explicit private-LAN address.
 - Nginx applies clickjacking, MIME-sniffing, referrer, permissions, and content-security headers.
 - Sensitive report downloads are no-store and feature-flag governed.
 
+## Commercial control plane
+
+Milestone 6 adds no infrastructure service. The Spring API derives plan access from
+one tenant-scoped PostgreSQL subscription row and immutable transition events. Plan
+prices are compiled into the service and repeated as PostgreSQL check constraints.
+The Next.js portal uses the role-safe access view to hide unavailable modules, while
+the API independently enforces every paid action. Billing records represent offline
+operator-verified payments only; there is no payment-gateway network boundary.
+
 ## Reliability
 
 - Responses are saved on question navigation and every 30 seconds.

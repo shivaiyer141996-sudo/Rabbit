@@ -54,8 +54,16 @@ public class OrganisationSettings extends TenantEntity {
     }
 
     public OrganisationSettings(UUID organisationId) {
+        this(organisationId, "Rabbit AiP", "Asia/Kolkata");
+    }
+
+    public OrganisationSettings(
+            UUID organisationId,
+            String displayName,
+            String timezone
+    ) {
         super(organisationId);
-        this.timezone = "Asia/Kolkata";
+        this.timezone = timezone;
         this.language = "en";
         this.passPercentage = BigDecimal.valueOf(40);
         this.atRiskThreshold = BigDecimal.valueOf(40);
@@ -63,10 +71,10 @@ public class OrganisationSettings extends TenantEntity {
         this.defaultAttemptsAllowed = 1;
         this.shuffleQuestions = true;
         this.shuffleOptions = false;
-        this.emailNotificationsEnabled = true;
+        this.emailNotificationsEnabled = false;
         this.smsNotificationsEnabled = false;
         this.auditRetentionDays = 2555;
-        this.displayName = "Rabbit AiP";
+        this.displayName = displayName;
         this.primaryColour = "#5936C8";
     }
 

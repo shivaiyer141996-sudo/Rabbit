@@ -4,7 +4,8 @@
 	pilot-ui-install pilot-ui-evidence pilot-performance pilot-security \
 	pilot-functional-restore-drill pilot-rollback-rehearsal pilot-m5-3 \
 	pilot-m5-4-freeze pilot-m5-4-reconcile pilot-m5-5-prepare pilot-m5-5-finalize \
-	pilot-m5-6-prepare pilot-m5-6-verify-tag release-tag-check
+	pilot-m5-6-prepare pilot-m5-6-verify-tag release-tag-check \
+	m6-contract m6-activation-check
 
 PILOT_COMPOSE = docker compose --env-file .env -f docker-compose.yml -f infra/pilot/compose.local-pilot.yml
 
@@ -104,3 +105,10 @@ pilot-m5-6-verify-tag:
 release-tag-check:
 	@test -n "$(RELEASE_TAG)" || (echo "Set RELEASE_TAG to the annotated vX.Y.Z tag." >&2; exit 2)
 	./infra/release/verify-release-tag.sh "$(RELEASE_TAG)"
+
+m6-contract:
+	python3 infra/commercial/verify-m6-contract.py --repo-root .
+
+m6-activation-check:
+	@test -n "$(M6_ENV)" || (echo "Set M6_ENV to the protected local environment file." >&2; exit 2)
+	python3 infra/commercial/verify-m6-contract.py --repo-root . --env-file "$(M6_ENV)"

@@ -80,6 +80,14 @@ Release 1.0 database engine: MySQL, SQL Server, Oracle, or a non-relational engi
 would require new migrations and equivalent tenant-safety controls rather than a
 simple setting change. See [Database portability](DATABASE_PORTABILITY.md).
 
+## Milestone 6 commercial boundary
+
+Commercial readiness does not relax this policy. Subscriptions, invoices, manual
+payment references, receipts, and support cases live only in local PostgreSQL.
+Rabbit does not call a payment gateway, tax service, CRM, email/SMS provider, cloud
+registry, or managed database. `COMMERCIAL_CONTROLS_ENABLED` defaults to `false` and
+requires final local M5.6 evidence plus the exact release commit before activation.
+
 ## Future change gate
 
 A future infrastructure change is permitted only after the owner approves:

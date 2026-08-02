@@ -1,5 +1,7 @@
 package com.rabbit.aip.question;
 
+import com.rabbit.aip.commercial.CommercialService;
+import com.rabbit.aip.commercial.CommercialTypes.Entitlement;
 import com.rabbit.aip.question.QuestionDtos.QuestionRequest;
 import com.rabbit.aip.question.QuestionDtos.QuestionResponse;
 import com.rabbit.aip.question.QuestionDtos.ReviewRequest;
@@ -24,9 +26,11 @@ import org.springframework.web.bind.annotation.RestController;
 public class QuestionController {
 
     private final QuestionService service;
+    private final CommercialService commercial;
 
-    public QuestionController(QuestionService service) {
+    public QuestionController(QuestionService service, CommercialService commercial) {
         this.service = service;
+        this.commercial = commercial;
     }
 
     @GetMapping
@@ -61,6 +65,7 @@ public class QuestionController {
     @ResponseStatus(HttpStatus.CREATED)
     @PreAuthorize("hasAnyRole('SUPER_ADMIN','ORG_ADMIN','ACADEMIC_HEAD','FACULTY')")
     QuestionResponse create(@Valid @RequestBody QuestionRequest request) {
+        commercial.requireEntitlement(Entitlement.ASSESSMENT_DELIVERY);
         return service.create(request);
     }
 
@@ -70,12 +75,14 @@ public class QuestionController {
             @PathVariable UUID id,
             @Valid @RequestBody QuestionRequest request
     ) {
+        commercial.requireEntitlement(Entitlement.ASSESSMENT_DELIVERY);
         return service.update(id, request);
     }
 
     @PostMapping("/{id}/submit")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN','ORG_ADMIN','ACADEMIC_HEAD','FACULTY')")
     QuestionResponse submit(@PathVariable UUID id) {
+        commercial.requireEntitlement(Entitlement.ASSESSMENT_DELIVERY);
         return service.submit(id);
     }
 
@@ -85,6 +92,7 @@ public class QuestionController {
             @PathVariable UUID id,
             @Valid @RequestBody ReviewRequest request
     ) {
+        commercial.requireEntitlement(Entitlement.ASSESSMENT_DELIVERY);
         return service.review(
                 id,
                 request.decision(),

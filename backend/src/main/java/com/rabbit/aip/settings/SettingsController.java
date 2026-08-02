@@ -1,5 +1,7 @@
 package com.rabbit.aip.settings;
 
+import com.rabbit.aip.commercial.CommercialService;
+import com.rabbit.aip.commercial.CommercialTypes.Entitlement;
 import com.rabbit.aip.settings.SettingsDtos.GeneralSettingsRequest;
 import com.rabbit.aip.settings.SettingsDtos.GeneralSettingsResponse;
 import com.rabbit.aip.settings.SettingsDtos.GradeBandResponse;
@@ -30,9 +32,11 @@ import org.springframework.web.bind.annotation.RestController;
 public class SettingsController {
 
     private final SettingsService service;
+    private final CommercialService commercial;
 
-    public SettingsController(SettingsService service) {
+    public SettingsController(SettingsService service, CommercialService commercial) {
         this.service = service;
+        this.commercial = commercial;
     }
 
     @GetMapping
@@ -44,6 +48,7 @@ public class SettingsController {
     GeneralSettingsResponse updateGeneral(
             @Valid @RequestBody GeneralSettingsRequest request
     ) {
+        commercial.requireEntitlement(Entitlement.ASSESSMENT_DELIVERY);
         return service.updateGeneral(request);
     }
 
@@ -51,23 +56,27 @@ public class SettingsController {
     List<GradeBandResponse> updateGradeBands(
             @Valid @RequestBody GradeBandsRequest request
     ) {
+        commercial.requireEntitlement(Entitlement.ASSESSMENT_DELIVERY);
         return service.updateGradeBands(request.bands());
     }
 
     @PostMapping("/subjects")
     @ResponseStatus(HttpStatus.CREATED)
     SubjectResponse createSubject(@Valid @RequestBody SubjectRequest request) {
+        commercial.requireEntitlement(Entitlement.ASSESSMENT_DELIVERY);
         return service.createSubject(request.code(), request.name());
     }
 
     @PatchMapping("/subjects/{id}/deactivate")
     SubjectResponse deactivateSubject(@PathVariable UUID id) {
+        commercial.requireEntitlement(Entitlement.ASSESSMENT_DELIVERY);
         return service.deactivateSubject(id);
     }
 
     @PostMapping("/topics")
     @ResponseStatus(HttpStatus.CREATED)
     TopicResponse createTopic(@Valid @RequestBody TopicRequest request) {
+        commercial.requireEntitlement(Entitlement.ASSESSMENT_DELIVERY);
         return service.createTopic(request.subjectId(), request.name());
     }
 }

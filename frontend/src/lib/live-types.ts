@@ -140,6 +140,118 @@ export interface InvitationIssue {
   expiresAt: string;
 }
 
+export type CommercialPlan = "BASIC" | "PRO" | "LEGEND";
+export type CommercialEntitlement =
+  | "ASSESSMENT_DELIVERY"
+  | "STUDENT_EVALUATION"
+  | "INSTITUTION_ANALYTICS"
+  | "TEACHER_ANALYTICS"
+  | "REPORT_EXPORTS";
+export type SubscriptionStatus = "TRIALING" | "ACTIVE" | "EXPIRED" | "SUSPENDED";
+
+export interface CommercialAccess {
+  enforcementEnabled: boolean;
+  plan?: CommercialPlan;
+  status?: SubscriptionStatus;
+  studentLimit?: number;
+  accessEndsAt?: string;
+  entitlements: CommercialEntitlement[];
+}
+
+export interface CommercialOverview {
+  enforcementEnabled: boolean;
+  m5_6ActivationEvidenceAccepted: boolean;
+  trialDays: number;
+  serverNow: string;
+  activeAndInvitedStudents: number;
+  availableStudentSlots: number;
+  effectiveEntitlements: CommercialEntitlement[];
+  subscription?: {
+    id: string;
+    plan: CommercialPlan;
+    studentLimit: number;
+    monthlyPricePaise: number;
+    status: SubscriptionStatus;
+    trialStartsAt?: string;
+    trialEndsAt?: string;
+    periodStartsAt?: string;
+    periodEndsAt?: string;
+    pendingPlan?: CommercialPlan;
+    pendingStudentLimit?: number;
+    pendingMonthlyPricePaise?: number;
+    pendingPeriodStartsAt?: string;
+    pendingPeriodEndsAt?: string;
+    note?: string;
+    rowVersion: number;
+    entitlements: CommercialEntitlement[];
+  };
+  catalog: Array<{
+    code: CommercialPlan;
+    label: string;
+    description: string;
+    prices: Array<{ studentLimit: number; monthlyPricePaise: number }>;
+    entitlements: CommercialEntitlement[];
+  }>;
+  subscriptionEvents: Array<{
+    id: string;
+    eventType: string;
+    beforeValue?: string;
+    afterValue: string;
+    actorUserId: string;
+    occurredAt: string;
+  }>;
+  invoices: Array<{
+    id: string;
+    invoiceNumber: string;
+    plan: CommercialPlan;
+    studentLimit: number;
+    periodStartsAt: string;
+    periodEndsAt: string;
+    subtotalPaise: number;
+    taxPaise: number;
+    totalPaise: number;
+    status: "ISSUED" | "PAID" | "VOID";
+    issuedAt: string;
+    dueAt: string;
+    paidAt?: string;
+    note?: string;
+  }>;
+  payments: Array<{
+    id: string;
+    invoiceId: string;
+    paymentReference: string;
+    paymentMethod: "BANK_TRANSFER" | "UPI" | "CHEQUE" | "CASH" | "OTHER";
+    amountPaise: number;
+    status: "RECORDED";
+    paidAt: string;
+    note?: string;
+  }>;
+  receipts: Array<{
+    id: string;
+    paymentId: string;
+    invoiceId: string;
+    receiptNumber: string;
+    amountPaise: number;
+    issuedAt: string;
+  }>;
+  supportCases: Array<{
+    id: string;
+    caseNumber: string;
+    severity: "S1" | "S2" | "S3" | "S4";
+    category: "ACCESS" | "ASSESSMENT" | "REPORTING" | "BILLING" | "DATA" | "OTHER";
+    status: "OPEN" | "IN_PROGRESS" | "WAITING_FOR_INSTITUTION" | "RESOLVED" | "CLOSED";
+    summary: string;
+    description: string;
+    requesterUserId: string;
+    assignedTo?: string;
+    responseDueAt: string;
+    resolvedAt?: string;
+    resolution?: string;
+    createdAt: string;
+    updatedAt: string;
+  }>;
+}
+
 export interface StudentAssessmentSummary {
   id: string;
   title: string;

@@ -1,5 +1,6 @@
 package com.rabbit.aip.organisation;
 
+import com.rabbit.aip.commercial.CommercialLaunchGuard;
 import com.rabbit.aip.common.exception.DomainException;
 import com.rabbit.aip.security.CurrentSession;
 import com.rabbit.aip.user.AccountStatus;
@@ -22,13 +23,16 @@ public class OrganisationController {
 
     private final OrganisationRepository organisations;
     private final CurrentSession session;
+    private final CommercialLaunchGuard commercialLaunch;
 
     public OrganisationController(
             OrganisationRepository organisations,
-            CurrentSession session
+            CurrentSession session,
+            CommercialLaunchGuard commercialLaunch
     ) {
         this.organisations = organisations;
         this.session = session;
+        this.commercialLaunch = commercialLaunch;
     }
 
     @GetMapping
@@ -50,6 +54,12 @@ public class OrganisationController {
     @PostMapping
     @PreAuthorize("hasRole('SUPER_ADMIN')")
     OrganisationResponse create(@Valid @RequestBody CreateOrganisationRequest request) {
+        if (commercialLaunch.enabled()) {
+            throw DomainException.badRequest(
+                    "COMMERCIAL_ONBOARDING_REQUIRED",
+                    "Use commercial onboarding so membership, settings, trial, and audit records are created atomically."
+            );
+        }
         if (organisations.existsByCodeIgnoreCase(request.code())) {
             throw new DomainException(
                     "ORGANISATION_CODE_EXISTS",

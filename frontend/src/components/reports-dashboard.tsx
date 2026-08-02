@@ -16,7 +16,7 @@ import { PageHeader } from "@/components/page-header";
 import { StatusBadge } from "@/components/status-badge";
 import { StudentReportsPanel } from "@/components/student-reports-panel";
 import { apiErrorMessage, apiFetch } from "@/lib/api";
-import type { MeProfile } from "@/lib/live-types";
+import type { CommercialAccess, MeProfile } from "@/lib/live-types";
 import type {
   FacultyPerformance,
   IntelligenceOverview,
@@ -31,6 +31,7 @@ export function ReportsDashboard() {
   const [questionRows, setQuestionRows] = useState<QuestionPerformance[]>([]);
   const [facultyRows, setFacultyRows] = useState<FacultyPerformance[]>([]);
   const [role, setRole] = useState<MeProfile["role"] | null>(null);
+  const [commercialAccess, setCommercialAccess] = useState<CommercialAccess | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -38,18 +39,35 @@ export function ReportsDashboard() {
     setLoading(true);
     setError("");
     try {
-      const profile = await apiFetch<MeProfile>("/auth/me");
-      const [nextOverview, nextQuestions, nextFaculty] = await Promise.all([
-        apiFetch<IntelligenceOverview>("/reports/overview"),
-        apiFetch<QuestionPerformance[]>("/reports/questions"),
-        ["SUPER_ADMIN", "ORG_ADMIN", "ACADEMIC_HEAD"].includes(profile.role)
-          ? apiFetch<FacultyPerformance[]>("/reports/faculty")
-          : Promise.resolve([]),
+      const [profile, access] = await Promise.all([
+        apiFetch<MeProfile>("/auth/me"),
+        apiFetch<CommercialAccess>("/commercial-access"),
       ]);
       setRole(profile.role);
-      setOverview(nextOverview);
-      setQuestionRows(nextQuestions);
-      setFacultyRows(nextFaculty);
+      setCommercialAccess(access);
+      const institutionAnalytics = !access.enforcementEnabled
+        || access.entitlements.includes("INSTITUTION_ANALYTICS");
+      if (institutionAnalytics) {
+        const [nextOverview, nextQuestions, nextFaculty] = await Promise.all([
+          apiFetch<IntelligenceOverview>("/reports/overview"),
+          apiFetch<QuestionPerformance[]>("/reports/questions"),
+          ["SUPER_ADMIN", "ORG_ADMIN", "ACADEMIC_HEAD"].includes(profile.role)
+            && (!access.enforcementEnabled
+              || access.entitlements.includes("TEACHER_ANALYTICS"))
+            ? apiFetch<FacultyPerformance[]>("/reports/faculty")
+            : Promise.resolve([]),
+        ]);
+        setOverview(nextOverview);
+        setQuestionRows(nextQuestions);
+        setFacultyRows(nextFaculty);
+      } else if (access.entitlements.includes("STUDENT_EVALUATION")) {
+        setTab("students");
+        setOverview(null);
+        setQuestionRows([]);
+        setFacultyRows([]);
+      } else {
+        throw new Error("Student evaluation is not included in the current plan.");
+      }
     } catch (requestError) {
       setOverview(null);
       setError(apiErrorMessage(requestError, "Reports could not be loaded."));
@@ -72,35 +90,50 @@ export function ReportsDashboard() {
     [overview],
   );
   const tabs = useMemo(
-    () =>
-      (["overview", "students", "questions", "faculty"] as ReportTab[]).filter(
+    () => {
+      const institutionAnalytics = !commercialAccess?.enforcementEnabled
+        || commercialAccess.entitlements.includes("INSTITUTION_ANALYTICS");
+      if (!institutionAnalytics) return ["students"] as ReportTab[];
+      return (["overview", "students", "questions", "faculty"] as ReportTab[]).filter(
         (item) =>
           item !== "faculty"
-          || role === "SUPER_ADMIN"
-          || role === "ORG_ADMIN"
-          || role === "ACADEMIC_HEAD",
-      ),
-    [role],
+          || ((!commercialAccess?.enforcementEnabled
+            || commercialAccess.entitlements.includes("TEACHER_ANALYTICS"))
+            && (role === "SUPER_ADMIN"
+              || role === "ORG_ADMIN"
+              || role === "ACADEMIC_HEAD")),
+      );
+    },
+    [commercialAccess, role],
   );
+
+  const studentOnly = commercialAccess?.enforcementEnabled
+    && commercialAccess.entitlements.includes("STUDENT_EVALUATION")
+    && !commercialAccess.entitlements.includes("INSTITUTION_ANALYTICS");
 
   if (loading) {
     return <div className="page"><LoadingState label="Loading published report data…" /></div>;
   }
-  if (!overview) {
+  if (!overview && !studentOnly) {
     return <div className="page"><ErrorState message={error} retry={() => void load()} /></div>;
   }
 
   return (
     <div className="page">
       <PageHeader
-        eyebrow="Reports & academic intelligence · Live"
-        title="Turn results into action"
-        description="Every insight is calculated from published MCQ evaluations within your organisation."
+        eyebrow={studentOnly ? "Pro · Student evaluation" : "Reports & academic intelligence · Live"}
+        title={studentOnly ? "Understand every student's progress" : "Turn results into action"}
+        description={studentOnly
+          ? "Detailed student evaluation is included in Pro; institution and teacher analytics require Legend."
+          : "Every insight is calculated from published MCQ evaluations within your organisation."}
         actions={
           <>
-            <Link className="button button-primary" href="/reports/teacher">
-              <UsersRound size={15} /> Teacher reports
-            </Link>
+            {(!commercialAccess?.enforcementEnabled
+              || commercialAccess.entitlements.includes("TEACHER_ANALYTICS")) && (
+              <Link className="button button-primary" href="/reports/teacher">
+                <UsersRound size={15} /> Teacher reports
+              </Link>
+            )}
             <button className="button button-secondary" onClick={() => window.print()}>
               <Download size={15} /> Print view
             </button>
@@ -128,7 +161,7 @@ export function ReportsDashboard() {
         ))}
       </div>
 
-      {tab === "overview" && (
+      {tab === "overview" && overview && (
         <>
           <section className="metrics-grid report-metrics">
             {[
@@ -243,9 +276,14 @@ export function ReportsDashboard() {
         </>
       )}
 
-      {tab === "students" && <StudentReportsPanel />}
+      {tab === "students" && (
+        <StudentReportsPanel
+          showAssessmentLinks={!commercialAccess?.enforcementEnabled
+            || commercialAccess.entitlements.includes("INSTITUTION_ANALYTICS")}
+        />
+      )}
 
-      {tab === "questions" && (
+      {tab === "questions" && overview && (
         <section className="panel report-table-panel">
           <div className="panel-header">
             <div>
@@ -289,7 +327,7 @@ export function ReportsDashboard() {
         </section>
       )}
 
-      {tab === "faculty" && (
+      {tab === "faculty" && overview && (
         <section className="faculty-grid">
           {facultyRows.map((faculty) => (
             <article className="panel faculty-card" key={faculty.facultyUserId}>

@@ -1,5 +1,7 @@
 package com.rabbit.aip.evaluation;
 
+import com.rabbit.aip.commercial.CommercialService;
+import com.rabbit.aip.commercial.CommercialTypes.Entitlement;
 import com.rabbit.aip.evaluation.EvaluationDtos.AssessmentEvaluationSummary;
 import com.rabbit.aip.evaluation.EvaluationDtos.EvaluationRow;
 import com.rabbit.aip.evaluation.EvaluationDtos.PublicationResponse;
@@ -23,9 +25,14 @@ import org.springframework.web.bind.annotation.RestController;
 public class EvaluationController {
 
     private final EvaluationService service;
+    private final CommercialService commercial;
 
-    public EvaluationController(EvaluationService service) {
+    public EvaluationController(
+            EvaluationService service,
+            CommercialService commercial
+    ) {
         this.service = service;
+        this.commercial = commercial;
     }
 
     @GetMapping("/assessments/{assessmentId}/results")
@@ -40,6 +47,7 @@ public class EvaluationController {
 
     @PostMapping("/assessments/{assessmentId}/publish")
     PublicationResponse publish(@PathVariable UUID assessmentId) {
+        commercial.requireEntitlement(Entitlement.ASSESSMENT_DELIVERY);
         return service.publish(assessmentId);
     }
 
@@ -48,6 +56,7 @@ public class EvaluationController {
             @PathVariable UUID attemptId,
             @Valid @RequestBody ReEvaluationRequest request
     ) {
+        commercial.requireEntitlement(Entitlement.ASSESSMENT_DELIVERY);
         return service.reEvaluate(attemptId, request.reason());
     }
 
@@ -61,6 +70,7 @@ public class EvaluationController {
             @PathVariable UUID attemptId,
             @Valid @RequestBody ManualScoreUpdateRequest request
     ) {
+        commercial.requireEntitlement(Entitlement.ASSESSMENT_DELIVERY);
         return service.updateScore(attemptId, request);
     }
 }

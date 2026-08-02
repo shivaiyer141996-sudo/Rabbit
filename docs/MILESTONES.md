@@ -176,7 +176,7 @@ Delivery boundary:
   fast-forward/annotated tag. It cannot merge, tag, push, or publish images. See
   [M5_6_RELEASE_CLOSURE.md](M5_6_RELEASE_CLOSURE.md).
 
-## Milestone 6 — Commercial readiness (planned; not started)
+## Milestone 6 — Commercial readiness (repository implementation complete; activation gated)
 
 - Basic, Pro, and Legend plan entitlements for the already-approved Release 1.0
   feature set
@@ -186,5 +186,15 @@ Delivery boundary:
   invoice/receipt records, and support administration
 - Entirely local Docker Compose operation with no payment gateway, cloud hosting,
   email/SMS provider, or paid service unless separately approved
+
+Delivery boundary:
+
+- The approved ₹599–₹2,499 monthly catalogue is locked in application and database
+  code, with Basic/Pro/Legend server-side entitlements and student-capacity limits.
+- The 20-day Legend trial, organisation onboarding, manual invoices/payments/receipts,
+  subscription transitions, and local support register are implemented and audited.
+- Commercial controls default off and cannot be activated without the exact release
+  commit plus final local M5.6 evidence. M5.6 human/host acceptance remains pending.
+- See [MILESTONE_6.md](MILESTONE_6.md).
 
 No milestone after Milestone 6 is authorised by the current roadmap.

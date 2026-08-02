@@ -83,7 +83,7 @@ info:
   app:
     name: Rabbit AiP
     version: 1.0.0
-    milestone: Release 1.0 Milestone 4.2 Functional and UI Completion
+    milestone: Milestone 6 Commercial Readiness (dormant until M5.6 closure)
 
 rabbit:
   attempt-expiry:
@@ -112,7 +112,11 @@ rabbit:
       authenticated-per-minute: ${RATE_LIMIT_AUTHENTICATED_PER_MINUTE:300}
   release:
     version: ${RABBIT_RELEASE_VERSION:1.0.0}
+    commit: ${RABBIT_RELEASE_COMMIT:unversioned}
     environment: ${RABBIT_ENVIRONMENT:local}
+  commercial:
+    enabled: ${COMMERCIAL_CONTROLS_ENABLED:false}
+    m5-6-evidence-reference: ${COMMERCIAL_M5_6_EVIDENCE_REFERENCE:}
 
 logging:
   pattern:

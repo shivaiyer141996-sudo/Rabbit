@@ -185,4 +185,66 @@ BEGIN
 END;
 $$;
 
+DO $$
+BEGIN
+    BEGIN
+        INSERT INTO organisation_subscriptions (
+            id, organisation_id, plan_code, student_limit,
+            monthly_price_paise, status, trial_starts_at, trial_ends_at,
+            created_by_user_id, updated_by_user_id, row_version,
+            created_at, updated_at
+        ) VALUES (
+            '29292929-2929-2929-2929-292929292929',
+            '12121212-1212-1212-1212-121212121212',
+            'LEGEND',
+            50,
+            149900,
+            'TRIALING',
+            TIMESTAMPTZ '2026-09-01 00:00:00+00',
+            TIMESTAMPTZ '2026-09-21 00:00:00+00',
+            '33333333-3333-3333-3333-333333333301',
+            '33333333-3333-3333-3333-333333333301',
+            0,
+            now(),
+            now()
+        );
+        RAISE EXCEPTION 'Commercial guard accepted an actor from another tenant';
+    EXCEPTION
+        WHEN check_violation THEN
+            RAISE NOTICE 'Cross-tenant commercial actor correctly rejected';
+    END;
+END;
+$$;
+
+DO $$
+BEGIN
+    BEGIN
+        INSERT INTO organisation_subscriptions (
+            id, organisation_id, plan_code, student_limit,
+            monthly_price_paise, status, trial_starts_at, trial_ends_at,
+            created_by_user_id, updated_by_user_id, row_version,
+            created_at, updated_at
+        ) VALUES (
+            '30303030-3030-3030-3030-303030303030',
+            '11111111-1111-1111-1111-111111111111',
+            'BASIC',
+            50,
+            1,
+            'EXPIRED',
+            NULL,
+            NULL,
+            '33333333-3333-3333-3333-333333333301',
+            '33333333-3333-3333-3333-333333333301',
+            0,
+            now(),
+            now()
+        );
+        RAISE EXCEPTION 'Commercial price guard accepted an altered plan price';
+    EXCEPTION
+        WHEN check_violation THEN
+            RAISE NOTICE 'Altered commercial plan price correctly rejected';
+    END;
+END;
+$$;
+
 ROLLBACK;

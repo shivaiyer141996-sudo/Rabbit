@@ -10,6 +10,7 @@ import {
   BookOpenCheck,
   Building2,
   ClipboardList,
+  CreditCard,
   FileQuestion,
   History,
   LayoutDashboard,
@@ -25,7 +26,11 @@ import {
 import { useEffect, useState } from "react";
 import { NotificationPopover } from "@/components/notification-popover";
 import { apiFetch } from "@/lib/api";
-import { initials, type MeProfile } from "@/lib/live-types";
+import {
+  initials,
+  type CommercialAccess,
+  type MeProfile,
+} from "@/lib/live-types";
 import type { UserRole } from "@/lib/types";
 
 interface NavigationItem {
@@ -116,6 +121,12 @@ const navigation: NavigationItem[] = [
     icon: Bell,
     roles: ["ALL"],
   },
+  {
+    href: "/commercial",
+    label: "Plan & support",
+    icon: CreditCard,
+    roles: ["SUPER_ADMIN", "ORG_ADMIN"],
+  },
 ];
 
 export function AppShell({
@@ -129,6 +140,7 @@ export function AppShell({
   const router = useRouter();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [profile, setProfile] = useState<MeProfile | null>(null);
+  const [commercialAccess, setCommercialAccess] = useState<CommercialAccess | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -139,13 +151,31 @@ export function AppShell({
       .catch(() => {
         if (active) setProfile(null);
       });
+    apiFetch<CommercialAccess>("/commercial-access")
+      .then((value) => {
+        if (active) setCommercialAccess(value);
+      })
+      .catch(() => {
+        if (active) setCommercialAccess(null);
+      });
     return () => {
       active = false;
     };
   }, []);
 
   const visibleNavigation = navigation.filter(
-    (item) => item.roles.includes("ALL") || item.roles.includes(role),
+    (item) => {
+      if (!(item.roles.includes("ALL") || item.roles.includes(role))) return false;
+      if (!commercialAccess?.enforcementEnabled) return true;
+      if (item.href === "/student/reports") {
+        return commercialAccess.entitlements.includes("STUDENT_EVALUATION");
+      }
+      if (item.href === "/reports") {
+        return commercialAccess.entitlements.includes("INSTITUTION_ANALYTICS")
+          || commercialAccess.entitlements.includes("STUDENT_EVALUATION");
+      }
+      return true;
+    },
   );
 
   async function logout() {
@@ -267,10 +297,32 @@ export function AppShell({
           </div>
         </div>
         <div className="topbar-actions">
+          {commercialAccess?.enforcementEnabled && commercialAccess.plan && (
+            <span className={`subscription-chip status-${commercialAccess.status?.toLowerCase()}`}>
+              {commercialAccess.plan} · {commercialAccess.status}
+            </span>
+          )}
           <NotificationPopover />
         </div>
       </header>
-      <main id="main-content" tabIndex={-1}>{children}</main>
+      <main id="main-content" tabIndex={-1}>
+        {commercialAccess?.enforcementEnabled &&
+          (["EXPIRED", "SUSPENDED"] as Array<string | undefined>).includes(
+            commercialAccess.status,
+          ) && (
+            <div className="subscription-alert" role="status">
+              <strong>Subscription {commercialAccess.status?.toLowerCase()}.</strong>
+              <span>
+                Core questions, assessments, attempts, and results remain visible,
+                but paid actions and plan-specific analytics are paused.
+                {(["SUPER_ADMIN", "ORG_ADMIN"] as UserRole[]).includes(role) && (
+                  <> <Link href="/commercial">Open plan and billing</Link>.</>
+                )}
+              </span>
+            </div>
+          )}
+        {children}
+      </main>
     </div>
   );
 }

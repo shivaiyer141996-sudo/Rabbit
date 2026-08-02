@@ -1,5 +1,7 @@
 package com.rabbit.aip.attempt;
 
+import com.rabbit.aip.commercial.CommercialService;
+import com.rabbit.aip.commercial.CommercialTypes.Entitlement;
 import com.rabbit.aip.attempt.AttemptDtos.AttemptView;
 import com.rabbit.aip.attempt.AttemptDtos.ResultView;
 import com.rabbit.aip.attempt.AttemptDtos.SaveResponseRequest;
@@ -26,9 +28,11 @@ import org.springframework.web.bind.annotation.RestController;
 public class StudentAssessmentController {
 
     private final AttemptService service;
+    private final CommercialService commercial;
 
-    public StudentAssessmentController(AttemptService service) {
+    public StudentAssessmentController(AttemptService service, CommercialService commercial) {
         this.service = service;
+        this.commercial = commercial;
     }
 
     @GetMapping("/assessments")
@@ -48,6 +52,7 @@ public class StudentAssessmentController {
 
     @PostMapping("/assessments/{assessmentId}/attempts")
     AttemptView start(@PathVariable UUID assessmentId) {
+        commercial.requireEntitlement(Entitlement.ASSESSMENT_DELIVERY);
         return service.start(assessmentId);
     }
 

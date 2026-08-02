@@ -79,7 +79,11 @@ function reportQuery(filters: StudentReportFilters) {
   return query.toString();
 }
 
-export function StudentReportsPanel() {
+export function StudentReportsPanel({
+  showAssessmentLinks = true,
+}: {
+  showAssessmentLinks?: boolean;
+}) {
   const [catalog, setCatalog] = useState<AcademicCatalog | null>(null);
   const [filters, setFilters] = useState(initialFilters);
   const [report, setReport] = useState<StudentReport | null>(null);
@@ -397,7 +401,7 @@ export function StudentReportsPanel() {
                       <article className={`result-question ${question.correct ? "correct" : "incorrect"}`} key={`${question.attemptId}-${question.questionId}`}>
                         <div className="result-question-heading"><span>{index + 1}</span><div><strong>{question.questionCode} · {question.stem}</strong><span className="table-subtitle">{question.assessmentTitle} · {question.subjectName} · {question.topicName} · {question.difficulty}</span></div><span>{question.awardedMarks}/{question.maxMarks}</span></div>
                         <div className="review-answer-grid"><div><span>Student answer</span>{question.selectedOptions.length ? question.selectedOptions.map((option) => <strong key={option.optionId}>{option.label}. {option.text}</strong>) : <strong>Not answered</strong>}</div><div><span>Correct answer</span>{question.correctOptions.map((option) => <strong key={option.optionId}>{option.label}. {option.text}</strong>)}</div></div>
-                        <div className="question-review-meta"><span className={`badge ${question.correct ? "badge-success" : "badge-danger"}`}>{question.correct ? "CORRECT" : question.answered ? "INCORRECT" : "UNANSWERED"}</span><span>{formatSeconds(question.timeSpentSeconds)}</span><Link href={`/reports/assessments/${question.assessmentId}`}>Open assessment report</Link></div>
+                        <div className="question-review-meta"><span className={`badge ${question.correct ? "badge-success" : "badge-danger"}`}>{question.correct ? "CORRECT" : question.answered ? "INCORRECT" : "UNANSWERED"}</span><span>{formatSeconds(question.timeSpentSeconds)}</span>{showAssessmentLinks && <Link href={`/reports/assessments/${question.assessmentId}`}>Open assessment report</Link>}</div>
                         {question.explanation && <p>{question.explanation}</p>}
                       </article>
                     ))}
