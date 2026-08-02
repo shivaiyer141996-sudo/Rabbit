@@ -1,0 +1,40 @@
+x-rabbit-logging: &rabbit-logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+services:
+  postgres:
+    restart: unless-stopped
+    logging: *rabbit-logging
+
+  redis:
+    restart: unless-stopped
+    logging: *rabbit-logging
+
+  rabbitmq:
+    restart: unless-stopped
+    logging: *rabbit-logging
+
+  minio:
+    restart: unless-stopped
+    logging: *rabbit-logging
+
+  backend:
+    restart: unless-stopped
+    read_only: true
+    tmpfs:
+      - /tmp:size=128m,mode=1777
+    logging: *rabbit-logging
+
+  frontend:
+    restart: unless-stopped
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m,mode=1777
+    logging: *rabbit-logging
+
+  nginx:
+    restart: unless-stopped
+    logging: *rabbit-logging

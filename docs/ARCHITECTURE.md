@@ -1,5 +1,17 @@
 # Release 1.0 architecture
 
+## Binding infrastructure rule
+
+Rabbit is local-first until production scale. Every feature must run on the
+complete Docker Compose stack with local PostgreSQL, Redis, RabbitMQ, and MinIO.
+AWS, Azure, GCP, Kubernetes, managed databases, paid cloud infrastructure, and
+public tunnels require Shiva Iyer's explicit prior approval. Future migration
+must be driven by environment configuration and controlled data migration rather
+than provider-specific product logic.
+
+The complete accepted constraint and change gate are recorded in
+[Local-only infrastructure policy](LOCAL_INFRASTRUCTURE_POLICY.md).
+
 ## Shape
 
 Rabbit Release 1.0 uses a modular monolith. This preserves strong transactional boundaries while the product and domain model are still evolving.
@@ -15,6 +27,10 @@ flowchart TB
   API --> Assets[("MinIO")]
   API --> Metrics["Prometheus metrics"]
 ```
+
+In the base and pilot stacks, the four data services use an internal Docker
+network and publish no host ports. Nginx is the only host entry point; it binds
+to loopback unless the pilot operator selects one explicit private-LAN address.
 
 ## Core boundaries
 

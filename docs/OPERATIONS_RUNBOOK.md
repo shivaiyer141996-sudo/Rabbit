@@ -1,5 +1,42 @@
 # Release 1.0 operations runbook
 
+## Milestone 5 local-only deployment
+
+The institutional pilot does not use hosted images, public endpoints, AWS, or
+another cloud runtime. Prepare one approved local computer with:
+
+```bash
+./infra/pilot/prepare-local-env.sh [approved-private-lan-ip]
+# Fill the PILOT_* ownership and separate-backup placeholders in .env.
+make architecture-check
+make pilot-up
+make pilot-preflight
+```
+
+The base stack publishes only Nginx. PostgreSQL, Redis, RabbitMQ, MinIO, and both
+administration consoles remain Docker-internal. The gateway is loopback-only by
+default; same-LAN access requires one explicit private address. Never use
+`0.0.0.0`, router port forwarding, a public tunnel, or a public URL.
+
+The generated preflight bundle under `artifacts/pilot-preflight/` contains no
+secrets. Attach its checksummed report, manifest, service/image inventory, and
+readiness response to the institution's pilot evidence register.
+
+Before institution data is loaded, sign in with the seeded Admin only long enough
+to invite and activate a real replacement Organisation Admin. Prove the new Admin
+can sign in, then retire every seeded identity:
+
+```bash
+PILOT_REPLACEMENT_ADMIN_EMAIL=admin@institution.example \
+CONFIRM_RETIRE_DEMO_USERS=yes \
+make pilot-retire-demo-users
+```
+
+The guarded command refuses a demo email, proves the replacement account is an
+active Admin in the tenant, suspends the four seeded users, revokes their refresh
+tokens, invalidates their published passwords, and writes an audit event. It does
+not delete academic demonstration data.
+
 ## Deployment gates
 
 Release only an immutable `v*` tag after:
@@ -13,7 +50,10 @@ Release only an immutable `v*` tag after:
 6. The tenant's `/pilot-readiness` register shows every mandatory check as passed
    and contains the institution's locked sign-off.
 
-The tag-triggered `Release images` workflow publishes SBOM/provenance-enabled API and web images to GitHub Container Registry. Production deployment remains an explicit environment-approved action.
+The tag-triggered `Release images` workflow is retained for a future explicitly
+approved production architecture. It is not used by Milestone 5; the local pilot
+builds and tags its images on the designated computer and records their local
+identifiers in preflight evidence.
 
 Start an approved immutable tag with:
 
@@ -41,7 +81,9 @@ Alert when readiness is down for two consecutive minutes, five-minute server err
 - `LOGIN_MAX_FAILED_ATTEMPTS` defaults to `5`.
 - `LOGIN_LOCK_DURATION` defaults to `PT30M`.
 - `INVITATION_TTL` defaults to `PT72H`.
-- `INVITATION_ACTIVATION_BASE_URL` must be the public HTTPS `/activate` route.
+- In production, `INVITATION_ACTIVATION_BASE_URL` must be the approved HTTPS
+  `/activate` route. In the local pilot it must match the selected loopback or
+  private-LAN HTTP origin exactly.
 
 Failed-login counters are intentionally committed even when authentication returns
 an error. Do not wrap or merge the independent login-attempt transaction into the
@@ -54,14 +96,35 @@ logs, and reissue immediately if disclosure is suspected.
 Run from the repository root:
 
 ```bash
-./infra/backup/backup.sh /secure/rabbit-backups
+./infra/backup/backup.sh
 ```
+
+The no-argument pilot command reads `PILOT_BACKUP_DIRECTORY` from the protected
+`.env`. An explicit approved path may still be supplied for an operator-controlled
+one-off backup.
 
 The backup contains a custom-format PostgreSQL dump, MinIO asset archive, manifest, and checksums. Store a copy in a separate failure domain. The target operating objective is:
 
 - Database and assets RPO: 24 hours
 - Service RTO: 4 hours
 - Restore drill: quarterly and before a major schema release
+
+Verify a backup without changing data:
+
+```bash
+./infra/backup/verify.sh /approved-external-disk/rabbit-YYYYMMDDTHHMMSSZ
+```
+
+Prove restoration into temporary, isolated PostgreSQL and MinIO Docker volumes:
+
+```bash
+./infra/backup/restore-drill.sh \
+  /approved-external-disk/rabbit-YYYYMMDDTHHMMSSZ
+```
+
+The restore drill records database reconciliation and asset counts beside the
+backup, then removes only its uniquely named temporary containers and volumes.
+It never modifies the live `postgres-data` or `minio-data` volumes.
 
 ## Restore
 

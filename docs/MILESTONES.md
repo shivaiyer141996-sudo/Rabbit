@@ -131,7 +131,7 @@ Delivery boundary:
 - AI, subjective assessment, proctoring, native apps, and external integrations remain
   outside Release 1.0.
 
-## Milestone 5 — Institutional pilot and release acceptance (preparation in progress)
+## Milestone 5 — Institutional pilot and release acceptance (M5.1 tooling ready)
 
 - Finalise the named institution, cohort, scope, hosting, budget, dates, and owners
 - Deploy the approved release candidate to a secure production-like environment
@@ -139,6 +139,8 @@ Delivery boundary:
 - Prove target performance, environment security, backup restore, and rollback
 - Run a staff rehearsal and at least one complete institutional assessment
 - Record written acceptance, known issues, support ownership, and a Go/No-Go decision
+- Operate entirely on the approved local Docker Compose host with PostgreSQL,
+  Redis, RabbitMQ, and MinIO; no cloud or paid runtime is permitted
 
 Delivery boundary:
 
@@ -148,6 +150,9 @@ Delivery boundary:
   but no production deployment or live pilot may start before that gate passes.
 - Institution decisions and human operating ownership cannot be inferred or replaced
   by repository automation. See [MILESTONE_5.md](MILESTONE_5.md).
+- Local environment tooling is implemented, but M5.1 does not pass until the
+  designated host, private LAN, separate backup device, and named owners produce
+  genuine preflight and restore evidence.
 
 ## Post–Release 1.0
 

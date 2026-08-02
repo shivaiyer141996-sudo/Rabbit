@@ -4,6 +4,7 @@
 .env.production
 infra/deploy/production.env
 infra/database/external-postgres.env
+infra/pilot/local-pilot.env
 *.pem
 *.key
 
@@ -30,4 +31,5 @@ Thumbs.db
 # Runtime data
 data/
 backups/
+artifacts/
 *.log

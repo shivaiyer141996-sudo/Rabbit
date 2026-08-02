@@ -2,8 +2,9 @@
 
 ## Status
 
-**M5.0 pilot preparation is in progress.** Milestone 5 is an environment, people,
-and evidence milestone. It does not add product scope.
+**M5.1 local-environment tooling is implemented; execution evidence is pending
+on the designated host.** Milestone 5 is an environment, people, and evidence
+milestone. It does not add product scope.
 
 - Release candidate: `b6f6715`
 - Milestone 4.2 automated gates: passed on GitHub Actions run `30699322752`
@@ -16,12 +17,17 @@ and evidence milestone. It does not add product scope.
 - Future portability: database connection and migration settings remain external
   to product code, with a backup-led path to another PostgreSQL instance if a
   later milestone approves it
+- Binding architecture policy: zero-cost local Docker Compose with PostgreSQL,
+  Redis, RabbitMQ, and MinIO; no cloud or paid runtime without explicit approval
 
 Milestone 5 will use a local-only environment. Rabbit must not be deployed to AWS
 or another cloud service, made publicly reachable, or connected to a paid hosting
 account. This is a final Milestone 5 constraint, not a pending approval item.
 Institution data may be loaded only after the relevant owner approves the remaining
 pilot decisions below.
+
+The permanent pre-production constraint is recorded in
+[Local-only infrastructure policy](LOCAL_INFRASTRUCTURE_POLICY.md).
 
 ## Release 1.0 scope freeze
 
@@ -126,6 +132,36 @@ Exit criteria:
 - Milestone 4.2 desktop and 360 px Android acceptance is recorded.
 
 ## M5.1 — Set up the pilot environment
+
+Repository implementation now provides:
+
+- loopback-only gateway binding by default and explicit private-LAN binding for
+  an approved multi-user pilot;
+- a Docker-internal data network with no host-published PostgreSQL, Redis,
+  RabbitMQ, MinIO, or administration-console ports;
+- generated non-default local credentials in a protected, Git-ignored `.env`;
+- a guarded administrator handover that requires a proven replacement Admin,
+  suspends all seeded demo identities, revokes their sessions, and audits the act;
+- a hardened local-pilot Compose overlay with restart policies, read-only
+  application containers, temporary filesystems, and bounded local logs;
+- an architecture-policy verifier and redacted M5.1 host/runtime preflight bundle;
+- checksum-verified PostgreSQL/MinIO backups and an isolated, non-destructive
+  restore drill using temporary Docker volumes;
+- locally tagged API/web images and a release manifest containing their exact
+  deployed evidence when runtime preflight executes.
+
+Prepare and validate the designated host with:
+
+```bash
+./infra/pilot/prepare-local-env.sh [approved-private-lan-ip]
+# Replace only the PILOT_* owner and separate-backup placeholders in .env.
+make pilot-up
+make pilot-preflight
+```
+
+Tooling availability is not M5.1 acceptance. This stage passes only when the
+generated preflight bundle from the actual host has zero failures and the backup
+plus isolated restore evidence is attached to `/pilot-readiness`.
 
 Required evidence:
 

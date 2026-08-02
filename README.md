@@ -90,15 +90,19 @@ Milestone 4.1 is release hardening only. It does not begin Milestone 5.
 Milestone 4.2 exact commit `b6f6715` has passed branch CI. It remains unpublished to
 `main` while manual desktop/Android Docker acceptance is pending.
 
-## Milestone 5 institutional pilot preparation
+## Milestone 5 local pilot readiness
 
-M5.0 preparation has started on an isolated branch with a proposed pilot cohort,
-hosting and budget baseline, timeline, owner register, scope freeze, and Go/No-Go
-criteria. No production deployment or live institutional activity starts until the
-Milestone 4.2 visual gate and the named institution decisions are approved. See
-[docs/MILESTONE_5.md](docs/MILESTONE_5.md).
+M5.1 tooling prepares a zero-cost local pilot host, generates protected secrets,
+keeps PostgreSQL/Redis/RabbitMQ/MinIO Docker-internal, captures redacted preflight
+evidence, and proves backups in temporary restore volumes. No cloud account,
+managed database, public tunnel, or paid runtime is used. Actual M5.1 acceptance
+still requires the designated computer, private LAN, separate backup device, and
+named human owners. See [docs/MILESTONE_5.md](docs/MILESTONE_5.md) and the binding
+[local infrastructure policy](docs/LOCAL_INFRASTRUCTURE_POLICY.md).
 
 ## Run with Docker
+
+For ordinary loopback-only development:
 
 ```bash
 cp .env.example .env
@@ -110,13 +114,28 @@ Open:
 - Portal: `http://localhost`
 - API health: `http://localhost/api/actuator/health`
 - Operations console: `http://localhost/operations`
-- RabbitMQ console: `http://localhost:15672`
-- MinIO console: `http://localhost:9001`
 
-For Android pilot testing on the same Wi-Fi, open
-`http://<laptop-ip-address>` in Chrome instead of `localhost`. The local
-environment intentionally sets `SESSION_COOKIE_SECURE=false` for HTTP access;
-deployments behind HTTPS must use the production value `true`.
+PostgreSQL, Redis, RabbitMQ, and MinIO have no host-published ports in the base
+stack. They remain reachable to the backend through Docker's internal data
+network.
+
+For the controlled local pilot:
+
+```bash
+# Omit the argument for loopback-only use, or provide the host's approved
+# private-LAN IPv4 address for same-Wi-Fi access.
+./infra/pilot/prepare-local-env.sh [192.168.x.x]
+# Fill the PILOT_* owner and separate-backup placeholders in .env.
+make pilot-up
+# Invite and activate a real Organisation Admin, verify that login, then retire
+# the four seeded users as described in docs/OPERATIONS_RUNBOOK.md.
+make pilot-preflight
+```
+
+For Android pilot testing on the same trusted Wi-Fi, generate `.env` with the
+laptop's explicit private-LAN address and open that same address in Chrome. The
+pilot generator rejects public IPs and `0.0.0.0`. Local HTTP intentionally uses
+`SESSION_COOKIE_SECURE=false`; no port forwarding or public tunnel is allowed.
 
 Demo accounts use the password `Rabbit@123`:
 
@@ -147,8 +166,14 @@ mvn spring-boot:run
 For local processes outside Docker, start the dependencies with:
 
 ```bash
-docker compose up postgres redis rabbitmq minio
+docker compose \
+  -f docker-compose.yml \
+  -f infra/development/compose.host-ports.yml \
+  up postgres redis rabbitmq minio
 ```
+
+That optional development override binds dependency and administration ports to
+`127.0.0.1` only. It is not used for the pilot.
 
 ## Database mode
 
