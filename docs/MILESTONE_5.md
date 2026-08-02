@@ -13,6 +13,9 @@ and evidence milestone. It does not add product scope.
   the designated local host/network/backup arrangement
 - Final database decision: local PostgreSQL on the designated computer; AWS and
   managed cloud databases are rejected for Milestone 5
+- Future portability: database connection and migration settings remain external
+  to product code, with a backup-led path to another PostgreSQL instance if a
+  later milestone approves it
 
 Milestone 5 will use a local-only environment. Rabbit must not be deployed to AWS
 or another cloud service, made publicly reachable, or connected to a paid hosting
@@ -47,6 +50,7 @@ release candidate during the pilot.
 | Live assessment size | 30–45 questions, 45–60 minutes, maximum 30 concurrent students in the first live run | Proposed with institution |
 | Hosting | One designated local laptop or desktop running Rabbit through Docker Compose; 16 GB RAM recommended, 8 GB minimum for rehearsal, 4 CPU cores, and at least 30 GB free SSD space | **Final — local only** |
 | Database | Local PostgreSQL 16 container using the persistent `postgres-data` Docker volume on the designated computer | **Final — Shiva decided** |
+| Future database move | Keep the connection configurable and retain portable backups; permit a controlled move to another PostgreSQL instance only after separate approval | **Provisioned, not active in M5** |
 | Supporting storage | Uploaded assets, Redis, and RabbitMQ data stored in local Docker named volumes on the designated computer | **Final — local only** |
 | Incremental hosting cost | ₹0 cloud cost; use the existing computer, power, and local network | **Approved direction** |
 | User access | `localhost` for individual review; the same trusted Wi-Fi/LAN for multi-user pilot access; no public URL, port forwarding, or public tunnel | Proposed with institution |
@@ -73,6 +77,8 @@ institution data must continue to be handled by Rabbit's backend and PostgreSQL.
   Therefore, the latest backup must also exist on a separate approved local device.
 - AWS, managed cloud databases, and other cloud hosting will not be proposed or
   used during Milestone 5.
+- The portability provision does not activate or approve an external database.
+  See [Database portability](DATABASE_PORTABILITY.md) for the future boundary.
 
 ## Proposed dates
 

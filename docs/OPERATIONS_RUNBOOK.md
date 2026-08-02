@@ -74,6 +74,19 @@ Restore is destructive and requires an explicit confirmation flag:
 
 After restore, verify readiness, login, question assets, one student assessment, result publication, report export, audit search, and notification creation before reopening access.
 
+## Future database move
+
+Milestone 5 remains on the bundled local PostgreSQL database. Rabbit's backend
+connection is nevertheless externalized through `DATABASE_URL`,
+`DATABASE_USERNAME`, and `DATABASE_PASSWORD`, with pool and Flyway settings also
+configurable. A future approved move to another PostgreSQL instance must follow
+[Database portability](DATABASE_PORTABILITY.md), begin from a verified backup,
+and retain the original local database as the rollback target until acceptance.
+
+A different database engine is not an environment-only switch because Rabbit's
+tenant-integrity triggers use PostgreSQL. It requires a separately approved
+engineering and migration project.
+
 ## Rollback
 
 1. Stop new assessment starts and communicate the maintenance window.

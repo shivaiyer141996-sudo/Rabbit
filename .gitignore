@@ -3,6 +3,7 @@
 .env.local
 .env.production
 infra/deploy/production.env
+infra/database/external-postgres.env
 *.pem
 *.key
 

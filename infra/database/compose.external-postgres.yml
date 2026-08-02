@@ -1,0 +1,22 @@
+# FUTURE USE ONLY. Do not use for the Milestone 5 local pilot.
+# Requires Docker Compose 2.24.4+ for the !override merge directive.
+
+services:
+  # Keep the source volume intact, but do not start the bundled database while
+  # Rabbit is intentionally connected to an approved external PostgreSQL target.
+  postgres:
+    profiles:
+      - bundled-local-database
+
+  backend:
+    environment:
+      DATABASE_URL: ${DATABASE_URL:?Set DATABASE_URL for external PostgreSQL mode}
+      DATABASE_USERNAME: ${DATABASE_USERNAME:?Set DATABASE_USERNAME for external PostgreSQL mode}
+      DATABASE_PASSWORD: ${DATABASE_PASSWORD:?Set DATABASE_PASSWORD for external PostgreSQL mode}
+    depends_on: !override
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      minio:
+        condition: service_healthy

@@ -150,6 +150,20 @@ For local processes outside Docker, start the dependencies with:
 docker compose up postgres redis rabbitmq minio
 ```
 
+## Database mode
+
+Milestone 5 uses the bundled local PostgreSQL 16 container and persistent
+`postgres-data` Docker volume. The backend connection is environment-configured,
+so a future approved move to another PostgreSQL instance can use
+`DATABASE_URL`, `DATABASE_USERNAME`, and `DATABASE_PASSWORD` without product-code
+changes. No external database is enabled by default.
+
+See [Database portability](docs/DATABASE_PORTABILITY.md) for the migration and
+rollback procedure. PostgreSQL is the supported Release 1.0 engine; changing to a
+different database engine requires vendor-specific migrations and tenant-safety
+validation. The dormant external-PostgreSQL environment and Compose override are
+not loaded by the normal local startup command.
+
 ## Repository map
 
 ```text
