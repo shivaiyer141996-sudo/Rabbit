@@ -62,7 +62,8 @@ postgres_password="$(openssl rand -hex 24)"
 jwt_secret="$(openssl rand -hex 48)"
 minio_password="$(openssl rand -hex 24)"
 rabbitmq_password="$(openssl rand -hex 24)"
-release_commit="$(git -C "${repo_root}" rev-parse --short=12 HEAD 2>/dev/null || printf 'unversioned')"
+release_commit="$(git -C "${repo_root}" rev-parse HEAD 2>/dev/null || printf 'unversioned')"
+release_suffix="${release_commit:0:12}"
 portal_origin="http://${bind_address}"
 
 cat >"${temporary_file}" <<EOF
@@ -107,7 +108,8 @@ SPRING_PROFILES_ACTIVE=docker
 
 RABBIT_BIND_ADDRESS=${bind_address}
 RABBIT_HTTP_PORT=80
-RABBIT_RELEASE_VERSION=1.0.0-pilot-${release_commit}
+RABBIT_RELEASE_VERSION=1.0.0-pilot-${release_suffix}
+RABBIT_RELEASE_COMMIT=${release_commit}
 RABBIT_ENVIRONMENT=pilot-local
 RATE_LIMIT_ENABLED=true
 RATE_LIMIT_ANONYMOUS_PER_MINUTE=20

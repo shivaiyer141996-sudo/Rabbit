@@ -2,7 +2,7 @@
 
 ## Status
 
-**M5.1 through M5.5 repository tooling is implemented; execution and human
+**M5.1 through M5.6 repository tooling is implemented; execution and human
 evidence remain pending on the designated host.** Milestone 5 is an environment,
 people, and evidence milestone. It does not add product scope.
 
@@ -99,6 +99,7 @@ and owners confirm availability.
 | M5.3 — Performance/security/recovery | 18–20 August 2026 | Pilot load, security review, backup and restore evidence pass |
 | M5.4 — Institutional pilot | 21–28 August 2026 | Rehearsal and one complete live assessment executed |
 | M5.5 — Approval and handover | 31 August–2 September 2026 | Institution acceptance, known issues, ownership, and Go/No-Go recorded |
+| M5.6 — Release 1.0 closure | After accepted Go | Exact commit fast-forwarded to `main`, annotated `v1.0.0`, and local release package verified |
 
 ## Required owners
 
@@ -332,6 +333,34 @@ Tooling availability does not pass M5.5. The institution must sign the local
 acceptance PDF, choose the outcome, record it through an authenticated Admin,
 accept the named handover, and review the checksummed final bundle. Conditional
 Retest and No-Go are valid records but do not authorise release expansion.
+
+## M5.6 — Close Release 1.0
+
+Repository implementation now provides:
+
+- verification of the exact protected M5.5 Go decision and every mandatory
+  M5.1–M5.4 evidence row;
+- live locked-decision, operations, external-delivery, seven-service, and
+  API/web image-provenance checks;
+- a complete local source/repository/seven-image package with migration and
+  SHA-256 manifests on approved separate local media;
+- a verification-only tag workflow with no registry login, package write, image
+  push, or cloud deployment; and
+- a separate final check that clean `main`, `origin/main`, and annotated
+  `v1.0.0` all resolve to the same Go-approved commit.
+
+Prepare and verify with:
+
+```bash
+make pilot-m5-6-prepare
+make pilot-m5-6-verify-tag \
+  PILOT_M5_6_PREPARED_MANIFEST=<passed-release-manifest.json>
+```
+
+See [M5.6 Release 1.0 closure](M5_6_RELEASE_CLOSURE.md). Tooling availability
+does not pass M5.6. It requires a real Go decision, designated-host image export,
+green exact-commit branch/tag validation, a human fast-forward and annotated tag,
+and a passing final bundle on approved separate local media.
 
 ## Severity and change policy
 

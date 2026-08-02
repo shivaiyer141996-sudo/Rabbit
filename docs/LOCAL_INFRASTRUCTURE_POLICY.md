@@ -47,6 +47,11 @@ service, a public tunnel, or a public Internet endpoint.
    registry, or hosted service being available.
 8. Email and SMS adapters remain disabled until a provider and its ongoing cost,
    consent, monitoring, and operating owner are explicitly approved.
+9. Release automation may build and scan images for verification, but it must not
+   log in to a container registry, publish packages/images, or deploy Rabbit.
+   Approved release images are exported with checksums to separate local media.
+10. API and web release images carry the exact Git revision and release version
+    as OCI labels; evidence must reject a stale or unlabelled application image.
 
 Run the local policy check before pilot startup:
 
@@ -55,8 +60,9 @@ make architecture-check
 ```
 
 The check verifies the required Compose services, private data network, local
-volumes, absence of public infrastructure bindings, absence of cloud/Kubernetes
-infrastructure files, and absence of cloud SDKs in application dependencies.
+volumes, release revision binding, absence of public infrastructure bindings,
+cloud/Kubernetes infrastructure files, cloud SDKs, public tunnels, and registry
+publishing permissions/actions.
 
 ## Portability without premature cloud adoption
 

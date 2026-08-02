@@ -77,6 +77,9 @@ services:
     image: rabbit-aip-api:${RABBIT_RELEASE_VERSION:-local}
     build:
       context: ./backend
+      args:
+        RABBIT_RELEASE_VERSION: ${RABBIT_RELEASE_VERSION:-local}
+        RABBIT_RELEASE_COMMIT: ${RABBIT_RELEASE_COMMIT:-unversioned}
     environment:
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-docker}
       DATABASE_URL: ${DATABASE_URL:-jdbc:postgresql://postgres:5432/${POSTGRES_DB:-rabbit}}
@@ -139,6 +142,8 @@ services:
       context: ./frontend
       args:
         NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-/gateway/backend}
+        RABBIT_RELEASE_VERSION: ${RABBIT_RELEASE_VERSION:-local}
+        RABBIT_RELEASE_COMMIT: ${RABBIT_RELEASE_COMMIT:-unversioned}
     environment:
       BACKEND_INTERNAL_URL: ${BACKEND_INTERNAL_URL:-http://backend:8080/api/v1}
       SESSION_COOKIE_SECURE: ${SESSION_COOKIE_SECURE:-false}

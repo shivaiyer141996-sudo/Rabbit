@@ -39,6 +39,7 @@ require_text 'image: rabbitmq:[^ ]*-management-alpine' 'Local RabbitMQ is define
 require_text 'image: (quay\.io/)?minio/minio:' 'Local MinIO is defined'
 require_text 'DATABASE_URL:.*postgres:5432' 'Backend defaults to bundled PostgreSQL'
 require_text 'RABBIT_BIND_ADDRESS:-127\.0\.0\.1' 'Web gateway defaults to loopback'
+require_text 'RABBIT_RELEASE_COMMIT:.*RABBIT_RELEASE_COMMIT' 'Release images receive the exact Git commit'
 require_text '^  data:$' 'Dedicated data network exists'
 require_text '^    internal: true$' 'Data network is Docker-internal'
 
@@ -106,6 +107,21 @@ if grep -R -Eiq --include='*.yml' --include='*.yaml' --include='*.sh' \
   fail 'A public-tunnel dependency is present in runtime or automation files'
 else
   pass 'Runtime and automation files contain no public-tunnel dependency'
+fi
+
+if grep -R -Eiq --include='*.yml' --include='*.yaml' \
+  'ghcr\.io|docker/login-action|push:[[:space:]]*true|packages:[[:space:]]*write' \
+  "${repo_root}/.github/workflows"; then
+  fail 'A workflow can publish Rabbit runtime images to a cloud registry'
+else
+  pass 'Release automation cannot publish Rabbit runtime images to a cloud registry'
+fi
+
+if grep -Fq 'org.opencontainers.image.revision' "${repo_root}/backend/Dockerfile" \
+    && grep -Fq 'org.opencontainers.image.revision' "${repo_root}/frontend/Dockerfile"; then
+  pass 'API and web images carry immutable Git revision labels'
+else
+  fail 'API or web image is missing its immutable Git revision label'
 fi
 
 if ((failures > 0)); then

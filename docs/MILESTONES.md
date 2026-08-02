@@ -131,7 +131,7 @@ Delivery boundary:
 - AI, subjective assessment, proctoring, native apps, and external integrations remain
   outside Release 1.0.
 
-## Milestone 5 — Institutional pilot and release acceptance (M5.1–M5.5 tooling ready)
+## Milestone 5 — Institutional pilot and release acceptance (M5.1–M5.6 tooling ready)
 
 - Finalise the named institution, cohort, scope, hosting, budget, dates, and owners
 - Deploy the approved release candidate to a secure production-like environment
@@ -170,13 +170,21 @@ Delivery boundary:
   decisions with database and audit enforcement. Only a named institution can
   sign and record the outcome. See
   [M5_5_APPROVAL_HANDOVER.md](M5_5_APPROVAL_HANDOVER.md).
+- Local M5.6 tooling accepts only the exact immutable Go commit, verifies all
+  mandatory evidence and active image provenance, exports source plus all seven
+  runtime images to checksummed separate local media, and verifies the human
+  fast-forward/annotated tag. It cannot merge, tag, push, or publish images. See
+  [M5_6_RELEASE_CLOSURE.md](M5_6_RELEASE_CLOSURE.md).
 
-## Post–Release 1.0
+## Milestone 6 — Commercial readiness (planned; not started)
 
-- AI-assisted question generation or recommendation
-- Predictive intervention and adaptive learning
-- Parent portal
-- Subjective evaluation
-- Native mobile apps
-- Video proctoring
-- LMS, ERP, SIS, and payment integrations
+- Basic, Pro, and Legend plan entitlements for the already-approved Release 1.0
+  feature set
+- Twenty-day Legend trial with explicit start, expiry, conversion, and downgrade
+  rules
+- Organisation onboarding, subscription validity, manual payment recording,
+  invoice/receipt records, and support administration
+- Entirely local Docker Compose operation with no payment gateway, cloud hosting,
+  email/SMS provider, or paid service unless separately approved
+
+No milestone after Milestone 6 is authorised by the current roadmap.

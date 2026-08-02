@@ -3,7 +3,8 @@
 	pilot-backup pilot-restore-drill pilot-retire-demo-users \
 	pilot-ui-install pilot-ui-evidence pilot-performance pilot-security \
 	pilot-functional-restore-drill pilot-rollback-rehearsal pilot-m5-3 \
-	pilot-m5-4-freeze pilot-m5-4-reconcile pilot-m5-5-prepare pilot-m5-5-finalize
+	pilot-m5-4-freeze pilot-m5-4-reconcile pilot-m5-5-prepare pilot-m5-5-finalize \
+	pilot-m5-6-prepare pilot-m5-6-verify-tag release-tag-check
 
 PILOT_COMPOSE = docker compose --env-file .env -f docker-compose.yml -f infra/pilot/compose.local-pilot.yml
 
@@ -92,3 +93,14 @@ pilot-m5-5-prepare:
 pilot-m5-5-finalize:
 	@test -n "$(PILOT_M5_5_PREPARED_MANIFEST)" || (echo "Set PILOT_M5_5_PREPARED_MANIFEST to a passed prepare-manifest.json." >&2; exit 2)
 	./infra/pilot/m5-5-evidence.sh finalize --prepared-manifest "$(PILOT_M5_5_PREPARED_MANIFEST)"
+
+pilot-m5-6-prepare:
+	./infra/release/m5-6-evidence.sh prepare
+
+pilot-m5-6-verify-tag:
+	@test -n "$(PILOT_M5_6_PREPARED_MANIFEST)" || (echo "Set PILOT_M5_6_PREPARED_MANIFEST to a passed release-manifest.json." >&2; exit 2)
+	./infra/release/m5-6-evidence.sh verify-tag --prepared-manifest "$(PILOT_M5_6_PREPARED_MANIFEST)"
+
+release-tag-check:
+	@test -n "$(RELEASE_TAG)" || (echo "Set RELEASE_TAG to the annotated vX.Y.Z tag." >&2; exit 2)
+	./infra/release/verify-release-tag.sh "$(RELEASE_TAG)"

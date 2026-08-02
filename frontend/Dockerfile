@@ -13,6 +13,11 @@ RUN npm run build
 
 FROM node:24-alpine AS runner
 WORKDIR /app
+ARG RABBIT_RELEASE_VERSION=local
+ARG RABBIT_RELEASE_COMMIT=unversioned
+LABEL org.opencontainers.image.title="Rabbit AiP Web" \
+      org.opencontainers.image.version="${RABBIT_RELEASE_VERSION}" \
+      org.opencontainers.image.revision="${RABBIT_RELEASE_COMMIT}"
 ENV NODE_ENV=production
 ENV PORT=3000
 ENV HOSTNAME=0.0.0.0

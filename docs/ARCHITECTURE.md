@@ -89,7 +89,9 @@ to loopback unless the pilot operator selects one explicit private-LAN address.
 - In-app notifications are persisted and retryable; RabbitMQ remains available for environment-specific external delivery adapters.
 - Redis, RabbitMQ, and MinIO remain provisioned for GA caching, external-channel delivery, and file workflows.
 - Liveness/readiness probes, Prometheus metrics, trace IDs, request/error/latency counters, pool capacity, and tenant workflow backlogs support operations.
-- Tagged release workflows publish immutable API and web images with SBOM and provenance after environment approval.
+- Tagged release workflows verify source, tests, local image builds, critical
+  vulnerabilities, main ancestry, and the architecture policy without publishing
+  images. M5.6 exports the exact seven-image runtime set to checksummed local media.
 - Backups cover PostgreSQL and MinIO with a checksum manifest; restore requires an explicit destructive confirmation and post-restore smoke test.
 - Database connection, pool, and Flyway locations are environment-configured, so
   the local PostgreSQL data can later move to another PostgreSQL instance without
@@ -99,6 +101,8 @@ to loopback unless the pilot operator selects one explicit private-LAN address.
   empty, and error states preserve the integrity of pilot evidence.
 - Pilot evidence is tenant-scoped, sign-off is blocked until every mandatory check
   passes, and the register becomes immutable after authorisation.
+- Release closure accepts only an immutable Go decision for the exact Git commit;
+  API/web OCI revision labels, `main`, and annotated `v1.0.0` must all agree.
 
 See [Database portability](DATABASE_PORTABILITY.md) for the supported migration
 boundary and future move procedure.

@@ -44,7 +44,7 @@ proctoring, and LMS/ERP/SIS integrations are excluded.
 - Database tenant-integrity triggers and a PostgreSQL CI contract that rejects cross-tenant and cross-parent relationships
 - Hardened security headers, graceful shutdown, production secret validation, pool/server limits, and no-store exports
 - Reproducible PostgreSQL/MinIO backup and destructive-confirmation restore tooling
-- Container-build CI, tagged GHCR release automation with SBOM/provenance, and automated dependency update configuration
+- Container-build CI, verification-only release tags, exact local image provenance/export, and automated dependency update configuration
 - Controlled-pilot UAT, accessibility, load-test, backup/restore, rollback, and operations runbooks
 
 Milestone 3 makes the codebase **GA-ready for controlled pilot validation**. Actual production sign-off still requires institution UAT evidence, an environment-specific security review, a successful restore drill, approved notification providers, and a named operating team.
@@ -128,6 +128,13 @@ named operating owners, local media, audit event, and no-cloud attestations into
 checksummed local evidence. Only Go locks the register; automation never chooses
 or records the institution's decision. See
 [docs/M5_5_APPROVAL_HANDOVER.md](docs/M5_5_APPROVAL_HANDOVER.md).
+
+M5.6 closes only an institution-approved Go commit into a fast-forwarded `main`,
+annotated `v1.0.0`, and checksummed local release package. It binds the live API
+and web images to the exact Git revision, exports all seven runtime images to
+separate local media, and keeps the tag workflow verification-only with no
+registry publishing or cloud deployment. See
+[docs/M5_6_RELEASE_CLOSURE.md](docs/M5_6_RELEASE_CLOSURE.md).
 
 ## Run with Docker
 

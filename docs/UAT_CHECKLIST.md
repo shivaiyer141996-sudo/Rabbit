@@ -53,3 +53,8 @@ automated smoke is supporting evidence; it does not replace institution UAT.
   in the four mandatory Pilot execution rows.
 - M5.5 prepare and finalize bundles pass on the designated computer. Release
   expansion requires Go; Conditional Retest and No-Go remain blocked outcomes.
+- M5.6 preparation binds that Go to the exact active API/web image revisions and
+  exports all seven runtime images to checksummed separate local media.
+- The exact branch and verification-only tag runs pass; `main`, `origin/main`,
+  and the annotated `v1.0.0` tag resolve to the same Go-approved commit; M5.6
+  finalization passes without a registry, cloud runtime, or public endpoint.
