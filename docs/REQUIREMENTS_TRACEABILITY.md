@@ -38,6 +38,6 @@ Status meanings:
 | OPS backup, restore, rollback | Pilot evidence | Quiesced checksummed backup, source reconciliation, isolated functional restore with RPO/RTO, and named rollback tabletop; execute on the pilot host |
 | NFR scale | Pilot evidence | Configurable k6 profile at approved concurrency plus 50% headroom with fixed error/p95/p99/check thresholds; execute on the pilot host |
 | Accessibility | Pilot evidence | Skip navigation, focus state, semantic labels, reduced motion, responsive/print views; human audit required |
-| PIL controlled-pilot evidence and sign-off | Implemented | Tenant-scoped check register, evidence/defect capture, mandatory gate, locked sign-off, audit trail |
-| PIL institutional execution | Pilot evidence | Named institution must perform checks and provide genuine evidence before sign-off |
+| PIL controlled-pilot evidence and sign-off | Implemented | Tenant-scoped check register, web/local-URN evidence capture, defect capture, mandatory gate, locked sign-off, audit trail |
+| PIL institutional execution | Pilot evidence | Local rehearsal/live freeze and reconciliation tooling covers release, cohort, content, attendance, attempts, publication, exports, audit, and incidents; named institution must execute and accept both events |
 | Release 1.0 exclusions | Post–Release 1.0 | AI, predictive models, parent portal, subjective grading, native app, proctoring, LMS/ERP/SIS/payment integrations |

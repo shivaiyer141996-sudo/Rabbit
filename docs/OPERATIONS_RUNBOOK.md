@@ -156,6 +156,28 @@ only into a unique temporary Compose project, verifies product and data recovery
 and removes only that project's volumes. It does not execute the recorded
 rollback command. Review [M5.3 local validation](M5_3_VALIDATION.md) before use.
 
+## M5.4 institutional pilot evidence
+
+M5.4 uses the same local stack after M5.1-M5.3 have passed. Prepare the protected
+Admin, institution, owner, roster, incident, and assessment inputs described in
+[M5.4 local pilot execution](M5_4_PILOT_EXECUTION.md). Before each event opens:
+
+```bash
+make pilot-m5-4-freeze
+```
+
+After the institution completes the event, fills attendance, resolves S1/S2,
+publishes results, and verifies reports:
+
+```bash
+make pilot-m5-4-reconcile PILOT_FREEZE_MANIFEST=<passed-freeze-manifest.json>
+```
+
+Run rehearsal and live assessment as separate freezes. The runner is read-only
+and accepts only loopback/private-LAN targets. It writes restricted local exports
+and a checksummed `urn:rabbit-evidence:...` reference; it never changes Rabbit's
+evidence register or signs on behalf of an institution.
+
 ## Future database move
 
 Milestone 5 remains on the bundled local PostgreSQL database. Rabbit's backend

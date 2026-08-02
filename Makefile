@@ -2,7 +2,8 @@
 	pilot-env pilot-config pilot-up pilot-down pilot-logs pilot-preflight \
 	pilot-backup pilot-restore-drill pilot-retire-demo-users \
 	pilot-ui-install pilot-ui-evidence pilot-performance pilot-security \
-	pilot-functional-restore-drill pilot-rollback-rehearsal pilot-m5-3
+	pilot-functional-restore-drill pilot-rollback-rehearsal pilot-m5-3 \
+	pilot-m5-4-freeze pilot-m5-4-reconcile
 
 PILOT_COMPOSE = docker compose --env-file .env -f docker-compose.yml -f infra/pilot/compose.local-pilot.yml
 
@@ -77,3 +78,10 @@ pilot-rollback-rehearsal:
 
 pilot-m5-3:
 	./infra/pilot/m5-3-evidence.sh
+
+pilot-m5-4-freeze:
+	./infra/pilot/m5-4-evidence.sh freeze
+
+pilot-m5-4-reconcile:
+	@test -n "$(PILOT_FREEZE_MANIFEST)" || (echo "Set PILOT_FREEZE_MANIFEST to a passed freeze-manifest.json." >&2; exit 2)
+	./infra/pilot/m5-4-evidence.sh reconcile --freeze-manifest "$(PILOT_FREEZE_MANIFEST)"

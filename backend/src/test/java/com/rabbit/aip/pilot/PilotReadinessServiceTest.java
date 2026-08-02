@@ -1,5 +1,6 @@
 package com.rabbit.aip.pilot;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -53,7 +54,40 @@ class PilotReadinessServiceTest {
                 )
         ))
                 .isInstanceOf(DomainException.class)
-                .hasMessageContaining("HTTP or HTTPS");
+                .hasMessageContaining("HTTP/HTTPS");
+    }
+
+    @Test
+    void localEvidenceUrnIsAcceptedWithoutACloudUrl() {
+        assertThatCode(() -> PilotReadinessService.validateCheck(
+                request(
+                        PilotCheckStatus.PASS,
+                        "Institution tester",
+                        "urn:rabbit-evidence:m5-4:live:20260821T120000Z:abc12345",
+                        null,
+                        null
+                )
+        )).doesNotThrowAnyException();
+
+        assertThatThrownBy(() -> PilotReadinessService.validateCheck(
+                request(
+                        PilotCheckStatus.PASS,
+                        "Institution tester",
+                        "urn:unapproved-cloud-evidence:abc12345",
+                        null,
+                        null
+                )
+        ))
+                .isInstanceOf(DomainException.class)
+                .hasMessageContaining("rabbit-evidence");
+    }
+
+    @Test
+    void institutionalExecutionChecksAreMandatory() {
+        assertThat(PilotCheckKey.STAFF_REHEARSAL.mandatory()).isTrue();
+        assertThat(PilotCheckKey.LIVE_ASSESSMENT.mandatory()).isTrue();
+        assertThat(PilotCheckKey.PILOT_RECONCILIATION.mandatory()).isTrue();
+        assertThat(PilotCheckKey.INCIDENT_CLOSURE.mandatory()).isTrue();
     }
 
     private UpdatePilotCheckRequest request(

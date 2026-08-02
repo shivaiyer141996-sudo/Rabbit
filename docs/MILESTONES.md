@@ -131,7 +131,7 @@ Delivery boundary:
 - AI, subjective assessment, proctoring, native apps, and external integrations remain
   outside Release 1.0.
 
-## Milestone 5 — Institutional pilot and release acceptance (M5.1–M5.3 tooling ready)
+## Milestone 5 — Institutional pilot and release acceptance (M5.1–M5.4 tooling ready)
 
 - Finalise the named institution, cohort, scope, hosting, budget, dates, and owners
 - Deploy the approved release candidate to a secure production-like environment
@@ -161,6 +161,10 @@ Delivery boundary:
   recovery with RPO/RTO measurement, and a named rollback tabletop. It does not
   pass until the designated host produces a clean bundle and named testers record
   the mandatory evidence. See [M5_3_VALIDATION.md](M5_3_VALIDATION.md).
+- Local M5.4 tooling freezes each rehearsal/live event and reconciles the roster,
+  attendance, attempts, evaluation, publication, exports, audit, and incident
+  closure. It does not pass until the institution runs and accepts both events.
+  See [M5_4_PILOT_EXECUTION.md](M5_4_PILOT_EXECUTION.md).
 
 ## Post–Release 1.0
 

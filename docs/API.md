@@ -105,6 +105,10 @@ and auto-submits expired attempts independently of the browser.
 | PUT | `/pilot-readiness/checks/{key}` | Record a pilot result, tester, evidence, defect, and notes |
 | POST | `/pilot-readiness/sign-off` | Lock and audit sign-off after every mandatory check passes |
 
+Passing pilot rows accept either an absolute HTTP/HTTPS evidence URL or a
+checksummed local `urn:rabbit-evidence:...` reference. The local reference is the
+default for Milestone 5 so no cloud evidence host or public endpoint is needed.
+
 All API responses include `X-Trace-Id`. Rate-limited responses use status `429`,
 include `Retry-After` and `X-RateLimit-*` headers, and retain the standard error
 envelope. Failed credentials persist in an independent transaction; the default

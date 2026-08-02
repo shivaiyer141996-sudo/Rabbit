@@ -116,6 +116,11 @@ local backup device, temporary project-scoped restore volumes, and exact local
 release images. It does not use CI or cloud infrastructure and never restores
 into the live pilot volumes. See [docs/M5_3_VALIDATION.md](docs/M5_3_VALIDATION.md).
 
+M5.4 adds local rehearsal/live freeze and reconciliation evidence. It proves the
+exact cohort, content, release, attendance, attempts, publication, exports,
+audit, and incident closure without mutating the event or using a cloud evidence
+link. See [docs/M5_4_PILOT_EXECUTION.md](docs/M5_4_PILOT_EXECUTION.md).
+
 ## Run with Docker
 
 For ordinary loopback-only development:

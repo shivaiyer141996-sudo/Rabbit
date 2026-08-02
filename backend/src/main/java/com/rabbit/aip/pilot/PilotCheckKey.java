@@ -75,6 +75,26 @@ public enum PilotCheckKey {
             "Operations",
             "Release, support, incident, and rollback owners are named",
             true
+    ),
+    STAFF_REHEARSAL(
+            "Pilot execution",
+            "Staff rehearsal completed on the approved local release and cohort",
+            true
+    ),
+    LIVE_ASSESSMENT(
+            "Pilot execution",
+            "Live institutional assessment completed on the approved local release",
+            true
+    ),
+    PILOT_RECONCILIATION(
+            "Pilot execution",
+            "Roster, attempts, scoring, publication, exports, and audit reconcile",
+            true
+    ),
+    INCIDENT_CLOSURE(
+            "Pilot execution",
+            "No Severity 1 or Severity 2 pilot incident remains open",
+            true
     );
 
     private final String category;

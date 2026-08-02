@@ -33,6 +33,10 @@ automated smoke is supporting evidence; it does not replace institution UAT.
 | Performance | Run the M5.3 k6 profile at the approved student count plus 50% headroom | Failure rate <1%, p95 <500 ms, p99 <1 s, checks >99% |
 | Security | Review M5.3 architecture, runtime, HTTP, secret-containment, and exact active-image scan evidence | No critical unresolved finding or failed mandatory control |
 | Operating ownership | Confirm release, support, incident, and rollback owners | Every operating role has a named, reachable owner |
+| Staff rehearsal | Complete the frozen staff rehearsal from access through reports | Exact local release/cohort/content is used and the institution UAT lead accepts the rehearsal evidence |
+| Live assessment | Complete the frozen institutional assessment from access through reports | Approved attendees complete one governed attempt and no live journey blocker remains |
+| Pilot reconciliation | Compare roster/attendance with attempts, evaluation, publication, reports, exports, and audit | Counts and identities reconcile to the M5.4 bundle with no unfinished or unexpected attempt |
+| Incident closure | Review the complete rehearsal/live incident register | No S1/S2 remains open; every S3/S4 has owner, workaround, and due date |
 
 ## Exit criteria
 
@@ -42,3 +46,5 @@ automated smoke is supporting evidence; it does not replace institution UAT.
 - The institution authorises pilot expansion in writing.
 - The authorised person, title, support contact, rollback owner, and release version
   are recorded in the locked pilot sign-off.
+- Both M5.4 event bundles pass, use unchanged freeze manifests, and are referenced
+  in the four mandatory Pilot execution rows.

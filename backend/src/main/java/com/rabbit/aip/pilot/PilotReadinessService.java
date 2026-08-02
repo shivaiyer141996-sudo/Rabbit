@@ -12,11 +12,16 @@ import java.net.URI;
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.List;
+import java.util.regex.Pattern;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class PilotReadinessService {
+
+    private static final Pattern LOCAL_EVIDENCE_REFERENCE = Pattern.compile(
+            "rabbit-evidence:[A-Za-z0-9][A-Za-z0-9._:-]{7,900}"
+    );
 
     private final PilotCheckResultRepository checks;
     private final PilotSignOffRepository signOffs;
@@ -139,7 +144,8 @@ public class PilotReadinessService {
         if (!blank(request.evidenceUrl()) && !validEvidenceUrl(request.evidenceUrl())) {
             throw DomainException.badRequest(
                     "PILOT_EVIDENCE_URL_INVALID",
-                    "Evidence links must use an absolute HTTP or HTTPS URL."
+                    "Evidence must use an absolute HTTP/HTTPS URL or a local "
+                            + "urn:rabbit-evidence reference."
             );
         }
         if ((request.status() == PilotCheckStatus.FAIL
@@ -160,9 +166,16 @@ public class PilotReadinessService {
     private static boolean validEvidenceUrl(String value) {
         try {
             URI uri = URI.create(value.trim());
-            return ("http".equalsIgnoreCase(uri.getScheme())
+            if (("http".equalsIgnoreCase(uri.getScheme())
                     || "https".equalsIgnoreCase(uri.getScheme()))
-                    && uri.getHost() != null;
+                    && uri.getHost() != null) {
+                return true;
+            }
+            return "urn".equalsIgnoreCase(uri.getScheme())
+                    && uri.getSchemeSpecificPart() != null
+                    && LOCAL_EVIDENCE_REFERENCE.matcher(
+                            uri.getSchemeSpecificPart()
+                    ).matches();
         } catch (IllegalArgumentException exception) {
             return false;
         }

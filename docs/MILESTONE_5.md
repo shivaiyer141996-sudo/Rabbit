@@ -2,7 +2,7 @@
 
 ## Status
 
-**M5.1, M5.2, and M5.3 repository tooling is implemented; execution and human
+**M5.1 through M5.4 repository tooling is implemented; execution and human
 evidence remain pending on the designated host.** Milestone 5 is an environment,
 people, and evidence milestone. It does not add product scope.
 
@@ -255,13 +255,39 @@ Exit criteria:
 
 ## M5.4 — Run the institutional pilot
 
-1. Import/create the approved academic structure and minimal user cohort.
-2. Conduct the staff rehearsal and resolve only Severity 1/2 blockers.
-3. Freeze assessment content and publish the live schedule.
-4. Confirm support contacts, incident channel, backup, monitoring, and rollback.
-5. Run the complete assessment through result publication and reports.
-6. Reconcile attendance, submissions, scoring, publication, exports, and audit events.
-7. Record every issue with severity, owner, workaround, and due date.
+Repository implementation now provides a read-only, local-only two-stage runner
+for both the staff rehearsal and live assessment. It freezes the exact release,
+tenant, approved roster fingerprint, scheduled assessment, question fingerprints,
+readiness, operations state, and approval history before the event. After the
+event it reconciles recorded attendance to attempts, evaluation, publication,
+reports, CSV/PDF/XLSX exports, audit events, and the incident register.
+
+Prepare the protected local inputs and run:
+
+```bash
+make pilot-m5-4-freeze
+# Conduct the event through Rabbit's UI and complete attendance/incidents.
+make pilot-m5-4-reconcile PILOT_FREEZE_MANIFEST=<passed-freeze-manifest.json>
+```
+
+Run the full sequence first with `REHEARSAL`, then separately with `LIVE`. The
+live freeze is blocked until the audited Staff rehearsal row has passed. See
+[M5.4 local pilot execution](M5_4_PILOT_EXECUTION.md).
+
+Exit criteria:
+
+- The institution UAT lead accepts the staff rehearsal evidence.
+- The live event uses the exact frozen local commit, cohort, content, schedule,
+  and one-attempt rule.
+- Every attendee/absence reconciles with attempt, evaluation, publication,
+  report, export, and audit evidence.
+- No assessment attempt remains in progress and no result remains pending.
+- No Severity 1 or Severity 2 incident remains open.
+- The four mandatory Pilot execution rows are passed by named humans using the
+  generated local evidence references.
+
+Tooling availability does not pass M5.4. The institution must conduct the two
+events and review the checksummed bundles on the designated computer.
 
 ## M5.5 — Final approval and handover
 

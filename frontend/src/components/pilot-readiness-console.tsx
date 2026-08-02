@@ -90,6 +90,10 @@ export function PilotReadinessConsole() {
     [readiness],
   );
 
+  function isWebEvidence(value?: string) {
+    return value?.startsWith("http://") || value?.startsWith("https://");
+  }
+
   function updateDraft(key: string, update: Partial<CheckDraft>) {
     setDrafts((current) => ({
       ...current,
@@ -149,9 +153,9 @@ export function PilotReadinessConsole() {
   return (
     <div className="page">
       <PageHeader
-        eyebrow="Milestone 4 · Controlled pilot"
+        eyebrow="Milestone 5 · Institutional pilot"
         title="Pilot readiness & sign-off"
-        description="Record institution-owned UAT evidence, defects, operating ownership, and final Release 1.0 authorisation."
+        description="Record institution-owned UAT, rehearsal, live-assessment, reconciliation, incident, and final Release 1.0 evidence."
       />
       {message && <div className="success-banner">{message}</div>}
       {error && <div className="form-error" role="alert">{error}</div>}
@@ -254,8 +258,8 @@ export function PilotReadinessConsole() {
                           onChange={(event) =>
                             updateDraft(check.key, { evidenceUrl: event.target.value })
                           }
-                          placeholder="https://…"
-                          type="url"
+                          placeholder="urn:rabbit-evidence:… or approved local URL"
+                          type="text"
                           value={draft.evidenceUrl}
                         />
                       </div>
@@ -285,7 +289,7 @@ export function PilotReadinessConsole() {
                           value={draft.notes}
                         />
                       </div>
-                      {check.evidenceUrl && (
+                      {check.evidenceUrl && isWebEvidence(check.evidenceUrl) && (
                         <a
                           className="button button-ghost"
                           href={check.evidenceUrl}
@@ -294,6 +298,11 @@ export function PilotReadinessConsole() {
                         >
                           <ExternalLink size={14} /> Open evidence
                         </a>
+                      )}
+                      {check.evidenceUrl && !isWebEvidence(check.evidenceUrl) && (
+                        <span className="button button-ghost" title={check.evidenceUrl}>
+                          <FileCheck2 size={14} /> Local evidence recorded
+                        </span>
                       )}
                       {!readiness.signedOff && (
                         <button

@@ -2,11 +2,14 @@
 .env
 .env.pilot-ui
 .env.pilot-m5-3
+.env.pilot-m5-4
 .env.local
 .env.production
 infra/deploy/production.env
 infra/database/external-postgres.env
 infra/pilot/local-pilot.env
+.pilot-m5-4-roster.csv
+.pilot-m5-4-incidents.csv
 *.pem
 *.key
 
@@ -34,4 +37,6 @@ Thumbs.db
 data/
 backups/
 artifacts/
+__pycache__/
+*.pyc
 *.log
