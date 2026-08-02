@@ -129,4 +129,5 @@ trap - EXIT HUP INT TERM
 echo "Created protected local pilot environment: ${env_file}"
 echo "Rabbit web bind: ${portal_origin}"
 echo "Edit only the PILOT_* ownership and separate-backup placeholders before preflight."
+echo "Create .env.pilot-m5-3 from its example only when M5.3 evidence is due."
 echo "No secret values were printed."

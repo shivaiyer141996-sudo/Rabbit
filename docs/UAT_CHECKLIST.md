@@ -29,9 +29,9 @@ automated smoke is supporting evidence; it does not replace institution UAT.
 | Feature flags | Change rollout and disable an export | Audit event exists and behaviour changes safely |
 | Accessibility | Keyboard-only, focus order, labels, zoom 200%, reduced motion | Core journey remains understandable and operable |
 | Mobile web | Complete student journey at 360 px width | No blocked action or horizontal page overflow |
-| Recovery | Restore latest backup in a non-production environment | Data/assets validate within four-hour RTO |
-| Performance | Run the k6 read profile at pilot load | Failure rate <1%, p95 <500 ms, p99 <1 s |
-| Security | Verify headers, rate limits, secret guard, dependency review | No critical unresolved finding |
+| Recovery | Run the M5.3 quiesced backup and isolated functional restore; inspect source/restored reconciliation and product probe | Data/assets/login/assessment/result/export/audit validate within four-hour RTO from a backup no older than 24 hours |
+| Performance | Run the M5.3 k6 profile at the approved student count plus 50% headroom | Failure rate <1%, p95 <500 ms, p99 <1 s, checks >99% |
+| Security | Review M5.3 architecture, runtime, HTTP, secret-containment, and exact active-image scan evidence | No critical unresolved finding or failed mandatory control |
 | Operating ownership | Confirm release, support, incident, and rollback owners | Every operating role has a named, reachable owner |
 
 ## Exit criteria

@@ -1,0 +1,20 @@
+services:
+  recovery-probe:
+    image: python:3.13-alpine
+    profiles: ["m5-3-evidence"]
+    entrypoint: ["python", "/probe/functional-recovery-probe.py"]
+    user: "0:0"
+    networks:
+      - app
+      - data
+    environment:
+      RABBIT_EVIDENCE_RUN_ID: ${M5_3_EVIDENCE_RUN_ID:?Set M5_3_EVIDENCE_RUN_ID}
+    volumes:
+      - ./infra/backup:/probe:ro
+      - ${M5_3_EVIDENCE_ROOT:?Set M5_3_EVIDENCE_ROOT}:/evidence
+      - ${M5_3_CONFIG_FILE:?Set M5_3_CONFIG_FILE}:/run/secrets/m5-3.env:ro
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp:size=16m,mode=1777

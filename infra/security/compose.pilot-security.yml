@@ -1,0 +1,36 @@
+services:
+  security-probe:
+    image: python:3.13-alpine
+    profiles: ["m5-3-evidence"]
+    entrypoint: ["python", "/probe/security-http-probe.py"]
+    user: "0:0"
+    networks:
+      - app
+    environment:
+      RABBIT_EVIDENCE_RUN_ID: ${M5_3_EVIDENCE_RUN_ID:?Set M5_3_EVIDENCE_RUN_ID}
+    volumes:
+      - ./infra/security:/probe:ro
+      - ${M5_3_EVIDENCE_ROOT:?Set M5_3_EVIDENCE_ROOT}:/evidence
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp:size=16m,mode=1777
+
+  security-scan:
+    image: aquasec/trivy:0.62.1
+    profiles: ["m5-3-evidence"]
+    entrypoint: ["trivy"]
+    user: "0:0"
+    volumes:
+      - m5-3-trivy-cache:/root/.cache/trivy
+      - ${M5_3_EVIDENCE_ROOT:?Set M5_3_EVIDENCE_ROOT}:/evidence
+      - ${M5_3_SCAN_ROOT:?Set M5_3_SCAN_ROOT}:/scan:ro
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m,mode=1777
+
+volumes:
+  m5-3-trivy-cache:

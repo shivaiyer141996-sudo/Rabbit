@@ -137,6 +137,25 @@ Restore is destructive and requires an explicit confirmation flag:
 
 After restore, verify readiness, login, question assets, one student assessment, result publication, report export, audit search, and notification creation before reopening access.
 
+## M5.3 technical evidence
+
+Run M5.3 only after local host preflight passes, demo identities are retired, a
+non-demo Admin and Student rehearsal account are ready, the Student has a
+published synthetic result, a separate local backup device is connected, and no
+assessment is active:
+
+```bash
+cp .env.pilot-m5-3.example .env.pilot-m5-3
+chmod 600 .env.pilot-m5-3
+# Replace every placeholder and record the rollback tabletop confirmation.
+make pilot-m5-3
+```
+
+The workflow briefly quiesces API/web access for a consistent backup. It restores
+only into a unique temporary Compose project, verifies product and data recovery,
+and removes only that project's volumes. It does not execute the recorded
+rollback command. Review [M5.3 local validation](M5_3_VALIDATION.md) before use.
+
 ## Future database move
 
 Milestone 5 remains on the bundled local PostgreSQL database. Rabbit's backend

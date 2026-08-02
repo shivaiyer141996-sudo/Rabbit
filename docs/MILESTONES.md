@@ -131,7 +131,7 @@ Delivery boundary:
 - AI, subjective assessment, proctoring, native apps, and external integrations remain
   outside Release 1.0.
 
-## Milestone 5 — Institutional pilot and release acceptance (M5.1/M5.2 tooling ready)
+## Milestone 5 — Institutional pilot and release acceptance (M5.1–M5.3 tooling ready)
 
 - Finalise the named institution, cohort, scope, hosting, budget, dates, and owners
 - Deploy the approved release candidate to a secure production-like environment
@@ -156,6 +156,11 @@ Delivery boundary:
 - Local browser evidence tooling is implemented, but M5.2 does not pass until
   state-changing journeys, current Chrome/Edge, 200% browser zoom, accessibility,
   and one representative physical Android device have signed human evidence.
+- Local M5.3 tooling now covers approved load plus 50% headroom, runtime/HTTP/image
+  security, a quiesced and reconciled PostgreSQL/MinIO backup, isolated functional
+  recovery with RPO/RTO measurement, and a named rollback tabletop. It does not
+  pass until the designated host produces a clean bundle and named testers record
+  the mandatory evidence. See [M5_3_VALIDATION.md](M5_3_VALIDATION.md).
 
 ## Post–Release 1.0
 

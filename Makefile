@@ -1,7 +1,8 @@
 .PHONY: up down logs test frontend-test backend-test architecture-check \
 	pilot-env pilot-config pilot-up pilot-down pilot-logs pilot-preflight \
 	pilot-backup pilot-restore-drill pilot-retire-demo-users \
-	pilot-ui-install pilot-ui-evidence
+	pilot-ui-install pilot-ui-evidence pilot-performance pilot-security \
+	pilot-functional-restore-drill pilot-rollback-rehearsal pilot-m5-3
 
 PILOT_COMPOSE = docker compose --env-file .env -f docker-compose.yml -f infra/pilot/compose.local-pilot.yml
 
@@ -60,3 +61,19 @@ pilot-ui-install:
 
 pilot-ui-evidence:
 	./infra/pilot/ui-evidence.sh
+
+pilot-performance:
+	./infra/performance/run-pilot-load.sh
+
+pilot-security:
+	./infra/security/pilot-security-review.sh
+
+pilot-functional-restore-drill:
+	@test -n "$(PILOT_BACKUP)" || (echo "Set PILOT_BACKUP to the backup directory to test." >&2; exit 2)
+	./infra/backup/functional-restore-drill.sh "$(PILOT_BACKUP)"
+
+pilot-rollback-rehearsal:
+	./infra/pilot/rollback-rehearsal.sh
+
+pilot-m5-3:
+	./infra/pilot/m5-3-evidence.sh

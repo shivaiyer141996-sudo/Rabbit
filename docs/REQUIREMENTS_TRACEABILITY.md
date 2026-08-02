@@ -35,8 +35,8 @@ Status meanings:
 | OPS rate limiting and security headers | Implemented | Redis + local fallback, Nginx edge zones, secure headers, production secret guard |
 | OPS software composition and secret assurance | Implemented | Clean production npm audit, Trivy API/web image SCA, dependency-review critical gate, Gitleaks history scan |
 | OPS feature rollout | Implemented | Tenant flags, deterministic percentage bucket, UI, audit |
-| OPS backup, restore, rollback | Pilot evidence | Checksum backup/restore scripts and runbook; quarterly drill must be evidenced |
-| NFR scale | Pilot evidence | k6 thresholds, pool/server limits, container-build gate; execute at target pilot load |
+| OPS backup, restore, rollback | Pilot evidence | Quiesced checksummed backup, source reconciliation, isolated functional restore with RPO/RTO, and named rollback tabletop; execute on the pilot host |
+| NFR scale | Pilot evidence | Configurable k6 profile at approved concurrency plus 50% headroom with fixed error/p95/p99/check thresholds; execute on the pilot host |
 | Accessibility | Pilot evidence | Skip navigation, focus state, semantic labels, reduced motion, responsive/print views; human audit required |
 | PIL controlled-pilot evidence and sign-off | Implemented | Tenant-scoped check register, evidence/defect capture, mandatory gate, locked sign-off, audit trail |
 | PIL institutional execution | Pilot evidence | Named institution must perform checks and provide genuine evidence before sign-off |

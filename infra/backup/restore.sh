@@ -18,10 +18,7 @@ if [ ! -f "$backup_dir/postgres.dump" ] \
   exit 1
 fi
 
-(
-  cd "$backup_dir"
-  sha256sum -c SHA256SUMS
-)
+"$repo_root/infra/backup/verify.sh" "$backup_dir"
 
 docker compose stop backend frontend nginx
 docker compose exec -T postgres sh -eu -c \

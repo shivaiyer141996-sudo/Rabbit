@@ -2,9 +2,9 @@
 
 ## Status
 
-**M5.1 local-environment tooling is implemented; execution evidence is pending
-on the designated host.** Milestone 5 is an environment, people, and evidence
-milestone. It does not add product scope.
+**M5.1, M5.2, and M5.3 repository tooling is implemented; execution and human
+evidence remain pending on the designated host.** Milestone 5 is an environment,
+people, and evidence milestone. It does not add product scope.
 
 - Release candidate: `b6f6715`
 - Milestone 4.2 automated gates: passed on GitHub Actions run `30699322752`
@@ -210,6 +210,36 @@ Test each role using real browser interactions, not API calls alone:
   spot checks on the critical journey
 
 ## M5.3 — Test performance, security, and recovery
+
+Repository implementation now provides one local command that:
+
+- tests the approved concurrent-student count plus 50% headroom with a protected,
+  non-demo Student and fixed latency/error/check thresholds;
+- verifies local-only architecture, secret containment, runtime isolation, HTTP
+  security controls, login rate limiting, and critical findings in the exact
+  active API/web images;
+- captures a quiesced PostgreSQL/MinIO backup with source reconciliation and
+  checksums on the configured separate local device;
+- restores into a unique temporary Compose project, reconciles source/restored
+  data and assets, and exercises restored login, assessment, result, analytics,
+  export, audit, and object-store paths;
+- measures the 24-hour RPO and four-hour RTO without attaching the restored app
+  to live volumes; and
+- verifies the retained prior local image pair and records a named, non-mutating
+  rollback tabletop with the exact command and communication path.
+
+Run it only in a maintenance window on the designated host:
+
+```bash
+cp .env.pilot-m5-3.example .env.pilot-m5-3
+chmod 600 .env.pilot-m5-3
+# Replace every placeholder and complete the human rollback tabletop.
+make pilot-m5-3
+```
+
+See [M5.3 local validation](M5_3_VALIDATION.md). Tooling availability and a local
+commit do not pass M5.3. The checksummed host bundle must pass and named testers
+must record the mandatory Pilot readiness rows.
 
 Exit criteria:
 

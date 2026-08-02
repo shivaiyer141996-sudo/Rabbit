@@ -27,6 +27,7 @@ if ! docker info >/dev/null 2>&1; then
 fi
 
 stamp="$(date -u +%Y%m%dT%H%M%SZ)"
+started_epoch="$(date -u +%s)"
 suffix="${stamp//[^0-9A-Za-z]/}-$$"
 postgres_container="rabbit-restore-postgres-${suffix}"
 postgres_volume="rabbit-restore-postgres-data-${suffix}"
@@ -85,9 +86,14 @@ docker exec "${postgres_container}" psql \
     SELECT 'flyway_version=' || COALESCE(MAX(version), 'none') FROM flyway_schema_history WHERE success;
     SELECT 'organisations=' || COUNT(*) FROM organisations;
     SELECT 'users=' || COUNT(*) FROM user_accounts;
+    SELECT 'memberships=' || COUNT(*) FROM organisation_memberships;
     SELECT 'questions=' || COUNT(*) FROM questions;
+    SELECT 'question_options=' || COUNT(*) FROM question_options;
     SELECT 'assessments=' || COUNT(*) FROM assessments;
+    SELECT 'assessment_questions=' || COUNT(*) FROM assessment_question_ids;
     SELECT 'attempts=' || COUNT(*) FROM assessment_attempts;
+    SELECT 'responses=' || COUNT(*) FROM attempt_responses;
+    SELECT 'selected_options=' || COUNT(*) FROM response_selected_options;
     SELECT 'audit_events=' || COUNT(*) FROM audit_events;
   " >"${drill_tmp}/database-reconciliation.txt"
 
@@ -106,8 +112,26 @@ docker run --rm \
     find /restore -type f | wc -l
   ' >"${drill_tmp}/minio-file-count.txt"
 
+printf 'minio_files=%s\n' \
+  "$(tr -d '[:space:]' <"${drill_tmp}/minio-file-count.txt")" \
+  >>"${drill_tmp}/database-reconciliation.txt"
+reconciliation_status=not_available
+if [[ -f "${backup_dir}/source-reconciliation.txt" ]]; then
+  if diff -u "${backup_dir}/source-reconciliation.txt" \
+      "${drill_tmp}/database-reconciliation.txt" \
+      >"${drill_tmp}/reconciliation-diff.txt"; then
+    reconciliation_status=pass
+  else
+    cat "${drill_tmp}/reconciliation-diff.txt" >&2
+    echo "Restored data does not reconcile to the backup source counts." >&2
+    exit 1
+  fi
+fi
+
+finished_epoch="$(date -u +%s)"
+
 cat >"${drill_tmp}/restore-drill.txt" <<EOF
-Rabbit M5.1 isolated restore drill
+Rabbit M5.3-compatible isolated restore drill
 completed_at_utc=${stamp}
 source_backup=${backup_dir}
 live_environment_modified=false
@@ -116,9 +140,14 @@ temporary_minio_volume=${minio_volume}
 database_restore=pass
 minio_archive_restore=pass
 minio_files=$(tr -d '[:space:]' <"${drill_tmp}/minio-file-count.txt")
+source_reconciliation=${reconciliation_status}
+restore_duration_seconds=$((finished_epoch - started_epoch))
+rto_target_seconds=14400
 EOF
 cat "${drill_tmp}/database-reconciliation.txt" >>"${drill_tmp}/restore-drill.txt"
 cp "${drill_tmp}/restore-drill.txt" "${backup_dir}/restore-drill-${stamp}.txt"
+sha256sum "${backup_dir}/restore-drill-${stamp}.txt" \
+  >"${backup_dir}/restore-drill-${stamp}.sha256"
 
 echo "Isolated restore drill passed."
 echo "Evidence: ${backup_dir}/restore-drill-${stamp}.txt"

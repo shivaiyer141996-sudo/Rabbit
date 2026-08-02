@@ -1,0 +1,17 @@
+services:
+  pilot-load:
+    image: grafana/k6:0.57.0
+    profiles: ["m5-3-evidence"]
+    entrypoint: ["k6"]
+    user: "0:0"
+    networks:
+      - app
+    volumes:
+      - ./infra/performance:/scripts:ro
+      - ${M5_3_EVIDENCE_ROOT:?Set M5_3_EVIDENCE_ROOT}:/evidence
+      - ${M5_3_CONFIG_FILE:?Set M5_3_CONFIG_FILE}:/run/secrets/m5-3.env:ro
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp:size=32m,mode=1777

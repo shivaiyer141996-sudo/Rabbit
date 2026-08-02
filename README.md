@@ -110,6 +110,12 @@ accessibility, responsive overflow, reduced motion, and screenshots. It does not
 replace signed state-changing journey checks or physical Android/Edge review. See
 [docs/M5_2_UI_VALIDATION.md](docs/M5_2_UI_VALIDATION.md).
 
+M5.3 adds local approved-load, security, isolated functional-recovery, and
+rollback-tabletop evidence. It uses a protected non-demo account file, a separate
+local backup device, temporary project-scoped restore volumes, and exact local
+release images. It does not use CI or cloud infrastructure and never restores
+into the live pilot volumes. See [docs/M5_3_VALIDATION.md](docs/M5_3_VALIDATION.md).
+
 ## Run with Docker
 
 For ordinary loopback-only development:
@@ -146,6 +152,16 @@ For Android pilot testing on the same trusted Wi-Fi, generate `.env` with the
 laptop's explicit private-LAN address and open that same address in Chrome. The
 pilot generator rejects public IPs and `0.0.0.0`. Local HTTP intentionally uses
 `SESSION_COOKIE_SECURE=false`; no port forwarding or public tunnel is allowed.
+
+After M5.1 host readiness and M5.2 journey preparation, configure and run the
+local M5.3 technical evidence workflow during a maintenance window:
+
+```bash
+cp .env.pilot-m5-3.example .env.pilot-m5-3
+chmod 600 .env.pilot-m5-3
+# Replace every placeholder, then:
+make pilot-m5-3
+```
 
 Demo accounts use the password `Rabbit@123`:
 
