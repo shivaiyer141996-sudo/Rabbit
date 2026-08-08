@@ -64,7 +64,7 @@ grep --quiet '"organisationName":"Rabbit Demo Academy"' \
     "${rabbit_smoke_tmp}/admin-auth-me.json"
 grep --quiet '"role":"ORG_ADMIN"' \
     "${rabbit_smoke_tmp}/admin-dashboard.json"
-grep --quiet '"totalChecks":15' \
+grep --quiet '"totalChecks":19' \
     "${rabbit_smoke_tmp}/admin-pilot-readiness.json"
 
 invited_email="milestone41.user@demo.rabbit.local"
