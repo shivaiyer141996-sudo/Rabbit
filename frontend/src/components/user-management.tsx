@@ -343,7 +343,7 @@ export function UserManagement() {
                 onChange={(event) =>
                   setDraft((current) => ({ ...current, sectionId: event.target.value }))
                 }
-                required={(["STUDENT", "FACULTY"] as UserRole[]).includes(draft.role)}
+                required={draft.role === "STUDENT"}
                 value={draft.sectionId}
               >
                 <option value="">Select section</option>

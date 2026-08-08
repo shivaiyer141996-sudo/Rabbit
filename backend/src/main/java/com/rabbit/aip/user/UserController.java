@@ -73,12 +73,13 @@ public class UserController {
     InvitationResponse create(@Valid @RequestBody CreateUserRequest request) {
         commercial.requireEntitlement(Entitlement.ASSESSMENT_DELIVERY);
         commercial.requireStudentCapacity(request.role());
-        if (request.role() == UserRole.STUDENT || request.role() == UserRole.FACULTY) {
-            if (request.sectionId() == null) {
-                throw DomainException.badRequest(
-                        "SECTION_REQUIRED", "Students and faculty must be assigned to an active section."
-                );
-            }
+        if (request.role() == UserRole.STUDENT && request.sectionId() == null) {
+            throw DomainException.badRequest(
+                    "SECTION_REQUIRED", "Students must be assigned to an active section."
+            );
+        }
+        if (request.sectionId() != null
+                && (request.role() == UserRole.STUDENT || request.role() == UserRole.FACULTY)) {
             sections.findByIdAndOrganisationId(request.sectionId(), session.organisationId())
                     .filter(section -> section.getStatus() == SectionStatus.ACTIVE)
                     .orElseThrow(() -> DomainException.badRequest(
