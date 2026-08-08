@@ -2,10 +2,22 @@
 
 BEGIN;
 
+INSERT INTO customer_accounts (
+    id, code, name, status, created_at, updated_at
+) VALUES (
+    '10101010-1010-1010-1010-101010101010',
+    'CA-ISOLATION',
+    'Isolation Contract Account',
+    'ACTIVE',
+    now(),
+    now()
+);
+
 INSERT INTO organisations (
-    id, code, name, timezone, status, created_at, updated_at
+    id, customer_account_id, code, name, timezone, status, created_at, updated_at
 ) VALUES (
     '12121212-1212-1212-1212-121212121212',
+    '10101010-1010-1010-1010-101010101010',
     'ISOLATION',
     'Isolation Contract Academy',
     'Asia/Kolkata',
