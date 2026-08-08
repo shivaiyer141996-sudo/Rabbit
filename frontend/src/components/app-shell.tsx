@@ -13,6 +13,7 @@ import {
   CreditCard,
   FileQuestion,
   LayoutDashboard,
+  Landmark,
   LogOut,
   Menu,
   Rocket,
@@ -129,6 +130,12 @@ const navigation: NavigationItem[] = [
     roles: ["STUDENT"],
   },
   {
+    href: "/platform",
+    label: "Rabbit Platform",
+    icon: Landmark,
+    roles: ["SUPER_ADMIN"],
+  },
+  {
     href: "/commercial",
     label: "Plan & support",
     icon: CreditCard,
@@ -211,10 +218,10 @@ export function AppShell({
         id="workspace-navigation"
       >
         <div className="sidebar-brand">
-          <Image src="/rabbit-mark.svg" width={42} height={42} alt="" />
+          <Image src="/rabbit-mark.png" width={38} height={45} alt="Rabbit" />
           <div className="brand-copy">
-            <strong>Rabbit AiP</strong>
-            <span>Student progress, understood</span>
+            <strong>Rabbit</strong>
+            <span>Assess. Progress. Excel.</span>
           </div>
           <button
             className="icon-button mobile-menu"
@@ -302,7 +309,23 @@ export function AppShell({
             <Menu size={20} />
           </button>
           <div className="topbar-context">
-            <strong>{profile?.organisationName ?? "Loading organisation…"}</strong>
+            <div className="topbar-organisation">
+              {profile?.organisationLogoAvailable ? (
+                <Image
+                  alt={`${profile.organisationName} logo`}
+                  className="organisation-logo organisation-logo-small"
+                  height={34}
+                  src={`/gateway/backend/organisation-branding/organisations/${profile.organisationId}/logo?v=${profile.organisationLogoUpdatedAt ?? "1"}`}
+                  unoptimized
+                  width={34}
+                />
+              ) : (
+                <span className="org-avatar org-avatar-small">
+                  {profile?.organisationCode.slice(0, 2) ?? "…"}
+                </span>
+              )}
+              <strong>{profile?.organisationName ?? "Loading organisation…"}</strong>
+            </div>
             <span>
               {profile
                 ? `${profile.organisationCode} · ${profile.timezone}`
@@ -321,7 +344,7 @@ export function AppShell({
       </header>
       <main id="main-content" tabIndex={-1}>
         {commercialAccess?.enforcementEnabled &&
-          (["EXPIRED", "SUSPENDED"] as Array<string | undefined>).includes(
+          (["EXPIRED", "TRIAL_EXPIRED", "SUSPENDED", "CANCELLED"] as Array<string | undefined>).includes(
             commercialAccess.status,
           ) && (
             <div className="subscription-alert" role="status">

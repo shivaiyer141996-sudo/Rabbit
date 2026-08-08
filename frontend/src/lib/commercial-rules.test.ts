@@ -32,7 +32,7 @@ describe("commercial rules", () => {
   });
 
   it("uses a clear read-only expiry label", () => {
-    expect(accessLabel("EXPIRED")).toContain("read-only");
+    expect(accessLabel("TRIAL_EXPIRED")).toContain("read-only");
   });
 
   it("rounds a partial final day up and never becomes negative", () => {

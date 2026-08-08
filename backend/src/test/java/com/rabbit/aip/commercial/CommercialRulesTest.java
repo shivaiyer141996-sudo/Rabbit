@@ -63,8 +63,56 @@ class CommercialRulesTest {
         assertThat(subscription.refresh(start.plus(Duration.ofDays(19)), ACTOR_ID)).isNull();
         assertThat(subscription.refresh(start.plus(Duration.ofDays(20)), ACTOR_ID))
                 .isEqualTo(SubscriptionEventType.TRIAL_EXPIRED);
-        assertThat(subscription.getStatus()).isEqualTo(SubscriptionStatus.EXPIRED);
+        assertThat(subscription.getStatus()).isEqualTo(SubscriptionStatus.TRIAL_EXPIRED);
         assertThat(subscription.refresh(start.plus(Duration.ofDays(21)), ACTOR_ID)).isNull();
+    }
+
+    @Test
+    void configurableTrialUsesSelectedTrialPlanAndDuration() {
+        Instant start = Instant.parse("2026-09-01T00:00:00Z");
+        CommercialSubscription subscription = CommercialSubscription.startTrial(
+                ORGANISATION_ID, PlanCode.BASIC, PlanCode.PRO, 150,
+                139_900, 35, start, ACTOR_ID, "Configured trial"
+        );
+        assertThat(subscription.getSelectedPlan()).isEqualTo(PlanCode.BASIC);
+        assertThat(subscription.getPlan()).isEqualTo(PlanCode.PRO);
+        assertThat(subscription.getTrialPlan()).isEqualTo(PlanCode.PRO);
+        assertThat(subscription.getTrialDurationDays()).isEqualTo(35);
+        assertThat(Duration.between(start, subscription.getTrialEndsAt()))
+                .isEqualTo(Duration.ofDays(35));
+    }
+
+    @Test
+    void trialExtensionReactivatesExpiredTrialWithoutDeletingHistory() {
+        Instant start = Instant.parse("2026-09-01T00:00:00Z");
+        CommercialSubscription subscription = CommercialSubscription.startTrial(
+                ORGANISATION_ID, 50, start, ACTOR_ID, "First trial"
+        );
+        subscription.refresh(start.plus(Duration.ofDays(20)), ACTOR_ID);
+        assertThat(subscription.extendTrial(5, ACTOR_ID, "Approved extension"))
+                .isEqualTo(SubscriptionEventType.TRIAL_EXTENDED);
+        assertThat(subscription.getStatus()).isEqualTo(SubscriptionStatus.TRIAL);
+        assertThat(subscription.getTrialDurationDays()).isEqualTo(25);
+    }
+
+    @Test
+    void manualActivationKeepsPaymentStateAndConfiguredPrice() {
+        Instant start = Instant.parse("2026-09-01T00:00:00Z");
+        CommercialSubscription subscription = CommercialSubscription.createPending(
+                ORGANISATION_ID, PlanCode.BASIC, 50, 59_900,
+                start, ACTOR_ID, "Pending manual payment"
+        );
+        subscription.manualActivate(
+                PlanCode.PRO, 150, 140_000, start, start.plus(Duration.ofDays(30)),
+                CommercialTypes.ManualPaymentStatus.WAIVED, 0L, "WAIVER-1",
+                "Approved pilot waiver", ACTOR_ID, "Upgrade"
+        );
+        assertThat(subscription.getPlan()).isEqualTo(PlanCode.PRO);
+        assertThat(subscription.getSelectedPlan()).isEqualTo(PlanCode.PRO);
+        assertThat(subscription.getStudentLimit()).isEqualTo(150);
+        assertThat(subscription.getMonthlyPricePaise()).isEqualTo(140_000);
+        assertThat(subscription.getPaymentStatus())
+                .isEqualTo(CommercialTypes.ManualPaymentStatus.WAIVED);
     }
 
     @Test
@@ -183,7 +231,7 @@ class CommercialRulesTest {
         assertThat(subscription.restore(
                 start.plus(Duration.ofDays(19)), ACTOR_ID, "Issue resolved"
         )).isEqualTo(SubscriptionEventType.SUBSCRIPTION_RESTORED);
-        assertThat(subscription.getStatus()).isEqualTo(SubscriptionStatus.TRIALING);
+        assertThat(subscription.getStatus()).isEqualTo(SubscriptionStatus.TRIAL);
 
         subscription.suspend(ACTOR_ID, "Second incident");
         assertThatThrownBy(() -> subscription.restore(

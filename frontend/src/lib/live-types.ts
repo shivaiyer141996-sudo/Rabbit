@@ -18,6 +18,8 @@ export interface MeProfile {
   organisationCode: string;
   organisationName: string;
   timezone: string;
+  organisationLogoAvailable: boolean;
+  organisationLogoUpdatedAt?: string;
   role: UserRole;
 }
 
@@ -27,6 +29,9 @@ export interface OrganisationSummary {
   name: string;
   timezone: string;
   status: "INVITED" | "ACTIVE" | "SUSPENDED" | "ARCHIVED";
+  customerAccountId: string;
+  logoAvailable: boolean;
+  logoUpdatedAt?: string;
 }
 
 export interface AcademicCatalog {
@@ -184,7 +189,14 @@ export type CommercialEntitlement =
   | "INSTITUTION_ANALYTICS"
   | "TEACHER_ANALYTICS"
   | "REPORT_EXPORTS";
-export type SubscriptionStatus = "TRIALING" | "ACTIVE" | "EXPIRED" | "SUSPENDED";
+export type SubscriptionStatus =
+  | "TRIAL"
+  | "ACTIVE"
+  | "TRIAL_EXPIRED"
+  | "GRACE_PERIOD"
+  | "SUSPENDED"
+  | "CANCELLED"
+  | "EXPIRED";
 
 export interface CommercialAccess {
   enforcementEnabled: boolean;
@@ -192,6 +204,7 @@ export interface CommercialAccess {
   status?: SubscriptionStatus;
   studentLimit?: number;
   accessEndsAt?: string;
+  daysRemaining: number;
   entitlements: CommercialEntitlement[];
 }
 
@@ -207,12 +220,23 @@ export interface CommercialOverview {
     id: string;
     plan: CommercialPlan;
     studentLimit: number;
+    selectedPlan: CommercialPlan;
+    selectedStudentLimit: number;
     monthlyPricePaise: number;
     status: SubscriptionStatus;
     trialStartsAt?: string;
     trialEndsAt?: string;
+    trialEnabled: boolean;
+    trialDurationDays?: number;
+    trialPlan?: CommercialPlan;
     periodStartsAt?: string;
     periodEndsAt?: string;
+    graceEndsAt?: string;
+    paymentStatus: "PENDING" | "PAID" | "WAIVED";
+    paymentReference?: string;
+    paymentRemarks?: string;
+    amountPaise?: number;
+    activationDate?: string;
     pendingPlan?: CommercialPlan;
     pendingStudentLimit?: number;
     pendingMonthlyPricePaise?: number;

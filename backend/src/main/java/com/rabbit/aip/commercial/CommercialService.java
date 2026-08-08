@@ -38,6 +38,11 @@ import com.rabbit.aip.user.AccountStatus;
 import com.rabbit.aip.user.OrganisationMembership;
 import com.rabbit.aip.user.OrganisationMembershipRepository;
 import com.rabbit.aip.user.UserRole;
+import com.rabbit.aip.platform.RabbitPlatformSettings;
+import com.rabbit.aip.platform.RabbitPlatformSettingsRepository;
+import com.rabbit.aip.platform.CustomerAccount;
+import com.rabbit.aip.platform.CustomerAccountRepository;
+import com.rabbit.aip.platform.CustomerAccountStatus;
 import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.DateTimeException;
@@ -74,6 +79,9 @@ public class CommercialService {
     private final CurrentSession session;
     private final AuditService audit;
     private final CommercialLaunchGuard launchGuard;
+    private final CommercialCatalogService catalogService;
+    private final RabbitPlatformSettingsRepository platformSettings;
+    private final CustomerAccountRepository customerAccounts;
     private final Clock clock;
 
     public CommercialService(
@@ -91,6 +99,9 @@ public class CommercialService {
             CurrentSession session,
             AuditService audit,
             CommercialLaunchGuard launchGuard,
+            CommercialCatalogService catalogService,
+            RabbitPlatformSettingsRepository platformSettings,
+            CustomerAccountRepository customerAccounts,
             Clock clock
     ) {
         this.subscriptions = subscriptions;
@@ -107,24 +118,14 @@ public class CommercialService {
         this.session = session;
         this.audit = audit;
         this.launchGuard = launchGuard;
+        this.catalogService = catalogService;
+        this.platformSettings = platformSettings;
+        this.customerAccounts = customerAccounts;
         this.clock = clock;
     }
 
     public List<PlanCatalogResponse> catalog() {
-        return Arrays.stream(PlanCode.values())
-                .map(plan -> new PlanCatalogResponse(
-                        plan,
-                        plan.label(),
-                        plan.description(),
-                        CommercialTypes.STUDENT_LIMITS.stream()
-                                .map(limit -> new PricePoint(
-                                        limit,
-                                        CommercialTypes.monthlyPricePaise(plan, limit)
-                                ))
-                                .toList(),
-                        CommercialTypes.entitlements(plan)
-                ))
-                .toList();
+        return catalogService.catalog();
     }
 
     @Transactional
@@ -134,15 +135,22 @@ public class CommercialService {
         );
         Instant accessEndsAt = subscription == null
                 ? null
-                : subscription.getPeriodEndsAt() != null
+                : subscription.getGraceEndsAt() != null
+                    ? subscription.getGraceEndsAt()
+                    : subscription.getPeriodEndsAt() != null
                     ? subscription.getPeriodEndsAt()
                     : subscription.getTrialEndsAt();
+        long daysRemaining = accessEndsAt == null ? 0
+                : Math.max(0, (long) Math.ceil(
+                        Duration.between(clock.instant(), accessEndsAt).toSeconds() / 86_400.0
+                ));
         return new CommercialAccessResponse(
                 launchGuard.enabled(),
                 subscription == null ? null : subscription.getPlan(),
                 subscription == null ? null : subscription.getStatus(),
                 subscription == null ? null : subscription.getStudentLimit(),
                 accessEndsAt,
+                daysRemaining,
                 effectiveEntitlements(subscription)
         );
     }
@@ -163,12 +171,12 @@ public class CommercialService {
         return new CommercialOverviewResponse(
                 launchGuard.enabled(),
                 launchGuard.enabled(),
-                CommercialTypes.TRIAL_DAYS,
+                defaultPlatformSettings().getDefaultTrialDays(),
                 now,
                 students,
                 availableSlots,
                 effective,
-                subscription == null ? null : SubscriptionResponse.from(subscription),
+                subscription == null ? null : subscriptionResponse(subscription),
                 catalog(),
                 subscriptionEvents.findAllByOrganisationIdOrderByOccurredAtDesc(
                                 organisationId
@@ -189,7 +197,7 @@ public class CommercialService {
     @Transactional
     public SubscriptionResponse startTrial(StartTrialRequest request) {
         launchGuard.requireEnabled();
-        return SubscriptionResponse.from(startTrialFor(
+        return subscriptionResponse(startTrialFor(
                 session.organisationId(),
                 request.declaredStudents(),
                 request.note(),
@@ -216,8 +224,11 @@ public class CommercialService {
                     HttpStatus.CONFLICT
             );
         }
+        CustomerAccount customerAccount = customerAccounts.save(new CustomerAccount(
+                "CA-" + request.code(), request.name().trim() + " Account", session.userId()
+        ));
         Organisation organisation = organisations.save(new Organisation(
-                request.code(), request.name().trim(), timezone
+                customerAccount.getId(), request.code(), request.name().trim(), timezone
         ));
         memberships.save(new OrganisationMembership(
                 organisation.getId(),
@@ -263,7 +274,7 @@ public class CommercialService {
                 invitation.user().getEmail(),
                 invitation.activationUrl(),
                 invitation.expiresAt(),
-                SubscriptionResponse.from(subscription)
+                subscriptionResponse(subscription)
         );
     }
 
@@ -290,6 +301,7 @@ public class CommercialService {
                 request.invoiceNumber(),
                 request.plan(),
                 request.studentLimit(),
+                monthlyPrice,
                 request.periodStartsAt(),
                 request.periodEndsAt(),
                 request.taxPaise(),
@@ -344,7 +356,7 @@ public class CommercialService {
                     "SUBSCRIPTION_NOT_SUSPENDABLE", exception.getMessage()
             );
         }
-        return SubscriptionResponse.from(subscription);
+        return subscriptionResponse(subscription);
     }
 
     @Transactional
@@ -368,7 +380,7 @@ public class CommercialService {
                     "SUBSCRIPTION_NOT_RESTORABLE", exception.getMessage()
             );
         }
-        return SubscriptionResponse.from(subscription);
+        return subscriptionResponse(subscription);
     }
 
     @Transactional
@@ -450,11 +462,15 @@ public class CommercialService {
                     organisationId,
                     invoice.getPlan(),
                     invoice.getStudentLimit(),
+                    invoice.getSubtotalPaise(),
                     invoice.getPeriodStartsAt(),
                     invoice.getPeriodEndsAt(),
                     invoice.getId(),
                     session.userId(),
-                    request.note()
+                    request.note(),
+                    com.rabbit.aip.commercial.CommercialTypes.ManualPaymentStatus.PAID,
+                    request.paymentReference(),
+                    request.amountPaise()
             ));
             transition = SubscriptionEventType.PLAN_ACTIVATED;
         } else {
@@ -462,6 +478,7 @@ public class CommercialService {
                 transition = subscription.applyPaidPlan(
                         invoice.getPlan(),
                         invoice.getStudentLimit(),
+                        invoice.getSubtotalPaise(),
                         invoice.getPeriodStartsAt(),
                         invoice.getPeriodEndsAt(),
                         invoice.getId(),
@@ -487,7 +504,7 @@ public class CommercialService {
         return new PaymentReceiptResponse(
                 PaymentResponse.from(payment),
                 ReceiptResponse.from(receipt),
-                SubscriptionResponse.from(subscription)
+                subscriptionResponse(subscription)
         );
     }
 
@@ -546,11 +563,16 @@ public class CommercialService {
     public void requireEntitlement(Entitlement entitlement) {
         if (!launchGuard.enabled()) return;
         CommercialSubscription subscription = requireActiveSubscription();
-        if (!CommercialTypes.entitlements(subscription.getPlan()).contains(entitlement)) {
+        if (!catalogService.entitlements(subscription.getPlan()).contains(entitlement)) {
+            String requiredPlan = catalogService.catalog().stream()
+                    .filter(value -> value.entitlements().contains(entitlement))
+                    .map(PlanCatalogResponse::label)
+                    .findFirst().orElse("a higher Rabbit plan");
             throw new DomainException(
                     "PLAN_ENTITLEMENT_REQUIRED",
-                    entitlement.name().replace('_', ' ')
-                            + " is not included in the organisation's current plan.",
+                    "Available on " + requiredPlan + ". "
+                            + entitlement.name().replace('_', ' ')
+                            + " is not included in the Organisation's current plan.",
                     HttpStatus.PAYMENT_REQUIRED
             );
         }
@@ -573,12 +595,20 @@ public class CommercialService {
     }
 
     private CommercialSubscription requireActiveSubscription() {
+        if (!customerAccountActive(session.organisationId())) {
+            throw new DomainException(
+                    "CUSTOMER_ACCOUNT_INACTIVE",
+                    "The Organisation's Customer Account is suspended or archived.",
+                    HttpStatus.PAYMENT_REQUIRED
+            );
+        }
         CommercialSubscription subscription = findAndRefresh(
                 session.organisationId(), session.userId(), clock.instant()
         );
         if (subscription == null
-                || (subscription.getStatus() != SubscriptionStatus.TRIALING
-                    && subscription.getStatus() != SubscriptionStatus.ACTIVE)) {
+                || (subscription.getStatus() != SubscriptionStatus.TRIAL
+                    && subscription.getStatus() != SubscriptionStatus.ACTIVE
+                    && subscription.getStatus() != SubscriptionStatus.GRACE_PERIOD)) {
             throw new DomainException(
                     "SUBSCRIPTION_INACTIVE",
                     "The organisation needs an active trial or paid subscription to continue.",
@@ -609,15 +639,15 @@ public class CommercialService {
                             + currentStudents + " active or invited Students."
             );
         }
-        int studentLimit;
-        try {
-            studentLimit = CommercialTypes.studentLimitFor(declaredStudents);
-        } catch (IllegalArgumentException exception) {
-            throw DomainException.badRequest("STUDENT_COUNT_INVALID", exception.getMessage());
-        }
+        RabbitPlatformSettings defaults = defaultPlatformSettings();
+        PlanCode trialPlan = defaults.getDefaultTrialPlan();
+        int studentLimit = catalogService.capacityFor(trialPlan, declaredStudents);
+        CommercialPlanPrice price = catalogService.requirePrice(trialPlan, studentLimit);
         CommercialSubscription subscription = subscriptions.save(
                 CommercialSubscription.startTrial(
-                        organisationId, studentLimit, now, actorUserId, note
+                        organisationId, trialPlan, trialPlan, studentLimit,
+                        price.getMonthlyPricePaise(), defaults.getDefaultTrialDays(),
+                        now, actorUserId, note
                 )
         );
         recordSubscriptionEvent(
@@ -648,12 +678,23 @@ public class CommercialService {
 
     private Set<Entitlement> effectiveEntitlements(CommercialSubscription subscription) {
         if (!launchGuard.enabled()) return EnumSet.allOf(Entitlement.class);
-        if (subscription == null
-                || (subscription.getStatus() != SubscriptionStatus.TRIALING
-                    && subscription.getStatus() != SubscriptionStatus.ACTIVE)) {
+        if (!customerAccountActive(session.organisationId())) {
             return EnumSet.noneOf(Entitlement.class);
         }
-        return CommercialTypes.entitlements(subscription.getPlan());
+        if (subscription == null
+                || (subscription.getStatus() != SubscriptionStatus.TRIAL
+                    && subscription.getStatus() != SubscriptionStatus.ACTIVE
+                    && subscription.getStatus() != SubscriptionStatus.GRACE_PERIOD)) {
+            return EnumSet.noneOf(Entitlement.class);
+        }
+        return catalogService.entitlements(subscription.getPlan());
+    }
+
+    private boolean customerAccountActive(UUID organisationId) {
+        return organisations.findById(organisationId)
+                .flatMap(value -> customerAccounts.findById(value.getCustomerAccountId()))
+                .map(value -> value.getStatus() == CustomerAccountStatus.ACTIVE)
+                .orElse(false);
     }
 
     private int studentCount(UUID organisationId) {
@@ -755,11 +796,18 @@ public class CommercialService {
     }
 
     private long validatedPrice(PlanCode plan, int studentLimit) {
-        try {
-            return CommercialTypes.monthlyPricePaise(plan, studentLimit);
-        } catch (IllegalArgumentException exception) {
-            throw DomainException.badRequest("STUDENT_LIMIT_INVALID", exception.getMessage());
-        }
+        return catalogService.requirePrice(plan, studentLimit).getMonthlyPricePaise();
+    }
+
+    private RabbitPlatformSettings defaultPlatformSettings() {
+        return platformSettings.findAll().stream().findFirst()
+                .orElseThrow(() -> new IllegalStateException("Rabbit platform settings are missing."));
+    }
+
+    private SubscriptionResponse subscriptionResponse(CommercialSubscription subscription) {
+        return SubscriptionResponse.from(
+                subscription, catalogService.entitlements(subscription.getPlan())
+        );
     }
 
     private CommercialInvoice findInvoice(UUID invoiceId) {

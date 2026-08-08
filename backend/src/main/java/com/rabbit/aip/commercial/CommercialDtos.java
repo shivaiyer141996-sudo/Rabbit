@@ -4,6 +4,7 @@ import com.rabbit.aip.commercial.CommercialTypes.Entitlement;
 import com.rabbit.aip.commercial.CommercialTypes.InvoiceStatus;
 import com.rabbit.aip.commercial.CommercialTypes.PaymentMethod;
 import com.rabbit.aip.commercial.CommercialTypes.PaymentStatus;
+import com.rabbit.aip.commercial.CommercialTypes.ManualPaymentStatus;
 import com.rabbit.aip.commercial.CommercialTypes.PlanCode;
 import com.rabbit.aip.commercial.CommercialTypes.SubscriptionEventType;
 import com.rabbit.aip.commercial.CommercialTypes.SubscriptionStatus;
@@ -45,12 +46,23 @@ public final class CommercialDtos {
             UUID id,
             PlanCode plan,
             int studentLimit,
+            PlanCode selectedPlan,
+            int selectedStudentLimit,
             long monthlyPricePaise,
             SubscriptionStatus status,
             Instant trialStartsAt,
             Instant trialEndsAt,
+            boolean trialEnabled,
+            Integer trialDurationDays,
+            PlanCode trialPlan,
             Instant periodStartsAt,
             Instant periodEndsAt,
+            Instant graceEndsAt,
+            ManualPaymentStatus paymentStatus,
+            String paymentReference,
+            String paymentRemarks,
+            Long amountPaise,
+            Instant activationDate,
             PlanCode pendingPlan,
             Integer pendingStudentLimit,
             Long pendingMonthlyPricePaise,
@@ -60,17 +72,34 @@ public final class CommercialDtos {
             long rowVersion,
             Set<Entitlement> entitlements
     ) {
-        static SubscriptionResponse from(CommercialSubscription value) {
+        public static SubscriptionResponse from(CommercialSubscription value) {
+            return from(value, CommercialTypes.entitlements(value.getPlan()));
+        }
+
+        public static SubscriptionResponse from(
+                CommercialSubscription value, Set<Entitlement> entitlements
+        ) {
             return new SubscriptionResponse(
                     value.getId(),
                     value.getPlan(),
                     value.getStudentLimit(),
+                    value.getSelectedPlan(),
+                    value.getSelectedStudentLimit(),
                     value.getMonthlyPricePaise(),
                     value.getStatus(),
                     value.getTrialStartsAt(),
                     value.getTrialEndsAt(),
+                    value.isTrialEnabled(),
+                    value.getTrialDurationDays(),
+                    value.getTrialPlan(),
                     value.getPeriodStartsAt(),
                     value.getPeriodEndsAt(),
+                    value.getGraceEndsAt(),
+                    value.getPaymentStatus(),
+                    value.getPaymentReference(),
+                    value.getPaymentRemarks(),
+                    value.getAmountPaise(),
+                    value.getActivationDate(),
                     value.getPendingPlan(),
                     value.getPendingStudentLimit(),
                     value.getPendingMonthlyPricePaise(),
@@ -78,7 +107,7 @@ public final class CommercialDtos {
                     value.getPendingPeriodEndsAt(),
                     value.getNote(),
                     value.getRowVersion(),
-                    CommercialTypes.entitlements(value.getPlan())
+                    entitlements
             );
         }
     }
@@ -213,6 +242,7 @@ public final class CommercialDtos {
             SubscriptionStatus status,
             Integer studentLimit,
             Instant accessEndsAt,
+            long daysRemaining,
             Set<Entitlement> entitlements
     ) {
     }

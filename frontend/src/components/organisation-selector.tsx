@@ -1,6 +1,7 @@
 "use client";
 
 import { Check, LoaderCircle } from "lucide-react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -9,6 +10,7 @@ interface OrganisationChoice {
   name: string;
   code: string;
   role: string;
+  logoDataUrl?: string;
 }
 
 export function OrganisationSelector() {
@@ -80,7 +82,11 @@ export function OrganisationSelector() {
             onClick={() => setSelected(choice.id)}
             type="button"
           >
-            <span className="org-avatar">{choice.code.slice(0, 2)}</span>
+            <span className="org-avatar">
+              {choice.logoDataUrl
+                ? <Image alt={`${choice.name} logo`} height={36} src={choice.logoDataUrl} unoptimized width={36} />
+                : choice.code.slice(0, 2)}
+            </span>
             <div>
               <strong>{choice.name}</strong>
               <small>{choice.code} · {choice.role.replaceAll("_", " ")}</small>

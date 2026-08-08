@@ -180,9 +180,9 @@ export function CommercialConsole({ role }: { role: UserRole }) {
     await mutate(
       () => apiFetch("/commercial/trial", {
         method: "POST",
-        body: JSON.stringify({ declaredStudents, note: "20-day Legend trial" }),
+        body: JSON.stringify({ declaredStudents, note: "Configured Rabbit free trial" }),
       }),
-      "The 20-day Legend trial has started.",
+      `The ${data?.trialDays ?? 20}-day configured Rabbit trial has started.`,
     );
   }
 
@@ -351,7 +351,7 @@ export function CommercialConsole({ role }: { role: UserRole }) {
       {!data.subscription && (
         <section className="panel trial-panel">
           <div>
-            <h2>Start the one-time Legend trial</h2>
+            <h2>Start the configured one-time Rabbit trial</h2>
             <p>Exactly 20 days. Capacity is assigned to the smallest approved band that fits the declared student count.</p>
           </div>
           <div className="trial-action">
@@ -365,7 +365,7 @@ export function CommercialConsole({ role }: { role: UserRole }) {
               value={declaredStudents}
             />
             <button className="button button-primary" disabled={mutationsDisabled} onClick={startTrial}>
-              Start 20-day trial
+              Start {data.trialDays}-day trial
             </button>
           </div>
         </section>
@@ -419,7 +419,7 @@ export function CommercialConsole({ role }: { role: UserRole }) {
             <div className="definition-row"><dt>Pending plan</dt><dd>{data.subscription?.pendingPlan ?? "None"}</dd></div>
           </dl>
           {role === "SUPER_ADMIN" && data.subscription
-            && ["TRIALING", "ACTIVE", "SUSPENDED"].includes(data.subscription.status) && (
+            && ["TRIAL", "ACTIVE", "SUSPENDED", "GRACE_PERIOD"].includes(data.subscription.status) && (
             <div className="subscription-state-controls">
               <div className="field">
                 <label htmlFor="subscription-state-reason">Suspension/restoration reason</label>

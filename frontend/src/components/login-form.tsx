@@ -14,6 +14,7 @@ interface LoginResponse {
     name: string;
     code: string;
     role: string;
+    logoDataUrl?: string;
   }>;
 }
 

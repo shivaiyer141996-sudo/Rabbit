@@ -25,14 +25,20 @@ export function planPrice(
 
 export function accessLabel(status?: SubscriptionStatus) {
   switch (status) {
-    case "TRIALING":
-      return "Legend trial";
+    case "TRIAL":
+      return "Free trial";
     case "ACTIVE":
       return "Paid and active";
     case "EXPIRED":
       return "Expired — read-only access";
+    case "TRIAL_EXPIRED":
+      return "Trial expired — read-only access";
+    case "GRACE_PERIOD":
+      return "Grace Period";
     case "SUSPENDED":
       return "Suspended — read-only access";
+    case "CANCELLED":
+      return "Cancelled — read-only access";
     default:
       return "Not started";
   }

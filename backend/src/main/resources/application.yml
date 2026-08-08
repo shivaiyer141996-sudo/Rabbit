@@ -39,6 +39,10 @@ spring:
     default-property-inclusion: non_null
   lifecycle:
     timeout-per-shutdown-phase: 30s
+  servlet:
+    multipart:
+      max-file-size: 2MB
+      max-request-size: 3MB
 
 server:
   port: 8080

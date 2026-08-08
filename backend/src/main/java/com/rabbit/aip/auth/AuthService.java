@@ -6,6 +6,7 @@ import com.rabbit.aip.audit.AuditService;
 import com.rabbit.aip.common.exception.DomainException;
 import com.rabbit.aip.organisation.Organisation;
 import com.rabbit.aip.organisation.OrganisationRepository;
+import com.rabbit.aip.organisation.OrganisationBrandingService;
 import com.rabbit.aip.user.AccountStatus;
 import com.rabbit.aip.user.OrganisationMembership;
 import com.rabbit.aip.user.OrganisationMembershipRepository;
@@ -38,6 +39,7 @@ public class AuthService {
     private final JwtService jwtService;
     private final AuditService audit;
     private final LoginAttemptService loginAttempts;
+    private final OrganisationBrandingService branding;
     private final Clock clock;
     private final long refreshTtlDays;
 
@@ -50,6 +52,7 @@ public class AuthService {
             JwtService jwtService,
             AuditService audit,
             LoginAttemptService loginAttempts,
+            OrganisationBrandingService branding,
             Clock clock,
             @Value("${rabbit.jwt.refresh-ttl-days}") long refreshTtlDays
     ) {
@@ -61,6 +64,7 @@ public class AuthService {
         this.jwtService = jwtService;
         this.audit = audit;
         this.loginAttempts = loginAttempts;
+        this.branding = branding;
         this.clock = clock;
         this.refreshTtlDays = refreshTtlDays;
     }
@@ -247,7 +251,8 @@ public class AuthService {
                             organisation.getId(),
                             organisation.getCode(),
                             organisation.getName(),
-                            membership.getRole()
+                            membership.getRole(),
+                            branding.inlineLogo(organisation)
                     );
                 })
                 .toList();

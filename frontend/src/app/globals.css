@@ -4638,3 +4638,27 @@ textarea:focus-visible {
   .question-review-navigation .button { justify-content: center; width: 100%; }
   .pagination { justify-content: space-between; }
 }
+
+.platform-loading { align-items: center; background: linear-gradient(145deg, #f8f5ff, #fff); display: flex; flex-direction: column; gap: 18px; justify-content: center; min-height: 100vh; text-align: center; }
+.rabbit-logo-image { height: auto; max-width: min(260px, 75vw); object-fit: contain; }
+.rabbit-mark-image { height: 45px; object-fit: contain; width: auto; }
+.loading-orbit { animation: spin 1s linear infinite; border: 3px solid var(--primary-soft); border-radius: 50%; border-top-color: var(--primary); height: 34px; width: 34px; }
+.topbar-organisation { align-items: center; display: flex; gap: 10px; }
+.organisation-logo { background: #fff; border: 1px solid var(--border); border-radius: 14px; object-fit: contain; padding: 5px; }
+.organisation-logo-small { border-radius: 10px; padding: 3px; }
+.org-avatar-small { font-size: 11px; height: 34px; width: 34px; }
+.organisation-logo-fallback { font-size: 18px; height: 72px; width: 72px; }
+.organisation-branding-panel { align-items: center; display: flex; gap: 20px; justify-content: space-between; }
+.organisation-brand-preview { align-items: center; display: flex; gap: 16px; }
+.organisation-brand-preview h2 { margin: 0 0 4px; }
+.organisation-brand-preview p { margin: 0; }
+.platform-grid { align-items: stretch; }
+.platform-console .plan-card ul { color: var(--muted); display: grid; gap: 7px; margin: 12px 0 0; padding-left: 18px; }
+.visually-hidden { height: 1px; margin: -1px; overflow: hidden; padding: 0; position: absolute; width: 1px; clip: rect(0 0 0 0); white-space: nowrap; }
+
+@media (max-width: 720px) {
+  .organisation-branding-panel,
+  .organisation-brand-preview { align-items: stretch; flex-direction: column; }
+  .organisation-branding-panel .table-actions { width: 100%; }
+  .organisation-branding-panel .button { flex: 1; justify-content: center; }
+}

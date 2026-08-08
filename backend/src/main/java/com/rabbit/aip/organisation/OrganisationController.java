@@ -4,6 +4,8 @@ import com.rabbit.aip.commercial.CommercialLaunchGuard;
 import com.rabbit.aip.common.exception.DomainException;
 import com.rabbit.aip.security.CurrentSession;
 import com.rabbit.aip.user.AccountStatus;
+import com.rabbit.aip.platform.CustomerAccount;
+import com.rabbit.aip.platform.CustomerAccountRepository;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
@@ -24,15 +26,18 @@ public class OrganisationController {
     private final OrganisationRepository organisations;
     private final CurrentSession session;
     private final CommercialLaunchGuard commercialLaunch;
+    private final CustomerAccountRepository customerAccounts;
 
     public OrganisationController(
             OrganisationRepository organisations,
             CurrentSession session,
-            CommercialLaunchGuard commercialLaunch
+            CommercialLaunchGuard commercialLaunch,
+            CustomerAccountRepository customerAccounts
     ) {
         this.organisations = organisations;
         this.session = session;
         this.commercialLaunch = commercialLaunch;
+        this.customerAccounts = customerAccounts;
     }
 
     @GetMapping
@@ -67,8 +72,11 @@ public class OrganisationController {
                     HttpStatus.CONFLICT
             );
         }
+        CustomerAccount account = customerAccounts.save(new CustomerAccount(
+                "CA-" + request.code(), request.name() + " Account", session.userId()
+        ));
         return OrganisationResponse.from(organisations.save(new Organisation(
-                request.code(),
+                account.getId(), request.code(),
                 request.name(),
                 request.timezone()
         )));
@@ -88,7 +96,10 @@ public class OrganisationController {
             String code,
             String name,
             String timezone,
-            AccountStatus status
+            AccountStatus status,
+            UUID customerAccountId,
+            boolean logoAvailable,
+            java.time.Instant logoUpdatedAt
     ) {
         static OrganisationResponse from(Organisation organisation) {
             return new OrganisationResponse(
@@ -96,7 +107,10 @@ public class OrganisationController {
                     organisation.getCode(),
                     organisation.getName(),
                     organisation.getTimezone(),
-                    organisation.getStatus()
+                    organisation.getStatus(),
+                    organisation.getCustomerAccountId(),
+                    organisation.hasLogo(),
+                    organisation.getLogoUpdatedAt()
             );
         }
     }

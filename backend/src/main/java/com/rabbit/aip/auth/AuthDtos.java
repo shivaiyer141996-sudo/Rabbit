@@ -34,7 +34,8 @@ public final class AuthDtos {
             UUID id,
             String code,
             String name,
-            UserRole role
+            UserRole role,
+            String logoDataUrl
     ) {
     }
 
@@ -87,6 +88,8 @@ public final class AuthDtos {
             String organisationCode,
             String organisationName,
             String timezone,
+            boolean organisationLogoAvailable,
+            java.time.Instant organisationLogoUpdatedAt,
             UserRole role
     ) {
     }

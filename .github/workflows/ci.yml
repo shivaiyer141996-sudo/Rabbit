@@ -65,6 +65,8 @@ jobs:
       - uses: actions/checkout@v6
       - name: Verify functional enhancement contracts
         run: python3 infra/enhancements/verify-enhancement-contract.py
+      - name: Verify platform branding and commercial contracts
+        run: python3 infra/platform/verify-platform-contract.py
       - name: Apply PostgreSQL migrations
         run: |
           while IFS= read -r migration; do
@@ -72,6 +74,8 @@ jobs:
           done < <(find backend/src/main/resources/db/migration -maxdepth 1 -name 'V*.sql' -print | sort -V)
       - name: Verify tenant-isolation contracts
         run: psql -h localhost -U rabbit -d rabbit -f infra/database/verify_tenant_isolation.sql
+      - name: Verify platform database contracts
+        run: psql -h localhost -U rabbit -d rabbit -f infra/platform/verify-platform-database.sql
 
   secret-scan:
     runs-on: ubuntu-latest

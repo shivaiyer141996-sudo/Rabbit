@@ -64,13 +64,33 @@ public class CommercialInvoice extends TenantEntity {
             String note,
             UUID createdByUserId
     ) {
+        this(organisationId, invoiceNumber, plan, studentLimit,
+                CommercialTypes.monthlyPricePaise(plan, studentLimit),
+                periodStartsAt, periodEndsAt, taxPaise, issuedAt, dueAt,
+                note, createdByUserId);
+    }
+
+    public CommercialInvoice(
+            UUID organisationId,
+            String invoiceNumber,
+            PlanCode plan,
+            int studentLimit,
+            long configuredSubtotalPaise,
+            Instant periodStartsAt,
+            Instant periodEndsAt,
+            long taxPaise,
+            Instant issuedAt,
+            Instant dueAt,
+            String note,
+            UUID createdByUserId
+    ) {
         super(organisationId);
         this.invoiceNumber = invoiceNumber.trim();
         this.plan = plan;
         this.studentLimit = studentLimit;
         this.periodStartsAt = periodStartsAt;
         this.periodEndsAt = periodEndsAt;
-        this.subtotalPaise = CommercialTypes.monthlyPricePaise(plan, studentLimit);
+        this.subtotalPaise = configuredSubtotalPaise;
         this.taxPaise = taxPaise;
         this.totalPaise = subtotalPaise + taxPaise;
         this.status = InvoiceStatus.ISSUED;

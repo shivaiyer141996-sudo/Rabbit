@@ -107,6 +107,8 @@ public class AuthController {
                 organisation.getCode(),
                 organisation.getName(),
                 organisation.getTimezone(),
+                organisation.hasLogo(),
+                organisation.getLogoUpdatedAt(),
                 session.role()
         );
     }

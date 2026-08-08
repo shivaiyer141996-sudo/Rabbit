@@ -39,26 +39,36 @@ public final class CommercialTypes {
     }
 
     public enum SubscriptionStatus {
-        TRIALING,
+        TRIAL,
         ACTIVE,
+        TRIAL_EXPIRED,
+        GRACE_PERIOD,
+        SUSPENDED,
+        CANCELLED,
         EXPIRED,
-        SUSPENDED
     }
 
     public enum SubscriptionEventType {
+        SUBSCRIPTION_CREATED,
         TRIAL_STARTED,
+        TRIAL_EXTENDED,
         TRIAL_EXPIRED,
         PLAN_ACTIVATED,
         PLAN_CHANGE_SCHEDULED,
         PLAN_CHANGE_APPLIED,
+        SUBSCRIPTION_RENEWED,
+        GRACE_PERIOD_STARTED,
         SUBSCRIPTION_EXPIRED,
         SUBSCRIPTION_SUSPENDED,
-        SUBSCRIPTION_RESTORED
+        SUBSCRIPTION_RESTORED,
+        SUBSCRIPTION_CANCELLED,
+        PAYMENT_STATUS_CHANGED
     }
 
     public enum InvoiceStatus { ISSUED, PAID, VOID }
     public enum PaymentMethod { BANK_TRANSFER, UPI, CHEQUE, CASH, OTHER }
     public enum PaymentStatus { RECORDED }
+    public enum ManualPaymentStatus { PENDING, PAID, WAIVED }
     public enum SupportSeverity { S1, S2, S3, S4 }
     public enum SupportCategory { ACCESS, ASSESSMENT, REPORTING, BILLING, DATA, OTHER }
     public enum SupportStatus { OPEN, IN_PROGRESS, WAITING_FOR_INSTITUTION, RESOLVED, CLOSED }
