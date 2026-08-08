@@ -3,6 +3,7 @@ package com.rabbit.aip.attempt;
 import com.rabbit.aip.assessment.AssessmentType;
 import com.rabbit.aip.question.QuestionType;
 import com.rabbit.aip.question.Difficulty;
+import com.rabbit.aip.question.BloomLevel;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import java.math.BigDecimal;
@@ -16,6 +17,13 @@ public final class AttemptDtos {
     private AttemptDtos() {
     }
 
+    public enum StudentAssessmentStatus {
+        AVAILABLE_NOW,
+        UPCOMING,
+        COMPLETED,
+        MISSED_CLOSED
+    }
+
     public record StudentAssessment(
             UUID id,
             String title,
@@ -25,7 +33,9 @@ public final class AttemptDtos {
             int questionCount,
             BigDecimal totalMarks,
             Instant startAt,
-            Instant endAt
+            Instant endAt,
+            StudentAssessmentStatus status,
+            long remainingDays
     ) {
     }
 
@@ -126,6 +136,7 @@ public final class AttemptDtos {
             int wrongAnswers,
             int unansweredAnswers,
             Integer rank,
+            BigDecimal topperScore,
             long timeTakenSeconds,
             int evaluationVersion,
             List<ResultQuestion> questions
@@ -137,14 +148,19 @@ public final class AttemptDtos {
             String questionCode,
             String stem,
             UUID subjectId,
+            String subjectName,
             UUID topicId,
+            String topicName,
+            String chapter,
             Difficulty difficulty,
+            BloomLevel bloomLevel,
             Set<UUID> selectedOptionIds,
             Set<UUID> correctOptionIds,
             List<ResultOption> options,
             BigDecimal awardedMarks,
             BigDecimal maxMarks,
             boolean correct,
+            String answerStatus,
             int timeSpentSeconds,
             String explanation
     ) {

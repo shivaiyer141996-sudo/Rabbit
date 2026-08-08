@@ -22,6 +22,7 @@ import {
   type UserSummary,
 } from "@/lib/live-types";
 import type { UserRole } from "@/lib/types";
+import { activeSectionOptions } from "@/lib/enhancement-rules";
 
 function csvCell(value: unknown) {
   return `"${String(value ?? "").replaceAll('"', '""')}"`;
@@ -324,7 +325,7 @@ export function UserManagement() {
                   setDraft((current) => ({
                     ...current,
                     role: event.target.value as UserRole,
-                    sectionId: event.target.value === "STUDENT" ? current.sectionId : "",
+                    sectionId: ["STUDENT", "FACULTY"].includes(event.target.value) ? current.sectionId : "",
                   }))
                 }
                 value={draft.role}
@@ -337,18 +338,18 @@ export function UserManagement() {
             <div className="field">
               <label htmlFor="new-section">Section</label>
               <select
-                disabled={draft.role !== "STUDENT"}
+                disabled={!(["STUDENT", "FACULTY"] as UserRole[]).includes(draft.role)}
                 id="new-section"
                 onChange={(event) =>
                   setDraft((current) => ({ ...current, sectionId: event.target.value }))
                 }
-                required={draft.role === "STUDENT"}
+                required={(["STUDENT", "FACULTY"] as UserRole[]).includes(draft.role)}
                 value={draft.sectionId}
               >
                 <option value="">Select section</option>
-                {catalog?.sections.filter((section) => section.active).map((section) => (
+                {activeSectionOptions(catalog?.sections ?? []).map((section) => (
                   <option key={section.id} value={section.id}>
-                    {section.departmentName} · {section.name}
+                    {section.programmeName} · {section.batchName} · {section.name}
                   </option>
                 ))}
               </select>

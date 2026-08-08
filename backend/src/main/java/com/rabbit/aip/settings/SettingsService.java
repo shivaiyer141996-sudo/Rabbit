@@ -77,6 +77,7 @@ public class SettingsService {
                 request.shuffleOptions(),
                 request.emailNotificationsEnabled(),
                 request.smsNotificationsEnabled(),
+                request.rankingEnabled(),
                 request.auditRetentionDays(),
                 request.displayName().trim(),
                 request.primaryColour()
@@ -207,6 +208,11 @@ public class SettingsService {
     @Transactional(readOnly = true)
     public BigDecimal passPercentage() {
         return findSettings(session.organisationId()).getPassPercentage();
+    }
+
+    @Transactional(readOnly = true)
+    public boolean rankingEnabled() {
+        return findSettings(session.organisationId()).isRankingEnabled();
     }
 
     private OrganisationSettings findSettings(UUID organisationId) {

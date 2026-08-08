@@ -36,8 +36,8 @@ public class StudentAssessmentController {
     }
 
     @GetMapping("/assessments")
-    List<StudentAssessment> available() {
-        return service.available();
+    List<StudentAssessment> assessments() {
+        return service.catalog();
     }
 
     @GetMapping("/assessments/{assessmentId}")

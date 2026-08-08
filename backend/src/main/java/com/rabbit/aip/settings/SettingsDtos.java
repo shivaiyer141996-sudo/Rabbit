@@ -30,6 +30,7 @@ public final class SettingsDtos {
             boolean shuffleOptions,
             boolean emailNotificationsEnabled,
             boolean smsNotificationsEnabled,
+            boolean rankingEnabled,
             @Min(365) @Max(3650) int auditRetentionDays,
             @NotBlank @Size(max = 200) String displayName,
             @Pattern(regexp = "^#[0-9A-Fa-f]{6}$") String primaryColour
@@ -47,6 +48,7 @@ public final class SettingsDtos {
             boolean shuffleOptions,
             boolean emailNotificationsEnabled,
             boolean smsNotificationsEnabled,
+            boolean rankingEnabled,
             int auditRetentionDays,
             String displayName,
             String primaryColour
@@ -63,6 +65,7 @@ public final class SettingsDtos {
                     settings.isShuffleOptions(),
                     settings.isEmailNotificationsEnabled(),
                     settings.isSmsNotificationsEnabled(),
+                    settings.isRankingEnabled(),
                     settings.getAuditRetentionDays(),
                     settings.getDisplayName(),
                     settings.getPrimaryColour()

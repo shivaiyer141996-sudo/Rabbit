@@ -47,3 +47,14 @@ Status meanings:
 | COM onboarding and manual billing | Implemented, activation gated | Atomic organisation/admin/default/trial onboarding; tenant invoices, exact offline payments, receipts, immutable subscription events, audit |
 | SUP local support administration | Implemented, activation gated | Tenant S1–S4 case register, assignment, response target, governed resolution/closure, no external CRM |
 | Release 1.0 exclusions | Post–Release 1.0 | AI, predictive models, parent portal, subjective grading, native app, proctoring, LMS/ERP/SIS/payment integrations remain outside the currently authorised Milestone 6 boundary |
+# Post-M6 enhancement traceability
+
+| Requirement | Primary implementation | Automated evidence |
+|---|---|---|
+| Multi-subject assessment creation | `Assessment`, `AssessmentService`, `assessment-author-form.tsx`, Flyway V10 | `enhancement-rules.test.ts`, enhancement contract |
+| Review Select/Clear/Partial | `approval-workspace.tsx`, existing `QuestionService` mandatory checklist | `enhancement-rules.test.ts`, enhancement contract |
+| Student-only dashboard/navigation | `DashboardService`, `app-shell.tsx`, `intelligence-dashboard.tsx` | route-rule test, enhancement contract |
+| Consistent assessment status | `StudentAssessmentClassifier`, `AttemptService` | `StudentAssessmentClassifierTest`, enhancement contract |
+| Published student results/analytics | `AttemptService`, `ReportService`, result and analytics views | publication contract plus existing scoring/report tests |
+| Section Management | academic section package, section UI, Flyway V10 | enhancement contract; PostgreSQL/Maven CI required |
+| Tenant isolation/authorization | controller annotations, tenant repository lookups, V10 triggers | enhancement contract; authenticated E2E pending host |

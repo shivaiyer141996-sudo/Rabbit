@@ -13,6 +13,7 @@ import com.rabbit.aip.attempt.AttemptDtos.SaveResponseRequest;
 import com.rabbit.aip.attempt.AttemptDtos.SavedResponse;
 import com.rabbit.aip.attempt.AttemptDtos.StudentAssessment;
 import com.rabbit.aip.attempt.AttemptDtos.StudentAssessmentInstructions;
+import com.rabbit.aip.attempt.AttemptDtos.StudentAssessmentStatus;
 import com.rabbit.aip.attempt.AttemptDtos.AttemptHistoryItem;
 import com.rabbit.aip.audit.AuditService;
 import com.rabbit.aip.common.exception.DomainException;
@@ -23,6 +24,8 @@ import com.rabbit.aip.question.QuestionOption;
 import com.rabbit.aip.question.QuestionRepository;
 import com.rabbit.aip.security.CurrentSession;
 import com.rabbit.aip.settings.SettingsService;
+import com.rabbit.aip.settings.AcademicSubjectRepository;
+import com.rabbit.aip.settings.AcademicTopicRepository;
 import com.rabbit.aip.user.AccountStatus;
 import com.rabbit.aip.user.OrganisationMembership;
 import com.rabbit.aip.user.OrganisationMembershipRepository;
@@ -53,6 +56,8 @@ public class AttemptService {
     private final SettingsService settings;
     private final AuditService audit;
     private final NotificationService notifications;
+    private final AcademicSubjectRepository subjects;
+    private final AcademicTopicRepository topics;
 
     public AttemptService(
             AssessmentRepository assessments,
@@ -64,7 +69,9 @@ public class AttemptService {
             EvaluationEngine evaluationEngine,
             SettingsService settings,
             AuditService audit,
-            NotificationService notifications
+            NotificationService notifications,
+            AcademicSubjectRepository subjects,
+            AcademicTopicRepository topics
     ) {
         this.assessments = assessments;
         this.attempts = attempts;
@@ -76,31 +83,49 @@ public class AttemptService {
         this.settings = settings;
         this.audit = audit;
         this.notifications = notifications;
+        this.subjects = subjects;
+        this.topics = topics;
     }
 
     @Transactional(readOnly = true)
     public List<StudentAssessment> available() {
+        return catalog().stream()
+                .filter(item -> item.status() == StudentAssessmentStatus.AVAILABLE_NOW)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<StudentAssessment> catalog() {
         Instant now = Instant.now();
         OrganisationMembership membership = currentMembership();
-        return assessments
-                .findAllByOrganisationIdAndStatusAndStartAtLessThanEqualAndEndAtGreaterThan(
-                        session.organisationId(),
-                        AssessmentStatus.SCHEDULED,
-                        now,
-                        now
+        Set<UUID> completed = attempts
+                .findAllByOrganisationIdAndStudentUserIdOrderByStartedAtDesc(
+                        session.organisationId(), session.userId()
                 ).stream()
+                .filter(item -> item.getStatus() != AttemptStatus.IN_PROGRESS)
+                .map(AssessmentAttempt::getAssessmentId)
+                .collect(java.util.stream.Collectors.toSet());
+        return assessments.findAllByOrganisationIdOrderByUpdatedAtDesc(
+                        session.organisationId()
+                ).stream()
+                .filter(item -> item.getStatus() == AssessmentStatus.SCHEDULED)
+                .filter(item -> item.getStartAt() != null && item.getEndAt() != null)
                 .filter(item -> eligible(item, membership))
-                .map(item -> new StudentAssessment(
-                        item.getId(),
-                        item.getTitle(),
-                        item.getCode(),
-                        item.getType(),
-                        item.getDurationMinutes(),
-                        item.getQuestionCount(),
-                        item.getTotalMarks(),
-                        item.getStartAt(),
-                        item.getEndAt()
-                ))
+                .map(item -> {
+                    StudentAssessmentStatus status = StudentAssessmentClassifier.classify(
+                            now, item.getStartAt(), item.getEndAt(), completed.contains(item.getId())
+                    );
+                    long remainingHours = java.time.Duration.between(now, item.getStartAt()).toHours();
+                    long remainingDays = status == StudentAssessmentStatus.UPCOMING
+                            ? Math.max(1, (remainingHours + 23) / 24)
+                            : 0;
+                    return new StudentAssessment(
+                            item.getId(), item.getTitle(), item.getCode(), item.getType(),
+                            item.getDurationMinutes(), item.getQuestionCount(), item.getTotalMarks(),
+                            item.getStartAt(), item.getEndAt(), status, remainingDays
+                    );
+                })
+                .sorted(Comparator.comparing(StudentAssessment::startAt))
                 .toList();
     }
 
@@ -476,6 +501,18 @@ public class AttemptService {
                         assessment.isShuffleQuestions()
                 )
                 : List.of();
+        Map<UUID, String> subjectNames = reveal
+                ? subjects.findAllByOrganisationIdOrderByName(session.organisationId())
+                        .stream().collect(java.util.stream.Collectors.toMap(
+                                item -> item.getId(), item -> item.getName()
+                        ))
+                : Map.of();
+        Map<UUID, String> topicNames = reveal
+                ? topics.findAllByOrganisationIdOrderByName(session.organisationId())
+                        .stream().collect(java.util.stream.Collectors.toMap(
+                                item -> item.getId(), item -> item.getName()
+                        ))
+                : Map.of();
         List<ResultQuestion> questionResults = resultQuestions.stream()
                 .map(question -> {
                     AttemptResponse response = byQuestion.get(question.getId());
@@ -494,8 +531,12 @@ public class AttemptService {
                             question.getCode(),
                             question.getStem(),
                             question.getSubjectId(),
+                            subjectNames.getOrDefault(question.getSubjectId(), "Unknown subject"),
                             question.getTopicId(),
+                            topicNames.getOrDefault(question.getTopicId(), "Unknown topic"),
+                            question.getSubTopic(),
                             question.getDifficulty(),
+                            question.getBloomLevel(),
                             response == null ? Set.of() : response.getSelectedOptionIds(),
                             question.getOptions().stream()
                                     .filter(QuestionOption::isCorrect)
@@ -522,6 +563,7 @@ public class AttemptService {
                                     : response.getAwardedMarks(),
                             question.getMarks(),
                             response != null && Boolean.TRUE.equals(response.getCorrect()),
+                            answerStatus(response, question),
                             response == null ? 0 : response.getTimeSpentSeconds(),
                             question.getExplanation()
                     );
@@ -543,7 +585,8 @@ public class AttemptService {
                 reveal ? attempt.getCorrectAnswers() : 0,
                 reveal ? attempt.getWrongAnswers() : 0,
                 reveal ? attempt.getUnansweredAnswers() : 0,
-                reveal ? rank(attempt) : null,
+                reveal && settings.rankingEnabled() ? rank(attempt) : null,
+                reveal && settings.rankingEnabled() ? topperScore(attempt) : null,
                 attempt.getSubmittedAt() == null
                         ? 0
                         : java.time.Duration.between(
@@ -570,6 +613,28 @@ public class AttemptService {
             if (ranked.get(index).getId().equals(attempt.getId())) return index + 1;
         }
         return ranked.size() + 1;
+    }
+
+    private BigDecimal topperScore(AssessmentAttempt attempt) {
+        return attempts.findAllByOrganisationIdAndAssessmentIdOrderBySubmittedAtAsc(
+                        session.organisationId(), attempt.getAssessmentId()
+                ).stream()
+                .filter(item -> item.getResultStatus() == ResultPublicationStatus.PUBLISHED)
+                .map(AssessmentAttempt::getPercentage)
+                .filter(java.util.Objects::nonNull)
+                .max(BigDecimal::compareTo)
+                .orElse(BigDecimal.ZERO);
+    }
+
+    private String answerStatus(AttemptResponse response, Question question) {
+        if (response == null || response.getSelectedOptionIds().isEmpty()) return "UNANSWERED";
+        if (Boolean.TRUE.equals(response.getCorrect())) return "CORRECT";
+        if (response.getAwardedMarks() != null
+                && response.getAwardedMarks().compareTo(BigDecimal.ZERO) > 0
+                && response.getAwardedMarks().compareTo(question.getMarks()) < 0) {
+            return "PARTIALLY_CORRECT";
+        }
+        return "INCORRECT";
     }
 
     private SavedResponse saved(AttemptResponse response) {

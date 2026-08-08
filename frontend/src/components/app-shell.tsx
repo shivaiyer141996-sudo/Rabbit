@@ -12,7 +12,6 @@ import {
   ClipboardList,
   CreditCard,
   FileQuestion,
-  History,
   LayoutDashboard,
   LogOut,
   Menu,
@@ -20,6 +19,7 @@ import {
   ShieldCheck,
   Settings,
   Users,
+  UserCircle,
   X,
   type LucideIcon,
 } from "lucide-react";
@@ -32,6 +32,7 @@ import {
   type MeProfile,
 } from "@/lib/live-types";
 import type { UserRole } from "@/lib/types";
+import { studentPortalRouteAllowed } from "@/lib/enhancement-rules";
 
 interface NavigationItem {
   href: string;
@@ -50,14 +51,8 @@ const navigation: NavigationItem[] = [
     roles: ["STUDENT"],
   },
   {
-    href: "/student/history",
-    label: "Attempt History",
-    icon: History,
-    roles: ["STUDENT"],
-  },
-  {
     href: "/student/reports",
-    label: "Performance Report",
+    label: "My Results",
     icon: BarChart3,
     roles: ["STUDENT"],
   },
@@ -92,6 +87,12 @@ const navigation: NavigationItem[] = [
     roles: ["SUPER_ADMIN", "ORG_ADMIN"],
   },
   {
+    href: "/organisations/sections",
+    label: "Academic Sections",
+    icon: Building2,
+    roles: ["SUPER_ADMIN", "ORG_ADMIN"],
+  },
+  {
     href: "/reports",
     label: "Reports",
     icon: BarChart3,
@@ -120,6 +121,12 @@ const navigation: NavigationItem[] = [
     label: "Notifications",
     icon: Bell,
     roles: ["ALL"],
+  },
+  {
+    href: "/profile",
+    label: "Profile",
+    icon: UserCircle,
+    roles: ["STUDENT"],
   },
   {
     href: "/commercial",
@@ -163,6 +170,11 @@ export function AppShell({
     };
   }, []);
 
+  const studentPortalAllowed = studentPortalRouteAllowed(pathname);
+  useEffect(() => {
+    if (role === "STUDENT" && !studentPortalAllowed) router.replace("/dashboard");
+  }, [role, router, studentPortalAllowed]);
+
   const visibleNavigation = navigation.filter(
     (item) => {
       if (!(item.roles.includes("ALL") || item.roles.includes(role))) return false;
@@ -183,6 +195,8 @@ export function AppShell({
     router.replace("/login");
     router.refresh();
   }
+
+  if (role === "STUDENT" && !studentPortalAllowed) return null;
 
   return (
     <div className="app-frame">

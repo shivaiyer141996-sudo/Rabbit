@@ -11,6 +11,8 @@ import {
 const catalog: AcademicCatalog = {
   academicYears: [],
   departments: [],
+  programmes: [],
+  batches: [],
   sections: [],
   subjects: [{ id: "subject-1", code: "PHY", name: "Physics", active: true }],
   topics: [
@@ -74,6 +76,7 @@ describe("live API view mapping", () => {
       code: "ASM-001",
       type: "CHAPTER_TEST",
       subjectId: "subject-1",
+      subjectIds: ["subject-1"],
       durationMinutes: 30,
       status: "DRAFT",
       totalMarks: 10,

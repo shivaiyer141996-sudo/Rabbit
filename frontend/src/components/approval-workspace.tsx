@@ -9,11 +9,12 @@ import {
   RotateCcw,
   XCircle,
 } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ErrorState, LoadingState } from "@/components/data-state";
 import { PageHeader } from "@/components/page-header";
 import { StatusBadge } from "@/components/status-badge";
 import { apiErrorMessage, apiFetch, ApiError } from "@/lib/api";
+import { reviewSelectionState } from "@/lib/enhancement-rules";
 
 const checklist = [
   ["CLEAR_STEM", "Question stem is clear and unambiguous"],
@@ -69,6 +70,7 @@ export function ApprovalWorkspace() {
   const [live, setLive] = useState(false);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
+  const selectAllRef = useRef<HTMLInputElement>(null);
 
   async function loadQueues() {
     setLoadError("");
@@ -127,10 +129,16 @@ export function ApprovalWorkspace() {
     };
   }, [selectedQuestion, selectedAssessment, live]);
 
-  const allChecked = useMemo(
-    () => checklist.every(([id]) => checks.includes(id)),
+  const selectionState = useMemo(
+    () => reviewSelectionState(checks, checklist.map(([id]) => id)),
     [checks],
   );
+  const allChecked = selectionState.all;
+  const partiallyChecked = selectionState.partial;
+
+  useEffect(() => {
+    if (selectAllRef.current) selectAllRef.current.indeterminate = partiallyChecked;
+  }, [partiallyChecked]);
 
   function chooseQuestion(question: ApprovalQuestion) {
     setSelectedQuestion(question);
@@ -308,6 +316,19 @@ export function ApprovalWorkspace() {
 
               {selectedQuestion && (
                 <div className="review-checklist">
+                  <div className="review-select-actions">
+                    <label className="review-check review-check-all">
+                      <input
+                        checked={allChecked}
+                        onChange={(event) => setChecks(event.target.checked ? checklist.map(([id]) => id) : [])}
+                        ref={selectAllRef}
+                        type="checkbox"
+                      />
+                      <span><Check size={13} /></span>
+                      Select all review criteria
+                    </label>
+                    <button className="button button-secondary" disabled={!checks.length} onClick={() => setChecks([])} type="button">Clear all</button>
+                  </div>
                   {checklist.map(([id, label]) => (
                     <label className="review-check" key={id}>
                       <input
@@ -315,7 +336,7 @@ export function ApprovalWorkspace() {
                         onChange={(event) =>
                           setChecks((current) =>
                             event.target.checked
-                              ? [...current, id]
+                              ? (current.includes(id) ? current : [...current, id])
                               : current.filter((item) => item !== id),
                           )
                         }
@@ -356,7 +377,7 @@ export function ApprovalWorkspace() {
                 </button>
                 <button
                   className="button button-secondary"
-                  disabled={busy}
+                  disabled={busy || reason.trim().length < 10}
                   onClick={() =>
                     selectedQuestion
                       ? reviewQuestion("RETURN")
@@ -367,7 +388,7 @@ export function ApprovalWorkspace() {
                 </button>
                 <button
                   className="button button-danger"
-                  disabled={busy}
+                  disabled={busy || reason.trim().length < 10}
                   onClick={() =>
                     selectedQuestion
                       ? reviewQuestion("REJECT")

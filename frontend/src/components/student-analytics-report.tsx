@@ -19,9 +19,10 @@ import { apiErrorMessage, apiFetch } from "@/lib/api";
 import type {
   StudentAnalysisBreakdown,
   StudentAnalyticsReport,
+  StudentPerformanceReport,
 } from "@/lib/types";
 
-type AnalyticsTab = "subjects" | "topics" | "difficulties" | "time" | "questions";
+type AnalyticsTab = "subjects" | "topics" | "chapters" | "difficulties" | "bloom" | "time" | "questions";
 
 function duration(seconds: number) {
   const minutes = Math.floor(seconds / 60);
@@ -79,6 +80,7 @@ function BreakdownTable({
 
 export function StudentAnalyticsReportView() {
   const [report, setReport] = useState<StudentAnalyticsReport | null>(null);
+  const [performance, setPerformance] = useState<StudentPerformanceReport | null>(null);
   const [tab, setTab] = useState<AnalyticsTab>("subjects");
   const [questionQuery, setQuestionQuery] = useState("");
   const [loading, setLoading] = useState(true);
@@ -88,7 +90,12 @@ export function StudentAnalyticsReportView() {
     setLoading(true);
     setError("");
     try {
-      setReport(await apiFetch<StudentAnalyticsReport>("/reports/students/me/analytics"));
+      const [analytics, results] = await Promise.all([
+        apiFetch<StudentAnalyticsReport>("/reports/students/me/analytics"),
+        apiFetch<StudentPerformanceReport>("/reports/students/me"),
+      ]);
+      setReport(analytics);
+      setPerformance(results);
     } catch (requestError) {
       setReport(null);
       setError(apiErrorMessage(requestError, "Your performance report could not be loaded."));
@@ -120,14 +127,13 @@ export function StudentAnalyticsReportView() {
           <div className="player-title"><strong>Rabbit AiP</strong><span>Student performance report</span></div>
         </Link>
         <div className="header-actions">
-          <Link className="button button-secondary" href="/student/history">Attempt history</Link>
           <Link className="button button-secondary" href="/dashboard"><ArrowLeft size={15} /> Dashboard</Link>
         </div>
       </header>
       <main className="student-home-main">
         <div>
           <span className="visual-eyebrow">Published academic intelligence</span>
-          <h1>{report ? `${report.studentName}'s performance` : "Your performance report"}</h1>
+          <h1>My Results</h1>
           <p>Understand where you are strong, where to focus, and how you use assessment time.</p>
         </div>
 
@@ -154,11 +160,18 @@ export function StudentAnalyticsReportView() {
               })}
             </section>
 
+            <section className="panel report-table-panel">
+              <div className="panel-header"><div><h2>Published assessment results</h2><p>Scores and answers appear only after institutional publication.</p></div></div>
+              {!performance?.results.length ? <div className="empty-state">No results have been published yet.</div> : <div className="data-table-wrap"><table className="data-table"><thead><tr><th>Assessment</th><th>Published result</th><th>Score</th><th>Percentage</th><th>Grade</th><th>Progress</th><th>Review</th></tr></thead><tbody>{performance.results.toReversed().map((item) => <tr key={item.attemptId}><td><strong>{item.assessmentTitle}</strong></td><td>{new Date(item.submittedAt).toLocaleString()}</td><td>{item.score} / {item.maxScore}</td><td>{item.percentage}%</td><td>{item.grade}</td><td>{item.trajectory}</td><td><Link href={`/results/${item.attemptId}`}>Review performance</Link></td></tr>)}</tbody></table></div>}
+            </section>
+
             <div className="segmented-control student-analysis-tabs" role="tablist" aria-label="Student analysis view">
               {([
                 ["subjects", "Subject-wise"],
                 ["topics", "Topic-wise"],
+                ["chapters", "Chapter-wise"],
                 ["difficulties", "Difficulty-wise"],
+                ["bloom", "Bloom's level"],
                 ["time", "Time analysis"],
                 ["questions", "Question review"],
               ] as Array<[AnalyticsTab, string]>).map(([value, label]) => (
@@ -170,7 +183,9 @@ export function StudentAnalyticsReportView() {
 
             {tab === "subjects" && <section className="panel report-table-panel student-analysis-panel"><div className="panel-header"><div><h2>Subject-wise analysis</h2><p>Marks, accuracy, and time across each subject.</p></div></div><BreakdownTable rows={report.subjects} label="Subject" /></section>}
             {tab === "topics" && <section className="panel report-table-panel student-analysis-panel"><div className="panel-header"><div><h2>Topic-wise analysis</h2><p>Topics below the institution support threshold are highlighted.</p></div></div><BreakdownTable rows={report.topics} label="Topic" /></section>}
+            {tab === "chapters" && <section className="panel report-table-panel student-analysis-panel"><div className="panel-header"><div><h2>Chapter-wise analysis</h2><p>Performance grouped by the question chapter metadata.</p></div></div><BreakdownTable rows={report.chapters} label="Chapter" /></section>}
             {tab === "difficulties" && <section className="panel report-table-panel student-analysis-panel"><div className="panel-header"><div><h2>Difficulty-wise analysis</h2><p>Compare your performance across Easy, Medium, and Hard questions.</p></div></div><BreakdownTable rows={report.difficulties} label="Difficulty" /></section>}
+            {tab === "bloom" && <section className="panel report-table-panel student-analysis-panel"><div className="panel-header"><div><h2>Bloom&apos;s level analysis</h2><p>Future-ready cognitive-level analysis from governed question metadata.</p></div></div><BreakdownTable rows={report.bloomLevels} label="Bloom level" /></section>}
 
             {tab === "time" && (
               <section className="panel report-table-panel student-analysis-panel">

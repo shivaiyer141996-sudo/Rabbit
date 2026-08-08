@@ -11,7 +11,6 @@ import {
   ClipboardList,
   FileQuestion,
   GraduationCap,
-  History,
   ShieldAlert,
   Users,
   type LucideIcon,
@@ -116,8 +115,7 @@ function roleContent(role: DashboardResponse["role"]) {
       attentionDescription: "Assessments, pending results, and support",
       quickActions: [
         { href: "/student/assessments", label: "View assessments", title: "Take an assessment", description: "See eligible windows and read instructions first.", icon: ClipboardList },
-        { href: "/student/history", label: "Attempt history", title: "Review attempt history", description: "Track active, submitted, and published attempts.", icon: History },
-        { href: "/student/reports", label: "Performance report", title: "Understand your progress", description: "See subject, topic, difficulty, time, and question analysis.", icon: BarChart3 },
+        { href: "/student/reports", label: "My results", title: "Review performance", description: "See published results, analytics, and question review.", icon: BarChart3 },
         { href: "/notifications", label: "Notifications", title: "Check notifications", description: "See result publication and assessment updates.", icon: Bell },
       ],
     },
@@ -219,7 +217,7 @@ export function IntelligenceDashboard() {
           )}
         </article>
 
-        <article className="panel">
+        {dashboard.role !== "STUDENT" && <article className="panel">
           <div className="panel-header">
             <div>
               <h2>{content.attentionTitle}</h2>
@@ -244,7 +242,7 @@ export function IntelligenceDashboard() {
               <div className="empty-state">There are no actions waiting for you.</div>
             )}
           </div>
-        </article>
+        </article>}
       </section>
 
       <section className="quick-grid" aria-label="Intelligence quick actions">

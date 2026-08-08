@@ -364,8 +364,22 @@ public class ReportService {
                 ),
                 breakdown(
                         facts,
+                        fact -> fact.question().getSubTopic() == null
+                                ? "UNSPECIFIED" : fact.question().getSubTopic(),
+                        fact -> fact.question().getSubTopic() == null
+                                ? "Unspecified chapter" : fact.question().getSubTopic(),
+                        weakThreshold
+                ),
+                breakdown(
+                        facts,
                         fact -> fact.question().getDifficulty().name(),
                         fact -> fact.question().getDifficulty().name(),
+                        weakThreshold
+                ),
+                breakdown(
+                        facts,
+                        fact -> fact.question().getBloomLevel().name(),
+                        fact -> fact.question().getBloomLevel().name(),
                         weakThreshold
                 ),
                 timeAnalysis,
@@ -424,7 +438,7 @@ public class ReportService {
                 .filter(item -> {
                     Assessment assessment = assessmentMap.get(item.getAssessmentId());
                     if (assessment == null) return false;
-                    if (subjectId != null && !subjectId.equals(assessment.getSubjectId())) {
+                    if (subjectId != null && !assessment.getSubjectIds().contains(subjectId)) {
                         return false;
                     }
                     if (assessmentType != null && assessmentType != assessment.getType()) {

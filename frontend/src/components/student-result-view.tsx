@@ -4,6 +4,8 @@ import Image from "next/image";
 import Link from "next/link";
 import {
   ArrowLeft,
+  ChevronLeft,
+  ChevronRight,
   CheckCircle2,
   Clock3,
   Eye,
@@ -20,6 +22,7 @@ export function StudentResultView({ attemptId }: { attemptId: string }) {
   const [result, setResult] = useState<ResultView | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [questionIndex, setQuestionIndex] = useState(0);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -129,7 +132,8 @@ export function StudentResultView({ attemptId }: { attemptId: string }) {
             <div className="result-stats">
               <div className="result-stat"><strong>{result.score ?? 0} / {result.maxScore ?? 0}</strong><span>Total score</span></div>
               <div className="result-stat"><strong>{result.correctAnswers} / {result.questionCount}</strong><span>Correct</span></div>
-              <div className="result-stat"><strong>#{result.rank ?? "—"}</strong><span>Rank</span></div>
+              {result.rank !== undefined && <div className="result-stat"><strong>#{result.rank}</strong><span>Rank</span></div>}
+              {result.topperScore !== undefined && <div className="result-stat"><strong>{result.topperScore}%</strong><span>Topper score</span></div>}
               <div className="result-stat"><strong>{minutes}m {seconds}s</strong><span>Time taken</span></div>
             </div>
           </div>
@@ -150,16 +154,16 @@ export function StudentResultView({ attemptId }: { attemptId: string }) {
                 <p>Answer keys and explanations are visible only after publication.</p>
               </div>
             </div>
-            {result.questions.map((question, index) => (
+            {result.questions.slice(questionIndex, questionIndex + 1).map((question) => (
               <article
-                className={`result-question ${question.correct ? "correct" : "incorrect"}`}
+                className={`result-question ${question.answerStatus.toLowerCase().replaceAll("_", "-")}`}
                 key={question.questionId}
               >
                 <div className="result-question-heading">
-                  <span>Q{index + 1}</span>
+                  <span>Q{questionIndex + 1}</span>
                   <div>
                     <strong>{question.questionCode} · {question.stem}</strong>
-                    <span className="table-subtitle">{question.difficulty} · {question.timeSpentSeconds}s</span>
+                    <span className="table-subtitle">{question.subjectName} · {question.topicName} · {question.chapter || "No chapter"} · {question.difficulty} · {question.bloomLevel} · {question.timeSpentSeconds}s</span>
                   </div>
                   <span>{question.awardedMarks}/{question.maxMarks}</span>
                 </div>
@@ -176,6 +180,11 @@ export function StudentResultView({ attemptId }: { attemptId: string }) {
                   </div>
                 </div>
                 {question.explanation && <p>{question.explanation}</p>}
+                <div className="question-review-navigation">
+                  <button className="button button-secondary" disabled={questionIndex === 0} onClick={() => setQuestionIndex((current) => current - 1)} type="button"><ChevronLeft size={15} /> Previous Question</button>
+                  <span>{questionIndex + 1} of {result.questions.length} · {question.answerStatus.replaceAll("_", " ")}</span>
+                  <button className="button button-secondary" disabled={questionIndex === result.questions.length - 1} onClick={() => setQuestionIndex((current) => current + 1)} type="button">Next Question <ChevronRight size={15} /></button>
+                </div>
               </article>
             ))}
           </section>

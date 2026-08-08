@@ -33,7 +33,7 @@ class AttemptExpiryServiceTest {
                 "Timed assessment",
                 "ASM-TIME",
                 AssessmentType.CLASS_TEST,
-                UUID.randomUUID(),
+                List.of(UUID.randomUUID()),
                 30,
                 true,
                 true,

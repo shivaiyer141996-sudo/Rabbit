@@ -6,6 +6,8 @@ import com.rabbit.aip.assessment.AssessmentStatus;
 import com.rabbit.aip.attempt.AssessmentAttempt;
 import com.rabbit.aip.attempt.AssessmentAttemptRepository;
 import com.rabbit.aip.attempt.AttemptStatus;
+import com.rabbit.aip.attempt.AttemptService;
+import com.rabbit.aip.attempt.AttemptDtos.StudentAssessmentStatus;
 import com.rabbit.aip.attempt.ResultPublicationStatus;
 import com.rabbit.aip.dashboard.DashboardDtos.DashboardAttention;
 import com.rabbit.aip.dashboard.DashboardDtos.DashboardMetric;
@@ -48,6 +50,7 @@ public class DashboardService {
     private final NotificationRepository notifications;
     private final UserAccountRepository users;
     private final CurrentSession session;
+    private final AttemptService attemptService;
 
     public DashboardService(
             ReportService reports,
@@ -57,7 +60,8 @@ public class DashboardService {
             OrganisationMembershipRepository memberships,
             NotificationRepository notifications,
             UserAccountRepository users,
-            CurrentSession session
+            CurrentSession session,
+            AttemptService attemptService
     ) {
         this.reports = reports;
         this.questions = questions;
@@ -67,6 +71,7 @@ public class DashboardService {
         this.notifications = notifications;
         this.users = users;
         this.session = session;
+        this.attemptService = attemptService;
     }
 
     @Transactional(readOnly = true)
@@ -205,64 +210,28 @@ public class DashboardService {
 
     private DashboardResponse studentDashboard() {
         StudentPerformanceReport performance = reports.myPerformance();
-        OrganisationMembership membership = memberships
-                .findByUserIdAndOrganisationIdAndStatus(
-                        session.userId(), session.organisationId(), AccountStatus.ACTIVE
-                )
-                .orElseThrow();
-        Instant now = Instant.now();
-        long available = organisationAssessments().stream()
-                .filter(item -> item.isOpenAt(now))
-                .filter(item -> item.getEligibleSectionIds().isEmpty()
-                        || membership.getSectionId() != null
-                        && item.getEligibleSectionIds().contains(membership.getSectionId()))
-                .count();
-        List<AssessmentAttempt> history = attempts
-                .findAllByOrganisationIdAndStudentUserIdOrderBySubmittedAtAsc(
-                        session.organisationId(), session.userId()
-                );
-        long pending = history.stream()
-                .filter(item -> item.getStatus() != AttemptStatus.IN_PROGRESS)
-                .filter(item -> item.getResultStatus() == ResultPublicationStatus.PENDING_PUBLICATION)
-                .count();
-        List<DashboardAttention> attention = new ArrayList<>();
-        attention.add(attention(
-                "Assessments available now",
-                "Read the instructions before starting or resuming an attempt.",
-                available,
-                available > 0 ? "INFO" : "NEUTRAL",
-                "/student/assessments"
-        ));
-        attention.add(attention(
-                "Results awaiting publication",
-                "Your submitted attempts are evaluated but not yet released.",
-                pending,
-                pending > 0 ? "INFO" : "NEUTRAL",
-                "/student/history"
-        ));
-        if (performance.atRisk()) {
-            attention.add(attention(
-                    "Academic support recommended",
-                    "Review your published history and speak with your faculty member.",
-                    1,
-                    "DANGER",
-                    "/student/reports"
-            ));
-        }
+        var assessmentCatalog = attemptService.catalog();
+        long available = assessmentCatalog.stream()
+                .filter(item -> item.status() == StudentAssessmentStatus.AVAILABLE_NOW).count();
+        long upcoming = assessmentCatalog.stream()
+                .filter(item -> item.status() == StudentAssessmentStatus.UPCOMING).count();
+        String latestScore = performance.results().isEmpty()
+                ? "—"
+                : performance.results().get(performance.results().size() - 1).percentage() + "%";
         return response(
-                "Your upcoming assessments, submitted attempts, and published progress.",
+                "Your assessments and published progress.",
                 List.of(
-                        metric("Available now", available, "Eligible open assessments", "PRIMARY", "/student/assessments"),
+                        metric("Upcoming assessments", upcoming + available, available + " available now", "PRIMARY", "/student/assessments"),
                         metric("Average score", performance.averagePercentage() + "%", "Published results", "SUCCESS", "/student/reports"),
-                        metric("Best score", performance.bestPercentage() + "%", "Personal best", "INFO", "/student/reports"),
-                        metric("Progress", performance.trajectory(), performance.atRisk() ? "Support recommended" : "Recent published results", performance.atRisk() ? "DANGER" : "SUCCESS", "/student/reports")
+                        metric("Latest score", latestScore, "Most recently published", "INFO", "/student/reports"),
+                        metric("Progress", performance.trajectory(), "Published performance trend", "SUCCESS", "/student/reports")
                 ),
                 performance.results().stream()
                         .map(item -> new DashboardTrend(
                                 item.assessmentTitle(), item.percentage()
                         ))
                         .toList(),
-                attention
+                List.of()
         );
     }
 

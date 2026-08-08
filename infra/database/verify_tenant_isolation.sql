@@ -38,6 +38,32 @@ INSERT INTO topics (
     now()
 );
 
+INSERT INTO academic_years (
+    id, organisation_id, name, start_date, end_date, active
+) VALUES (
+    '31313131-3131-3131-3131-313131313131',
+    '12121212-1212-1212-1212-121212121212',
+    '2026-27 Isolation', DATE '2026-04-01', DATE '2027-03-31', TRUE
+);
+
+INSERT INTO academic_programmes (
+    id, organisation_id, code, name
+) VALUES (
+    '32323232-3232-3232-3232-323232323232',
+    '12121212-1212-1212-1212-121212121212',
+    'ISO-PRG', 'Isolation Programme'
+);
+
+INSERT INTO academic_batches (
+    id, organisation_id, programme_id, academic_year_id, name
+) VALUES (
+    '33333333-3232-3232-3232-323232323232',
+    '12121212-1212-1212-1212-121212121212',
+    '32323232-3232-3232-3232-323232323232',
+    '31313131-3131-3131-3131-313131313131',
+    'Isolation Batch'
+);
+
 INSERT INTO questions (
     id, organisation_id, code, stem, type, subject_id, topic_id,
     difficulty, bloom_level, marks, negative_marks, status, version,
@@ -76,6 +102,66 @@ BEGIN
     EXCEPTION
         WHEN check_violation THEN
             RAISE NOTICE 'Cross-tenant assessment question correctly rejected';
+    END;
+END;
+$$;
+
+DO $$
+BEGIN
+    BEGIN
+        INSERT INTO sections (
+            id, organisation_id, department_id, name, active,
+            programme_id, academic_year_id, batch_id, status
+        )
+        SELECT gen_random_uuid(), organisation_id, department_id, lower(name), TRUE,
+               programme_id, academic_year_id, batch_id, 'ACTIVE'
+        FROM sections
+        WHERE organisation_id = '11111111-1111-1111-1111-111111111111'
+        LIMIT 1;
+        RAISE EXCEPTION 'Section uniqueness accepted a case-insensitive duplicate';
+    EXCEPTION
+        WHEN unique_violation THEN
+            RAISE NOTICE 'Case-insensitive section duplicate correctly rejected';
+    END;
+END;
+$$;
+
+DO $$
+BEGIN
+    BEGIN
+        INSERT INTO assessment_subject_ids (assessment_id, subject_id, display_order)
+        VALUES (
+            '77777777-7777-7777-7777-777777777701',
+            '23232323-2323-2323-2323-232323232323',
+            99
+        );
+        RAISE EXCEPTION 'Tenant guard accepted a cross-tenant assessment subject';
+    EXCEPTION
+        WHEN check_violation THEN
+            RAISE NOTICE 'Cross-tenant assessment subject correctly rejected';
+    END;
+END;
+$$;
+
+DO $$
+BEGIN
+    BEGIN
+        INSERT INTO sections (
+            id, organisation_id, name, active, programme_id,
+            academic_year_id, batch_id, status
+        ) VALUES (
+            '34343434-3434-3434-3434-343434343434',
+            '11111111-1111-1111-1111-111111111111',
+            'Cross Tenant Section', TRUE,
+            '32323232-3232-3232-3232-323232323232',
+            '31313131-3131-3131-3131-313131313131',
+            '33333333-3232-3232-3232-323232323232',
+            'ACTIVE'
+        );
+        RAISE EXCEPTION 'Section guard accepted cross-tenant academic masters';
+    EXCEPTION
+        WHEN check_violation THEN
+            RAISE NOTICE 'Cross-tenant section masters correctly rejected';
     END;
 END;
 $$;

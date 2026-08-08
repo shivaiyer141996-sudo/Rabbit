@@ -245,7 +245,9 @@ export interface StudentAnalyticsReport {
   totalTimeSeconds: number;
   subjects: StudentAnalysisBreakdown[];
   topics: StudentAnalysisBreakdown[];
+  chapters: StudentAnalysisBreakdown[];
   difficulties: StudentAnalysisBreakdown[];
+  bloomLevels: StudentAnalysisBreakdown[];
   timeAnalysis: Array<{
     attemptId: string;
     assessmentId: string;
@@ -491,6 +493,7 @@ export interface GeneralSettings {
   shuffleOptions: boolean;
   emailNotificationsEnabled: boolean;
   smsNotificationsEnabled: boolean;
+  rankingEnabled: boolean;
   auditRetentionDays: number;
   displayName: string;
   primaryColour: string;

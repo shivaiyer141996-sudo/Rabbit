@@ -158,3 +158,25 @@ as SHA-256 hashes, expire after 72 hours by default, and are consumed once.
   "traceId": "..."
 }
 ```
+# Post-M6 API additions
+
+## Assessments
+
+`POST /api/v1/assessments` now accepts `subjectIds: UUID[]` instead of a single authoring subject. Responses retain `subjectId` as the backward-compatible primary subject and add `subjectIds`.
+
+## Student assessments and results
+
+- `GET /api/v1/student/assessments` returns every eligible scheduled assessment with `AVAILABLE_NOW`, `UPCOMING`, `COMPLETED`, or `MISSED_CLOSED` and `remainingDays`.
+- `GET /api/v1/student/results/{attemptId}` adds publication-gated subject/topic names, chapter, Bloom level, answer status, and optional rank/topper score.
+- `GET /api/v1/reports/students/me/analytics` adds chapter and Bloom-level breakdowns.
+
+## Academic sections
+
+- `GET /api/v1/academic-masters/sections`
+- `POST /api/v1/academic-masters/sections`
+- `PUT /api/v1/academic-masters/sections/{id}`
+- `PATCH /api/v1/academic-masters/sections/{id}/activate`
+- `PATCH /api/v1/academic-masters/sections/{id}/deactivate`
+- `PATCH /api/v1/academic-masters/sections/{id}/archive`
+
+Section mutations require `SUPER_ADMIN` or `ORG_ADMIN`, an active assessment entitlement, tenant-owned matching masters, and a unique name within programme + batch.

@@ -41,6 +41,9 @@ public class OrganisationSettings extends TenantEntity {
     @Column(name = "sms_notifications_enabled", nullable = false)
     private boolean smsNotificationsEnabled;
 
+    @Column(name = "ranking_enabled", nullable = false)
+    private boolean rankingEnabled;
+
     @Column(name = "audit_retention_days", nullable = false)
     private int auditRetentionDays;
 
@@ -73,6 +76,7 @@ public class OrganisationSettings extends TenantEntity {
         this.shuffleOptions = false;
         this.emailNotificationsEnabled = false;
         this.smsNotificationsEnabled = false;
+        this.rankingEnabled = false;
         this.auditRetentionDays = 2555;
         this.displayName = displayName;
         this.primaryColour = "#5936C8";
@@ -89,6 +93,7 @@ public class OrganisationSettings extends TenantEntity {
             boolean shuffleOptions,
             boolean emailNotificationsEnabled,
             boolean smsNotificationsEnabled,
+            boolean rankingEnabled,
             int auditRetentionDays,
             String displayName,
             String primaryColour
@@ -103,6 +108,7 @@ public class OrganisationSettings extends TenantEntity {
         this.shuffleOptions = shuffleOptions;
         this.emailNotificationsEnabled = emailNotificationsEnabled;
         this.smsNotificationsEnabled = smsNotificationsEnabled;
+        this.rankingEnabled = rankingEnabled;
         this.auditRetentionDays = auditRetentionDays;
         this.displayName = displayName;
         this.primaryColour = primaryColour.toUpperCase();
@@ -118,6 +124,7 @@ public class OrganisationSettings extends TenantEntity {
     public boolean isShuffleOptions() { return shuffleOptions; }
     public boolean isEmailNotificationsEnabled() { return emailNotificationsEnabled; }
     public boolean isSmsNotificationsEnabled() { return smsNotificationsEnabled; }
+    public boolean isRankingEnabled() { return rankingEnabled; }
     public int getAuditRetentionDays() { return auditRetentionDays; }
     public String getDisplayName() { return displayName; }
     public String getPrimaryColour() { return primaryColour; }

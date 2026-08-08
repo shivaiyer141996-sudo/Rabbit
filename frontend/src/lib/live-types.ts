@@ -43,12 +43,32 @@ export interface AcademicCatalog {
     active: boolean;
     sectionCount: number;
   }>;
+  programmes: Array<{
+    id: string;
+    code: string;
+    name: string;
+    active: boolean;
+  }>;
+  batches: Array<{
+    id: string;
+    programmeId: string;
+    academicYearId: string;
+    name: string;
+    active: boolean;
+  }>;
   sections: Array<{
     id: string;
     departmentId?: string;
     departmentName: string;
     name: string;
     active: boolean;
+    programmeId: string;
+    programmeName: string;
+    academicYearId: string;
+    academicYearName: string;
+    batchId: string;
+    batchName: string;
+    status: "ACTIVE" | "INACTIVE" | "ARCHIVED";
   }>;
   subjects: Array<{
     id: string;
@@ -107,6 +127,7 @@ export interface ApiAssessment {
     | "FINAL_EXAMINATION"
     | "MOCK_TEST";
   subjectId: string;
+  subjectIds: string[];
   durationMinutes: number;
   status: Assessment["status"];
   totalMarks: number;
@@ -132,6 +153,22 @@ export interface UserSummary {
   role: UserRole;
   status: "INVITED" | "ACTIVE" | "SUSPENDED" | "ARCHIVED";
   sectionId?: string;
+}
+
+export interface AcademicSectionSummary {
+  id: string;
+  name: string;
+  programmeId: string;
+  programmeName: string;
+  academicYearId: string;
+  academicYearName: string;
+  batchId: string;
+  batchName: string;
+  studentCount: number;
+  teacherCount: number;
+  assessmentCount: number;
+  status: "ACTIVE" | "INACTIVE" | "ARCHIVED";
+  archivedAt?: string;
 }
 
 export interface InvitationIssue {
@@ -262,6 +299,8 @@ export interface StudentAssessmentSummary {
   totalMarks: number;
   startAt: string;
   endAt: string;
+  status: "AVAILABLE_NOW" | "UPCOMING" | "COMPLETED" | "MISSED_CLOSED";
+  remainingDays: number;
 }
 
 export interface StudentAssessmentInstructions extends StudentAssessmentSummary {
@@ -314,8 +353,12 @@ export interface ResultQuestion {
   questionCode: string;
   stem: string;
   subjectId: string;
+  subjectName: string;
   topicId: string;
+  topicName: string;
+  chapter?: string;
   difficulty: Difficulty;
+  bloomLevel: BloomLevel;
   selectedOptionIds: string[];
   correctOptionIds: string[];
   options: Array<{
@@ -328,6 +371,7 @@ export interface ResultQuestion {
   awardedMarks: number;
   maxMarks: number;
   correct: boolean;
+  answerStatus: "CORRECT" | "INCORRECT" | "UNANSWERED" | "PARTIALLY_CORRECT";
   timeSpentSeconds: number;
   explanation?: string;
 }
@@ -349,6 +393,7 @@ export interface ResultView {
   wrongAnswers: number;
   unansweredAnswers: number;
   rank?: number;
+  topperScore?: number;
   timeTakenSeconds: number;
   evaluationVersion: number;
   questions: ResultQuestion[];

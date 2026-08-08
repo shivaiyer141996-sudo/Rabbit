@@ -31,6 +31,7 @@ class RabbitHandler(BaseHTTPRequestHandler):
         "code": "M54-REHEARSAL",
         "type": "PRACTICE",
         "subjectId": "subject-1",
+        "subjectIds": ["subject-1"],
         "durationMinutes": 2,
         "status": "SCHEDULED",
         "totalMarks": 2,

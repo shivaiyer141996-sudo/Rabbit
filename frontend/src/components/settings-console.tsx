@@ -30,6 +30,7 @@ const emptySettings: SettingsBundle = {
     shuffleOptions: false,
     emailNotificationsEnabled: false,
     smsNotificationsEnabled: false,
+    rankingEnabled: false,
     auditRetentionDays: 365,
     displayName: "",
     primaryColour: "#5936C8",
@@ -329,6 +330,14 @@ export function SettingsConsole() {
                 value={bundle.general.auditRetentionDays}
               />
             </div>
+            <label className="switch-row">
+              <span><strong>Student ranking</strong><small>Show rank and topper score only after result publication.</small></span>
+              <input
+                checked={bundle.general.rankingEnabled}
+                onChange={(event) => updateGeneral("rankingEnabled", event.target.checked)}
+                type="checkbox"
+              />
+            </label>
           </section>
 
           <div className="settings-savebar">

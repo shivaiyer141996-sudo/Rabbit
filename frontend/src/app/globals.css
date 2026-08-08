@@ -4610,3 +4610,31 @@ textarea:focus-visible {
     break-inside: avoid;
   }
 }
+.multi-select-field { position: relative; }
+.multi-select-trigger { align-items: center; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; color: var(--text); display: flex; justify-content: space-between; min-height: 44px; padding: 0 12px; width: 100%; }
+.multi-select-popover { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; box-shadow: 0 16px 40px rgba(27, 18, 61, .16); display: grid; gap: 8px; left: 0; max-height: 300px; overflow: auto; padding: 12px; position: absolute; right: 0; top: 72px; z-index: 20; }
+.selected-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.selection-chip { align-items: center; background: var(--primary-soft); border: 0; border-radius: 999px; color: var(--primary); display: inline-flex; gap: 5px; padding: 6px 9px; }
+.question-filter-grid { display: grid; gap: 10px; grid-template-columns: minmax(220px, 1.5fr) repeat(4, minmax(130px, 1fr)); margin: 16px 0; }
+.summary-subject { padding-left: 10px; }
+.review-select-actions { align-items: center; display: flex; gap: 10px; justify-content: space-between; margin-bottom: 8px; }
+.review-check-all { flex: 1; font-weight: 700; }
+.question-review-navigation { align-items: center; display: flex; gap: 12px; justify-content: space-between; margin-top: 16px; }
+.result-question.unanswered { border-left-color: #8b93a7; }
+.result-question.partially-correct { border-left-color: #d88b1d; }
+.profile-card { margin: 0 auto; max-width: 720px; }
+.profile-card > svg { color: var(--primary); }
+.table-actions { display: flex; gap: 6px; }
+.pagination { align-items: center; display: flex; gap: 12px; justify-content: flex-end; padding: 14px 0 0; }
+
+@media (max-width: 900px) {
+  .question-filter-grid { grid-template-columns: 1fr 1fr; }
+  .multi-select-popover { position: static; }
+}
+
+@media (max-width: 600px) {
+  .question-filter-grid { grid-template-columns: 1fr; }
+  .review-select-actions, .question-review-navigation { align-items: stretch; flex-direction: column; }
+  .question-review-navigation .button { justify-content: center; width: 100%; }
+  .pagination { justify-content: space-between; }
+}

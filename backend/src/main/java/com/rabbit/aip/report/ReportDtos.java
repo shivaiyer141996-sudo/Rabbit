@@ -169,7 +169,9 @@ public final class ReportDtos {
             long totalTimeSeconds,
             List<StudentAnalysisBreakdown> subjects,
             List<StudentAnalysisBreakdown> topics,
+            List<StudentAnalysisBreakdown> chapters,
             List<StudentAnalysisBreakdown> difficulties,
+            List<StudentAnalysisBreakdown> bloomLevels,
             List<StudentAttemptTimeAnalysis> timeAnalysis,
             List<StudentQuestionReview> questionReview,
             Instant generatedAt

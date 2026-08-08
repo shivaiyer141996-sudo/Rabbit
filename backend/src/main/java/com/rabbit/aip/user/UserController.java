@@ -1,6 +1,8 @@
 package com.rabbit.aip.user;
 
 import com.rabbit.aip.audit.AuditService;
+import com.rabbit.aip.academic.AcademicSectionRepository;
+import com.rabbit.aip.academic.SectionStatus;
 import com.rabbit.aip.auth.InvitationService;
 import com.rabbit.aip.common.exception.DomainException;
 import com.rabbit.aip.commercial.CommercialService;
@@ -34,6 +36,7 @@ public class UserController {
     private final InvitationService invitations;
     private final AuditService audit;
     private final CommercialService commercial;
+    private final AcademicSectionRepository sections;
 
     public UserController(
             UserAccountRepository users,
@@ -41,7 +44,8 @@ public class UserController {
             CurrentSession session,
             InvitationService invitations,
             AuditService audit,
-            CommercialService commercial
+            CommercialService commercial,
+            AcademicSectionRepository sections
     ) {
         this.users = users;
         this.memberships = memberships;
@@ -49,6 +53,7 @@ public class UserController {
         this.invitations = invitations;
         this.audit = audit;
         this.commercial = commercial;
+        this.sections = sections;
     }
 
     @GetMapping
@@ -68,6 +73,19 @@ public class UserController {
     InvitationResponse create(@Valid @RequestBody CreateUserRequest request) {
         commercial.requireEntitlement(Entitlement.ASSESSMENT_DELIVERY);
         commercial.requireStudentCapacity(request.role());
+        if (request.role() == UserRole.STUDENT || request.role() == UserRole.FACULTY) {
+            if (request.sectionId() == null) {
+                throw DomainException.badRequest(
+                        "SECTION_REQUIRED", "Students and faculty must be assigned to an active section."
+                );
+            }
+            sections.findByIdAndOrganisationId(request.sectionId(), session.organisationId())
+                    .filter(section -> section.getStatus() == SectionStatus.ACTIVE)
+                    .orElseThrow(() -> DomainException.badRequest(
+                            "SECTION_NOT_ACTIVE",
+                            "The selected section is not active in this organisation."
+                    ));
+        }
         InvitationService.IssuedInvitation issued = invitations.create(
                 session.organisationId(),
                 session.userId(),

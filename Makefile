@@ -5,7 +5,7 @@
 	pilot-functional-restore-drill pilot-rollback-rehearsal pilot-m5-3 \
 	pilot-m5-4-freeze pilot-m5-4-reconcile pilot-m5-5-prepare pilot-m5-5-finalize \
 	pilot-m5-6-prepare pilot-m5-6-verify-tag release-tag-check \
-	m6-contract m6-activation-check
+	m6-contract m6-activation-check enhancement-contract
 
 PILOT_COMPOSE = docker compose --env-file .env -f docker-compose.yml -f infra/pilot/compose.local-pilot.yml
 
@@ -112,3 +112,6 @@ m6-contract:
 m6-activation-check:
 	@test -n "$(M6_ENV)" || (echo "Set M6_ENV to the protected local environment file." >&2; exit 2)
 	python3 infra/commercial/verify-m6-contract.py --repo-root . --env-file "$(M6_ENV)"
+
+enhancement-contract:
+	python3 infra/enhancements/verify-enhancement-contract.py

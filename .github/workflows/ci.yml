@@ -63,6 +63,8 @@ jobs:
       PGPASSWORD: rabbit_ci_password
     steps:
       - uses: actions/checkout@v6
+      - name: Verify functional enhancement contracts
+        run: python3 infra/enhancements/verify-enhancement-contract.py
       - name: Apply PostgreSQL migrations
         run: |
           for migration in backend/src/main/resources/db/migration/V*.sql; do

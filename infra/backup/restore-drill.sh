@@ -91,6 +91,10 @@ docker exec "${postgres_container}" psql \
     SELECT 'question_options=' || COUNT(*) FROM question_options;
     SELECT 'assessments=' || COUNT(*) FROM assessments;
     SELECT 'assessment_questions=' || COUNT(*) FROM assessment_question_ids;
+    SELECT 'assessment_subjects=' || COUNT(*) FROM assessment_subject_ids;
+    SELECT 'academic_programmes=' || COUNT(*) FROM academic_programmes;
+    SELECT 'academic_batches=' || COUNT(*) FROM academic_batches;
+    SELECT 'academic_sections=' || COUNT(*) FROM sections;
     SELECT 'attempts=' || COUNT(*) FROM assessment_attempts;
     SELECT 'responses=' || COUNT(*) FROM attempt_responses;
     SELECT 'selected_options=' || COUNT(*) FROM response_selected_options;

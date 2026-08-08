@@ -12,6 +12,7 @@ import com.rabbit.aip.question.Question;
 import com.rabbit.aip.question.QuestionRepository;
 import com.rabbit.aip.question.QuestionStatus;
 import com.rabbit.aip.security.CurrentSession;
+import com.rabbit.aip.settings.AcademicSubjectRepository;
 import com.rabbit.aip.user.UserRole;
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -33,6 +34,7 @@ public class AssessmentService {
     private final AuditService audit;
     private final AssessmentReviewRepository reviews;
     private final NotificationService notifications;
+    private final AcademicSubjectRepository subjects;
 
     public AssessmentService(
             AssessmentRepository assessments,
@@ -40,7 +42,8 @@ public class AssessmentService {
             CurrentSession session,
             AuditService audit,
             AssessmentReviewRepository reviews,
-            NotificationService notifications
+            NotificationService notifications,
+            AcademicSubjectRepository subjects
     ) {
         this.assessments = assessments;
         this.questions = questions;
@@ -48,6 +51,7 @@ public class AssessmentService {
         this.audit = audit;
         this.reviews = reviews;
         this.notifications = notifications;
+        this.subjects = subjects;
     }
 
     @Transactional(readOnly = true)
@@ -87,6 +91,24 @@ public class AssessmentService {
 
     @Transactional
     public AssessmentResponse create(AssessmentRequest request) {
+        Set<UUID> subjectIds = new HashSet<>(request.subjectIds());
+        if (subjectIds.size() != request.subjectIds().size()) {
+            throw DomainException.badRequest(
+                    "DUPLICATE_ASSESSMENT_SUBJECT",
+                    "An assessment cannot contain the same subject more than once."
+            );
+        }
+        long validSubjectCount = subjects.findAllByOrganisationIdOrderByName(
+                        session.organisationId()
+                ).stream()
+                .filter(subject -> subject.isActive() && subjectIds.contains(subject.getId()))
+                .count();
+        if (validSubjectCount != subjectIds.size()) {
+            throw DomainException.badRequest(
+                    "ASSESSMENT_SUBJECT_NOT_FOUND",
+                    "Every selected subject must be active in this organisation."
+            );
+        }
         Set<UUID> unique = new HashSet<>(request.questionIds());
         if (unique.size() != request.questionIds().size()) {
             throw DomainException.badRequest(
@@ -113,6 +135,13 @@ public class AssessmentService {
                     "Only approved questions can be added to an assessment."
             );
         }
+        if (selected.stream().anyMatch(question ->
+                !subjectIds.contains(question.getSubjectId()))) {
+            throw DomainException.badRequest(
+                    "QUESTION_SUBJECT_NOT_SELECTED",
+                    "Every question must belong to one of the selected subjects."
+            );
+        }
         BigDecimal total = selected.stream()
                 .map(Question::getMarks)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
@@ -124,7 +153,7 @@ public class AssessmentService {
                 request.title().trim(),
                 code,
                 request.type(),
-                request.subjectId(),
+                request.subjectIds(),
                 request.durationMinutes(),
                 request.shuffleQuestions(),
                 request.shuffleOptions(),

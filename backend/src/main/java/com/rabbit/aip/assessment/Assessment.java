@@ -36,6 +36,15 @@ public class Assessment extends TenantEntity {
     @Column(name = "subject_id", nullable = false)
     private UUID subjectId;
 
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(
+            name = "assessment_subject_ids",
+            joinColumns = @JoinColumn(name = "assessment_id")
+    )
+    @Column(name = "subject_id", nullable = false)
+    @OrderColumn(name = "display_order")
+    private List<UUID> subjectIds = new ArrayList<>();
+
     @Column(name = "duration_minutes", nullable = false)
     private int durationMinutes;
 
@@ -98,7 +107,7 @@ public class Assessment extends TenantEntity {
             String title,
             String code,
             AssessmentType type,
-            UUID subjectId,
+            List<UUID> subjectIds,
             int durationMinutes,
             boolean shuffleQuestions,
             boolean shuffleOptions,
@@ -112,7 +121,8 @@ public class Assessment extends TenantEntity {
         this.title = title;
         this.code = code;
         this.type = type;
-        this.subjectId = subjectId;
+        this.subjectId = subjectIds.get(0);
+        this.subjectIds.addAll(subjectIds);
         this.durationMinutes = durationMinutes;
         this.status = AssessmentStatus.DRAFT;
         this.shuffleQuestions = shuffleQuestions;
@@ -162,6 +172,7 @@ public class Assessment extends TenantEntity {
     public String getCode() { return code; }
     public AssessmentType getType() { return type; }
     public UUID getSubjectId() { return subjectId; }
+    public List<UUID> getSubjectIds() { return List.copyOf(subjectIds); }
     public int getDurationMinutes() { return durationMinutes; }
     public AssessmentStatus getStatus() { return status; }
     public BigDecimal getTotalMarks() { return totalMarks; }
