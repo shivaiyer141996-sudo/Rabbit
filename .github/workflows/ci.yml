@@ -67,9 +67,9 @@ jobs:
         run: python3 infra/enhancements/verify-enhancement-contract.py
       - name: Apply PostgreSQL migrations
         run: |
-          for migration in backend/src/main/resources/db/migration/V*.sql; do
+          while IFS= read -r migration; do
             psql -h localhost -U rabbit -d rabbit -v ON_ERROR_STOP=1 -f "$migration"
-          done
+          done < <(find backend/src/main/resources/db/migration -maxdepth 1 -name 'V*.sql' -print | sort -V)
       - name: Verify tenant-isolation contracts
         run: psql -h localhost -U rabbit -d rabbit -f infra/database/verify_tenant_isolation.sql
 
